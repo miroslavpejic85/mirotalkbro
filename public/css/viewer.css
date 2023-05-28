@@ -1,0 +1,52 @@
+.viewer {
+    padding: 1.5rem;
+    min-width: 320px;
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: auto;
+    color: var(--text-color);
+    background: var(--secondary-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+}
+
+.viewer-header {
+    color: var(--text-color);
+}
+
+.viewer-buttons {
+    margin: auto;
+}
+
+.viewer-buttons button {
+    padding: 0.5rem;
+    float: right;
+    margin-left: 5px;
+}
+
+.viewer i {
+    padding: 0.4rem;
+}
+
+.viewer button i {
+    padding: 0.2rem;
+}
+
+.viewer select {
+    padding: 1rem;
+    color: var(--text-color);
+    background-color: var(--primary-color);
+    cursor: pointer;
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.viewer input {
+    padding: 1rem;
+    color: var(--input-color);
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}

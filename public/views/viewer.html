@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>MiroTalk WebRTC Viewer</title>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link rel="apple-touch-icon" href="../assets/images/favicon.png" />
+        <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico" />
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+        <link rel="stylesheet" href="../css/common.css" />
+        <link rel="stylesheet" href="../css/viewer.css" />
+    </head>
+    <body>
+        <div id="viewerForm" class="viewer center fadeIn">
+            <div id="viewerFormHeader" class="viewer-header not-selectable">
+                <div class="viewer-info">
+                    <i class="fas fa-user"></i> <span id="myName">Viewer</span> <i class="fas fa-clock"></i>
+                    <span id="sessionTime">0s</span>
+                </div>
+            </div>
+            <video class="not-selectable" poster="../assets/images/loader.gif" playsinline autoplay muted></video>
+            <label id="recordingLabel" class="pulse">🔴 REC: <span id="recordingTime">0S</span></label>
+            <div class="viewer-buttons">
+                <button id="goHome"><i class="fas fa-times"></i></button>
+                <button id="fullScreenOn"><i class="fas fa-expand-alt"></i></button>
+                <button id="fullScreenOff"><i class="fas fa-compress-alt"></i></button>
+                <button id="snapshot"><i class="fas fa-camera-retro"></i></button>
+                <button id="recordingStart"><i class="fas fa-record-vinyl"></i></button>
+                <button id="recordingStop"><i class="fas fa-stop"></i></button>
+                <button id="enableAudio"><i class="fas fa-microphone-slash"></i></button>
+                <button id="disableAudio"><i class="fas fa-microphone"></i></button>
+            </div>
+            <input id="messageInput" maxlength="1024" name="message" placeholder="Type message..." />
+            <button id="messageSend"><i class="fas fa-paper-plane"></i> Send message</button>
+        </div>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="../js/swal.js"></script>
+        <script src="../js/utils.js"></script>
+        <script src="../js/config.js"></script>
+        <script src="../js/viewer.js"></script>
+        <script src="../js/recording.js"></script>
+        <script async src="../js/umami.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.8"></script>
+    </body>
+</html>

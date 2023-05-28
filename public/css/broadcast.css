@@ -1,0 +1,117 @@
+.broadcast {
+    padding: 1.5rem;
+    min-width: 320px;
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: auto;
+    color: var(--text-color);
+    background: var(--secondary-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+}
+
+.broadcast-header {
+    color: var(--text-color);
+}
+
+.broadcast-buttons {
+    margin: auto;
+}
+
+.broadcast-buttons button {
+    padding: 0.5rem;
+    float: right;
+    margin-left: 5px;
+}
+
+.broadcast i {
+    padding: 0.4rem;
+}
+
+.broadcast button i {
+    padding: 0.2rem;
+}
+
+.broadcast select {
+    padding: 1rem;
+    color: var(--text-color);
+    background-color: var(--primary-color);
+    cursor: pointer;
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.broadcast input {
+    padding: 1rem;
+    color: var(--input-color);
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.broadcast-quality-fps {
+    display: flex;
+    align-items: center;
+}
+
+.broadcast-quality-fps select {
+    width: 50%;
+    margin: 0px 2px;
+}
+
+.qrRoomContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.messages {
+    padding: 1.5rem;
+    width: var(--message-width);
+    height: var(--message-height);
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: auto;
+    color: var(--text-color);
+    background: var(--secondary-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+}
+
+.messages-header {
+    color: var(--text-color);
+    display: grid;
+    grid-gap: 1rem;
+}
+
+.messages-buttons button i,
+.messages-header label i {
+    padding: 0.2rem;
+}
+
+.messages-buttons button {
+    padding: 0.5rem;
+    float: right;
+    margin-left: 5px;
+}
+
+.messages-incoming {
+    padding: 1rem;
+    margin-top: 20px;
+    min-height: 80%;
+    max-height: 80%;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: auto;
+}
+
+.messages-incoming span {
+    color: var(--msg-title-color);
+}
+.messages-incoming p {
+    color: var(--text-color);
+}

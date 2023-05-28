@@ -1,0 +1,67 @@
+.support {
+    text-align: right;
+}
+
+.support button {
+    padding: 0.5rem;
+}
+
+.fa-arrows-rotate {
+    cursor: pointer;
+}
+
+.fa-arrows-rotate:hover {
+    color: #2196f3;
+    transition: var(--tran-05);
+}
+
+.home {
+    padding: 1.5rem;
+    min-width: 320px;
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: auto;
+    color: var(--text-color);
+    background: var(--secondary-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+}
+
+.home-header {
+    color: var(--text-color);
+    display: grid;
+    grid-gap: 1rem;
+}
+
+.home-buttons button {
+    padding: 0.5rem;
+    float: right;
+    margin-left: 5px;
+}
+
+.home i {
+    padding: 0.4rem;
+}
+
+.home button i {
+    padding: 0.2rem;
+}
+
+.home select {
+    padding: 1rem;
+    color: var(--text-color);
+    background-color: var(--primary-color);
+    cursor: pointer;
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.home input {
+    padding: 1rem;
+    color: var(--input-color);
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}

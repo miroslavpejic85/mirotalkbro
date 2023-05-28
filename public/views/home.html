@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>MiroTalk WebRTC Home</title>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="MiroTalk WebRTC Live Broadcast allows to broadcast live video, audio and screen stream to all connected users (viewers) and receive messages from them."
+        />
+        <link rel="apple-touch-icon" href="../assets/images/favicon.png" />
+        <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico" />
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+        <link rel="stylesheet" href="../css/common.css" />
+        <link rel="stylesheet" href="../css/home.css" />
+    </head>
+    <body>
+        <div class="home center">
+            <div class="support">
+                <button id="support"><i class="fas fa-heart"></i></button>
+            </div>
+            <label class="not-selectable"><i class="fas fa-user"></i>Username</label>
+            <input id="userName" maxlength="15" name="id" value="mirotalk" required />
+            <label id="broadcasterIdLabel" class="not-selectable"
+                ><i id="broadcasterIdRandom" class="fas fa-arrows-rotate"></i>Room Id</label
+            >
+            <input id="broadcasterId" maxlength="36" name="id" value="123" required />
+            <label id="broadcasterLabel" class="not-selectable"
+                ><i class="fas fa-podcast"></i>Broadcast video, audio and screen</label
+            >
+            <button id="broadcaster">Broadcaster</button>
+            <label class="not-selectable"><i class="fas fa-eye"></i>Join as viewer</label>
+            <button id="viewer">Viewer</button>
+            <label class="not-selectable"><i class="fas fa-moon"></i>Dark mode</label>
+            <label class="switch">
+                <input id="mode" type="checkbox" checked />
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <script src="../js/swal.js"></script>
+        <script src="../js/utils.js"></script>
+        <script src="../js/home.js"></script>
+        <script async src="../js/umami.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.8"></script>
+    </body>
+</html>

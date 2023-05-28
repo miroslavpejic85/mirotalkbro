@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+    mirotalk:
+        image: mirotalk/bro:latest
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: mirotalkbro
+        hostname: mirotalkbro
+        volumes:
+            - .env:/src/.env:ro
+            # These volumes are not mandatory, uncomment if you want to use it
+            # - ./app/:/src/app/:ro
+            # - ./public/:/src/public/:ro
+        restart: unless-stopped
+        ports:
+            - '${PORT}:${PORT}'
