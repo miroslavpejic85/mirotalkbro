@@ -38,7 +38,7 @@ $ npm install
 $ npm start
 ```
 
-Start the app using [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/):
+Start the app using [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/) and optional [official image](https://hub.docker.com/r/mirotalk/bro):
 
 ![docker](public/assets/images/docker.png)
 
@@ -47,7 +47,7 @@ Start the app using [docker](https://docs.docker.com/engine/install/) and [docke
 $ cp .env.template .env
 # Copy docker-compose.template.yml in docker-compose.yml and edit it if needed
 $ cp docker-compose.template.yml docker-compose.yml
-# Building the image
+# Building the image or get the official one: docker-compose pull
 $ docker-compose build
 # Run the image in a container
 $ docker-compose up #-d
@@ -63,7 +63,7 @@ Server is running {
 }
 ```
 
-The app should now be running on your `localhost:3016`, you can choose if join room as a `Broadcaster` or `Viewer`.
+The app should now be running on your http://localhost:3016, you can choose if join room as a `Broadcaster` or `Viewer`.
 
 The `Broadcaster` stream the audio, video or screen to all connected viewers and can receive messages from them.
 
