@@ -162,7 +162,7 @@ Thank you! ❤️
 
 <br>
 
-[MiroTalk C2C](https://github.com/miroslavpejic85/mirotalk) `peer to peer` real-time video conferences, optimized for cam 2 cam. Unlimited time, unlimited rooms each having 2 participants.
+[MiroTalk C2C](https://github.com/miroslavpejic85/mirotalkc2c) `peer to peer` real-time video conferences, optimized for cam 2 cam. Unlimited time, unlimited rooms each having 2 participants.
 
 </details>
 
