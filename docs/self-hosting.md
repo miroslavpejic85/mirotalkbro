@@ -41,7 +41,7 @@ $ npm install
 $ npm start
 ```
 
-Check if is correctly installed: https://your.domain.name:8080
+Check if is correctly installed: https://your.domain.name:3016
 
 ---
 
@@ -85,7 +85,7 @@ $ docker pull mirotalk/bro:latest
 $ docker-compose up -d
 ```
 
-Check if is correctly installed: https://your.domain.name:8080
+Check if is correctly installed: https://your.domain.name:3016
 
 ---
 
