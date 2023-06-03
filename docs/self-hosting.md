@@ -185,8 +185,8 @@ In order to have Your MiroTalk BRO instance always updated to latest, we going t
 
 ```bash
 $ cd
-# Create a file mirotalkbroUpdate.sh
-$ vim mirotalkbroUpdate.sh
+# Create a file broUpdate.sh
+$ vim broUpdate.sh
 ```
 
 ---
@@ -223,7 +223,7 @@ docker-compose up -d
 Make the script executable
 
 ```bash
-$ chmod +x mirotalkbroUpdate.sh
+$ chmod +x broUpdate.sh
 ```
 
 Follow the commits of the MiroTalk BRO project [here](https://github.com/miroslavpejic85/mirotalkbro/commits/main)
@@ -231,5 +231,5 @@ Follow the commits of the MiroTalk BRO project [here](https://github.com/mirosla
 To update Your MiroTalk BRO instance at latest commit, execute:
 
 ```bash
-./mirotalkbroUpdate.sh
+./broUpdate.sh
 ```
