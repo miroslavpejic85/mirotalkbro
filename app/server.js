@@ -157,7 +157,7 @@ function notFound(res) {
 }
 
 // Socket.io
-io.sockets.on('error', (e) => console.error(e));
+io.sockets.on('error', (e) => log.error(e));
 io.sockets.on('connection', (socket) => {
     socket.on('broadcaster', (broadcastID) => {
         handleBroadcaster(socket, broadcastID);
