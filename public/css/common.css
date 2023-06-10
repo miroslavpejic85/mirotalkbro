@@ -209,6 +209,24 @@ input:checked + .slider:before {
     background: #2196f3;
 }
 
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    border-style: hidden;
+    width: 100%;
+}
+
+td,
+th {
+    border: var(--border);
+    text-align: center;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: var(--secondary-color);
+}
+
 .fadeIn {
     -webkit-animation: fadeIn ease-in 1;
     -moz-animation: fadeIn ease-in 1;

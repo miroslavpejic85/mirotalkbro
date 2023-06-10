@@ -21,7 +21,6 @@ const recordingTime = document.getElementById('recordingTime');
 const goHome = document.getElementById('goHome');
 const fullScreenOn = document.getElementById('fullScreenOn');
 const fullScreenOff = document.getElementById('fullScreenOff');
-const disconnectAll = document.getElementById('disconnectAll');
 const shareRoom = document.getElementById('shareRoom');
 const copyRoom = document.getElementById('copyRoom');
 const myName = document.getElementById('myName');
@@ -33,13 +32,23 @@ const videoFpsSelect = document.getElementById('videoFpsSelect');
 const screenShareStart = document.getElementById('screenShareStart');
 const screenShareStop = document.getElementById('screenShareStop');
 const connectedPeers = document.getElementById('connectedPeers');
+
 const messagesForm = document.getElementById('messagesForm');
 const messagesFormHeader = document.getElementById('messagesFormHeader');
 const messagesSave = document.getElementById('messagesSave');
 const messagesClean = document.getElementById('messagesClean');
 const messagesArea = document.getElementById('messagesArea');
-const openMessagesForm = document.getElementById('openMessagesForm');
-const closeMessagesForm = document.getElementById('closeMessagesForm');
+const messagesOpenForm = document.getElementById('messagesOpenForm');
+const messagesCloseForm = document.getElementById('messagesCloseForm');
+
+const viewersForm = document.getElementById('viewersForm');
+const viewersFormHeader = document.getElementById('viewersFormHeader');
+const viewersTable = document.getElementById('viewersTable');
+const viewersSave = document.getElementById('viewersSave');
+const viewerSearch = document.getElementById('viewerSearch');
+const viewersDisconnect = document.getElementById('viewersDisconnect');
+const viewersOpenForm = document.getElementById('viewersOpenForm');
+const viewersCloseForm = document.getElementById('viewersCloseForm');
 
 const getMode = window.localStorage.mode || 'dark';
 if (getMode === 'dark') body.classList.toggle('dark');
@@ -56,6 +65,7 @@ let videoFpsSelectedIndex = 0;
 let isVideoMirrored = false;
 let screenShareEnabled = false;
 let messagesFormOpen = false;
+let viewersFormOpen = false;
 let recording = null;
 let recordingTimer = null;
 let sessionTimer = null;
@@ -85,12 +95,7 @@ socket.on('viewer', (id, iceServers, username) => {
 
     connectedPeers.innerText = Object.keys(peerConnections).length;
 
-    connectedViewers[id] = username;
-
-    console.log('ConnectedViewers', {
-        connected: username,
-        connectedViewers: connectedViewers,
-    });
+    addViewer(id, username);
 
     popupMessage('toast', 'New viewer', `${username} join`, 'top', 2000);
 
@@ -142,6 +147,27 @@ function handleDataChannels(id) {
     };
 }
 
+function sendToViewersDataChannel(method, action = {}, peerId = '*') {
+    for (let id in dataChannels) {
+        if (id == socket.id) continue; // bypass myself
+
+        if (peerId != '*') {
+            sendTo(peerId); // send to specified viewer
+            break;
+        } else {
+            sendTo(id); // send to all connected viewers
+        }
+    }
+    function sendTo(id) {
+        dataChannels[id].send(
+            JSON.stringify({
+                method: method,
+                action: action,
+            }),
+        );
+    }
+}
+
 socket.on('candidate', (id, candidate) => {
     peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate)).catch((e) => console.error(e));
 });
@@ -150,11 +176,7 @@ socket.on('disconnectPeer', (id, username) => {
     peerConnections[id].close();
     delete peerConnections[id];
     delete dataChannels[id];
-    delete connectedViewers[id];
-    console.log('ConnectedViewers', {
-        disconnected: username,
-        connectedViewers: connectedViewers,
-    });
+    delViewer(id, username);
     connectedPeers.innerText = Object.keys(peerConnections).length;
 });
 
@@ -162,6 +184,7 @@ socket.on('disconnectPeer', (id, username) => {
 
 elementDisplay(fullScreenOff, false);
 elementDisplay(messagesForm, false);
+elementDisplay(viewersForm, false);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
 elementDisplay(screenShareStop, false);
@@ -169,8 +192,8 @@ elementDisplay(copyRoom, broadcastSettings.buttons.copyRoom);
 elementDisplay(shareRoom, broadcastSettings.buttons.shareRoom);
 elementDisplay(screenShareStart, broadcastSettings.buttons.screenShareStart);
 elementDisplay(recordingStart, broadcastSettings.buttons.recordingStart);
-elementDisplay(openMessagesForm, broadcastSettings.buttons.openMessagesForm);
-elementDisplay(disconnectAll, broadcastSettings.buttons.disconnectAll);
+elementDisplay(messagesOpenForm, broadcastSettings.buttons.messagesOpenForm);
+elementDisplay(viewersOpenForm, broadcastSettings.buttons.viewersOpenForm);
 elementDisplay(fullScreenOn, broadcastSettings.buttons.fullScreenOn);
 
 // Handle session timer
@@ -207,20 +230,21 @@ navigator.share
     : shareRoom.addEventListener('click', shareRoomQR);
 
 copyRoom.addEventListener('click', copyRoomURL);
-disconnectAll.addEventListener('click', disconnectALLViewers);
 fullScreenOn.addEventListener('click', toggleFullScreenDoc);
 fullScreenOff.addEventListener('click', toggleFullScreenDoc);
 goHome.addEventListener('click', goToHomePage);
 
 video.addEventListener('click', toggleFullScreen);
-video.addEventListener('wheel', (e) => {
+video.addEventListener('wheel', handleZoom);
+
+function handleZoom(e) {
     e.preventDefault();
     if (!video.srcObject) return;
     const delta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
     delta > 0 ? (zoom *= 1.2) : (zoom /= 1.2);
     if (zoom < 1) zoom = 1;
     video.style.scale = zoom;
-});
+}
 
 if (!isMobileDevice && (navigator.getDisplayMedia || navigator.mediaDevices.getDisplayMedia)) {
     screenShareStart.addEventListener('click', toggleScreen);
@@ -229,8 +253,8 @@ if (!isMobileDevice && (navigator.getDisplayMedia || navigator.mediaDevices.getD
     elementDisplay(screenShareStart, false);
 }
 
-openMessagesForm.addEventListener('click', toggleMessagesForm);
-closeMessagesForm.addEventListener('click', toggleMessagesForm);
+messagesOpenForm.addEventListener('click', toggleMessagesForm);
+messagesCloseForm.addEventListener('click', toggleMessagesForm);
 messagesSave.addEventListener('click', saveMessages);
 messagesClean.addEventListener('click', cleanMessages);
 
@@ -299,10 +323,111 @@ function appendMessage(username, message) {
     console.log('Message', messageData);
 }
 
+// handle viewers list
+
+viewersOpenForm.addEventListener('click', toggleViewersForm);
+viewersCloseForm.addEventListener('click', toggleViewersForm);
+viewersSave.addEventListener('click', saveViewers);
+viewerSearch.addEventListener('keyup', searchViewer);
+
+viewersDisconnect.addEventListener('click', disconnectALLViewers);
+
+function toggleViewersForm() {
+    if (!viewersFormOpen && !thereIsPeerConnections()) {
+        return popupMessage('toast', 'Viewers', "There isn't connected viewers", 'top');
+    }
+    viewersFormOpen = !viewersFormOpen;
+    elementDisplay(viewersForm, viewersFormOpen);
+    elementDisplay(broadcastForm, !viewersFormOpen, 'grid');
+}
+
+function saveViewers() {
+    if (thereIsPeerConnections()) {
+        return saveAllViewers(connectedViewers);
+    }
+    popupMessage('toast', 'Viewers', "There isn't connected viewers", 'top');
+}
+
+function searchViewer() {
+    let filter, tr, td, i, username;
+    filter = viewerSearch.value.toUpperCase();
+    tr = viewersTable.getElementsByTagName('tr');
+    for (i = 0; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName('td')[0];
+        if (td) {
+            username = td.textContent || td.innerText;
+            if (username.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = '';
+            } else {
+                tr[i].style.display = 'none';
+            }
+        }
+    }
+}
+
+function addViewer(id, username) {
+    const tr = document.createElement('tr');
+    const tdUsername = document.createElement('td');
+    const tdDisconnect = document.createElement('td');
+    const button = document.createElement('button');
+    const p = document.createElement('p');
+    tr.id = id;
+    p.innerText = username;
+    button.id = `${id}___${username}`;
+    button.innerText = 'Disconnect';
+    tdUsername.appendChild(p);
+    tdDisconnect.appendChild(button);
+    tr.appendChild(tdUsername);
+    tr.appendChild(tdDisconnect);
+    viewersTable.appendChild(tr);
+    connectedViewers[id] = username;
+    console.log('ConnectedViewers', {
+        connected: username,
+        connectedViewers: connectedViewers,
+    });
+    handleDisconnectPeer(button.id);
+}
+
+function handleDisconnectPeer(uuid) {
+    const buttonDisconnect = document.getElementById(uuid);
+    buttonDisconnect.addEventListener('click', () => {
+        const words = uuid.split('___');
+        const peerId = words[0];
+        const peerName = words[1];
+        Swal.fire({
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showDenyButton: true,
+            position: 'top',
+            title: 'Disconnect',
+            text: `Do you want to disconnect ${peerName} ?`,
+            confirmButtonText: `Yes`,
+            denyButtonText: `No`,
+            showClass: { popup: 'animate__animated animate__fadeInDown' },
+            hideClass: { popup: 'animate__animated animate__fadeOutUp' },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                sendToViewersDataChannel('disconnect', {}, peerId);
+            }
+        });
+    });
+}
+
+function delViewer(id, username) {
+    delete connectedViewers[id];
+    console.log('ConnectedViewers', {
+        disconnected: username,
+        connectedViewers: connectedViewers,
+    });
+    const tr = document.getElementById(id);
+    viewersTable.removeChild(tr);
+    if (!thereIsPeerConnections() && viewersFormOpen) toggleViewersForm();
+}
+
 function disconnectALLViewers(confirmation = true) {
     const thereIsPeers = thereIsPeerConnections();
     if (!confirmation && thereIsPeers) {
-        return socket.emit('disconnectALL', broadcastID);
+        return sendToViewersDataChannel('disconnect');
     }
     if (!thereIsPeers) {
         popupMessage('toast', 'Viewers', "There isn't viewers", 'top');
@@ -320,7 +445,7 @@ function disconnectALLViewers(confirmation = true) {
             hideClass: { popup: 'animate__animated animate__fadeOutUp' },
         }).then((result) => {
             if (result.isConfirmed) {
-                socket.emit('disconnectALL', broadcastID);
+                sendToViewersDataChannel('disconnect');
             }
         });
     }
@@ -567,7 +692,6 @@ function gotDevices(deviceInfos) {
 }
 
 window.onunload = window.onbeforeunload = () => {
-    disconnectALLViewers(false);
     stopSessionTime();
     socket.close();
     saveRecording();

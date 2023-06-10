@@ -28,8 +28,8 @@
                 <button id="goHome"><i class="fas fa-times"></i></button>
                 <button id="fullScreenOn"><i class="fas fa-expand-alt"></i></button>
                 <button id="fullScreenOff"><i class="fas fa-compress-alt"></i></button>
-                <button id="disconnectAll"><i class="fas fa-plug"></i></button>
-                <button id="openMessagesForm"><i class="fas fa-message"></i></button>
+                <button id="viewersOpenForm"><i class="fas fa-eye"></i></button>
+                <button id="messagesOpenForm"><i class="fas fa-message"></i></button>
                 <button id="recordingStart"><i class="fas fa-record-vinyl"></i></button>
                 <button id="recordingStop"><i class="fas fa-stop"></i></button>
                 <button id="screenShareStart"><i class="fas fa-display"></i></button>
@@ -65,7 +65,7 @@
         <div id="messagesForm" class="messages center fadeIn">
             <div id="messagesFormHeader" class="messages-header">
                 <div class="messages-buttons">
-                    <button id="closeMessagesForm"><i class="fas fa-times"></i></button>
+                    <button id="messagesCloseForm"><i class="fas fa-times"></i></button>
                     <button id="messagesSave"><i class="fas fa-save"></i></button>
                     <button id="messagesClean"><i class="fas fa-trash"></i></button>
                 </div>
@@ -74,6 +74,24 @@
                 </div>
             </div>
             <div id="messagesArea" class="messages-incoming"></div>
+        </div>
+        <div id="viewersForm" class="viewers center fadeIn">
+            <div id="viewersHeader" class="viewers-header">
+                <div class="viewers-buttons">
+                    <button id="viewersCloseForm"><i class="fas fa-times"></i></button>
+                    <button id="viewersSave"><i class="fas fa-save"></i></button>
+                    <button id="viewersDisconnect"><i class="fas fa-plug"></i></button>
+                </div>
+                <input id="viewerSearch" type="text" placeholder=" 🔍 Search viewer..." name="search" />
+            </div>
+            <div class="viewers-area">
+                <table id="viewersTable">
+                    <tr>
+                        <th>Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </table>
+            </div>
         </div>
         <script src="/socket.io/socket.io.js"></script>
         <script src="../js/swal.js"></script>

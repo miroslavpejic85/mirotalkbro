@@ -89,12 +89,25 @@ function handleDataChannel() {
             let data = {};
             try {
                 data = JSON.parse(message.data);
+                handleDataChannelMessage(data);
                 console.log('Incoming dc data', data);
             } catch (err) {
                 console.log('Datachannel error', err);
             }
         };
     };
+}
+
+function handleDataChannelMessage(data) {
+    switch (data.method) {
+        case 'disconnect':
+            openURL('/');
+            break;
+        //...
+        default:
+            console.error('Data channel message not handled', data);
+            break;
+    }
 }
 
 socket.on('candidate', (id, candidate) => {
@@ -113,10 +126,6 @@ socket.on('broadcasterDisconnect', () => {
     popupMessage('warning', 'Broadcaster', 'Broadcaster seems away or disconnected.');
 });
 
-socket.on('disconnectMe', () => {
-    openURL('/');
-});
-
 function handleError(error) {
     console.error('Error', error);
     //popupMessage('warning', 'Ops', error);
@@ -131,6 +140,8 @@ elementDisplay(disableAudio, false);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn);
+
+messageDisplay(viewerSettings.buttons.message);
 
 // Handle session Timer
 
@@ -225,7 +236,7 @@ function gotSnapshot() {
     saveDataToFile(dataURL, getDataTimeString() + '-snapshot.png');
 }
 
-function handleZoom() {
+function handleZoom(e) {
     e.preventDefault();
     if (!video.srcObject) return;
     const delta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
@@ -256,6 +267,11 @@ function setAudioOff() {
     video.muted = true;
     elementDisplay(disableAudio, false);
     elementDisplay(enableAudio, true);
+}
+
+function messageDisplay(display) {
+    elementDisplay(messageInput, display);
+    elementDisplay(messageSend, display);
 }
 
 function sendMessage() {

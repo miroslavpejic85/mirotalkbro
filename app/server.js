@@ -174,9 +174,6 @@ io.sockets.on('connection', (socket) => {
     socket.on('candidate', (id, message) => {
         socket.to(id).emit('candidate', socket.id, message);
     });
-    socket.on('disconnectALL', (broadcastID) => {
-        sendToBroadcasterViewers(socket, broadcastID, 'disconnectMe');
-    });
     socket.on('disconnect', (reason) => {
         handleDisconnect(socket, reason);
     });

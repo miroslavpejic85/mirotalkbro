@@ -12,6 +12,10 @@ function elementDisable(element, disable) {
     element.disabled = disable;
 }
 
+function elementSetColor(elem, color) {
+    elem.style.color = color;
+}
+
 function getTime() {
     const date = new Date();
     return date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
@@ -78,6 +82,18 @@ function saveDataToFile(dataURL, fileName) {
 
 function saveAllMessages(messages) {
     const fileName = getDataTimeString() + '-messages.txt';
+    let a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(messages, null, 1));
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    playSound('download');
+}
+
+function saveAllViewers(messages) {
+    const fileName = getDataTimeString() + '-viewers.txt';
     let a = document.createElement('a');
     a.style.display = 'none';
     a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(messages, null, 1));

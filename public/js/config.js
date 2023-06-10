@@ -6,8 +6,8 @@ const broadcastSettings = {
         shareRoom: true,
         screenShareStart: true,
         recordingStart: true,
-        openMessagesForm: true,
-        disconnectAll: true,
+        messagesOpenForm: true,
+        viewersOpenForm: true,
         fullScreenOn: true,
     },
 };
@@ -17,5 +17,6 @@ const viewerSettings = {
         snapshot: true,
         recordingStart: true,
         fullScreenOn: true,
+        message: true,
     },
 };

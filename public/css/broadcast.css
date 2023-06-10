@@ -115,3 +115,50 @@
 .messages-incoming p {
     color: var(--text-color);
 }
+
+.viewers {
+    padding: 1.5rem;
+    width: var(--message-width);
+    height: var(--message-height);
+    grid-template-columns: auto;
+    color: var(--text-color);
+    background: var(--secondary-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+}
+
+.viewers-header {
+    color: var(--text-color);
+    display: grid;
+    grid-gap: 1rem;
+}
+
+.viewers-header input {
+    padding: 1rem;
+    color: var(--text-color);
+    border: none;
+    background-color: var(--primary-color);
+    border-radius: var(--border-radius);
+}
+
+.viewers-buttons button i {
+    padding: 0.2rem;
+}
+
+.viewers-buttons button {
+    padding: 0.5rem;
+    float: right;
+    margin-left: 5px;
+}
+
+.viewers-area {
+    padding: 1rem;
+    margin-top: 20px;
+    min-height: 75%;
+    max-height: 75%;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: auto;
+}
