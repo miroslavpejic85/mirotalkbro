@@ -1,8 +1,12 @@
 'use strict';
 
+console.log('Home', window.location);
+
 const broadcastID = new URLSearchParams(window.location.search).get('id');
 
 const body = document.querySelector('body');
+const support = document.getElementById('support');
+
 const userName = document.getElementById('userName');
 const broadcasterIdLabel = document.getElementById('broadcasterIdLabel');
 const broadcasterId = document.getElementById('broadcasterId');
@@ -11,17 +15,10 @@ const broadcasterLabel = document.getElementById('broadcasterLabel');
 const broadcaster = document.getElementById('broadcaster');
 const viewer = document.getElementById('viewer');
 const mode = document.getElementById('mode');
-const support = document.getElementById('support');
 
-broadcasterIdRandom.addEventListener('click', setRandomId);
-broadcaster.addEventListener('click', startBroadcaster);
-viewer.addEventListener('click', startViewer);
-support.addEventListener('click', getSupport);
-
-userName.value = window.localStorage.name || `User-${getRandomInt(99999)}`;
-broadcasterId.value = broadcastID || window.localStorage.room || getUUID4();
-
-console.log('Home', window.location);
+// =====================================================
+// handle element display
+// =====================================================
 
 if (broadcastID) {
     elementDisplay(broadcasterIdLabel, false);
@@ -30,6 +27,58 @@ if (broadcastID) {
     elementDisplay(broadcasterLabel, false);
     elementDisplay(broadcaster, false);
 }
+
+// =====================================================
+// Support the project - Thank you!
+// =====================================================
+
+support.addEventListener('click', getSupport);
+
+function getSupport() {
+    openURL('https://github.com/sponsors/miroslavpejic85', true);
+}
+
+// =====================================================
+// Handle username
+// =====================================================
+
+userName.value = window.localStorage.name || `User-${getRandomInt(99999)}`;
+
+// =====================================================
+// Handle broadcaster aka room id
+// =====================================================
+
+broadcasterId.value = broadcastID || window.localStorage.room || getUUID4();
+
+broadcasterIdRandom.addEventListener('click', setRandomId);
+
+function setRandomId() {
+    broadcasterId.value = getUUID4();
+}
+
+// =====================================================
+// Join as Broadcast
+// =====================================================
+
+broadcaster.addEventListener('click', startBroadcaster);
+
+function startBroadcaster() {
+    if (isFieldsOk()) window.location.href = `/broadcast?id=${broadcasterId.value}&name=${userName.value}`;
+}
+
+// =====================================================
+// Join as Viewer
+// =====================================================
+
+viewer.addEventListener('click', startViewer);
+
+function startViewer() {
+    if (isFieldsOk()) window.location.href = `/viewer?id=${broadcasterId.value}&name=${userName.value}`;
+}
+
+// =====================================================
+// Handle theme
+// =====================================================
 
 const getMode = window.localStorage.mode || 'dark';
 mode.checked = false;
@@ -45,17 +94,9 @@ function setTheme() {
     playSound('switch');
 }
 
-function setRandomId() {
-    broadcasterId.value = getUUID4();
-}
-
-function startBroadcaster() {
-    if (isFieldsOk()) window.location.href = `/broadcast?id=${broadcasterId.value}&name=${userName.value}`;
-}
-
-function startViewer() {
-    if (isFieldsOk()) window.location.href = `/viewer?id=${broadcasterId.value}&name=${userName.value}`;
-}
+// =====================================================
+// Handle fields
+// =====================================================
 
 function isFieldsOk() {
     if (userName.value == '') {
@@ -69,8 +110,4 @@ function isFieldsOk() {
     window.localStorage.name = userName.value;
     window.localStorage.room = broadcasterId.value;
     return true;
-}
-
-function getSupport() {
-    openURL('https://github.com/sponsors/miroslavpejic85', true);
 }

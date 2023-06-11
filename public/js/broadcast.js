@@ -137,6 +137,10 @@ socket.on('disconnectPeer', (id, username) => {
     connectedPeers.innerText = Object.keys(peerConnections).length;
 });
 
+function thereIsPeerConnections() {
+    return Object.keys(peerConnections).length === 0 ? false : true;
+}
+
 // =====================================================
 // Handle RTC Data Channels
 // =====================================================
@@ -231,7 +235,7 @@ function stopSessionTime() {
 }
 
 // =====================================================
-// Handle Devices adaptation
+// Handle Devices
 // =====================================================
 
 if (!isMobileDevice) {
@@ -742,10 +746,6 @@ function gotDevices(deviceInfos) {
             }
         }
     }
-}
-
-function thereIsPeerConnections() {
-    return Object.keys(peerConnections).length === 0 ? false : true;
 }
 
 // =====================================================
