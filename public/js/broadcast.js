@@ -11,47 +11,48 @@ console.log('Broadcaster', {
 });
 
 const body = document.querySelector('body');
-const video = document.querySelector('video');
+
 const broadcastForm = document.getElementById('broadcastForm');
 const broadcastFormHeader = document.getElementById('broadcastFormHeader');
+const myName = document.getElementById('myName');
+const connectedPeers = document.getElementById('connectedPeers');
+const sessionTime = document.getElementById('sessionTime');
+const video = document.querySelector('video');
+
+const copyRoom = document.getElementById('copyRoom');
+const shareRoom = document.getElementById('shareRoom');
+const screenShareStart = document.getElementById('screenShareStart');
+const screenShareStop = document.getElementById('screenShareStop');
 const recordingStart = document.getElementById('recordingStart');
 const recordingStop = document.getElementById('recordingStop');
 const recordingLabel = document.getElementById('recordingLabel');
 const recordingTime = document.getElementById('recordingTime');
-const goHome = document.getElementById('goHome');
-const fullScreenOn = document.getElementById('fullScreenOn');
-const fullScreenOff = document.getElementById('fullScreenOff');
-const shareRoom = document.getElementById('shareRoom');
-const copyRoom = document.getElementById('copyRoom');
-const myName = document.getElementById('myName');
-const sessionTime = document.getElementById('sessionTime');
-const audioSelect = document.getElementById('audioSelect');
-const videoSelect = document.getElementById('videoSelect');
-const videoQualitySelect = document.getElementById('videoQualitySelect');
-const videoFpsSelect = document.getElementById('videoFpsSelect');
-const screenShareStart = document.getElementById('screenShareStart');
-const screenShareStop = document.getElementById('screenShareStop');
-const connectedPeers = document.getElementById('connectedPeers');
 
+const messagesOpenForm = document.getElementById('messagesOpenForm');
+const messagesCloseForm = document.getElementById('messagesCloseForm');
 const messagesForm = document.getElementById('messagesForm');
 const messagesFormHeader = document.getElementById('messagesFormHeader');
 const messagesSave = document.getElementById('messagesSave');
 const messagesClean = document.getElementById('messagesClean');
 const messagesArea = document.getElementById('messagesArea');
-const messagesOpenForm = document.getElementById('messagesOpenForm');
-const messagesCloseForm = document.getElementById('messagesCloseForm');
 
+const viewersOpenForm = document.getElementById('viewersOpenForm');
+const viewersCloseForm = document.getElementById('viewersCloseForm');
 const viewersForm = document.getElementById('viewersForm');
 const viewersFormHeader = document.getElementById('viewersFormHeader');
 const viewersTable = document.getElementById('viewersTable');
 const viewersSave = document.getElementById('viewersSave');
 const viewerSearch = document.getElementById('viewerSearch');
 const viewersDisconnect = document.getElementById('viewersDisconnect');
-const viewersOpenForm = document.getElementById('viewersOpenForm');
-const viewersCloseForm = document.getElementById('viewersCloseForm');
 
-const getMode = window.localStorage.mode || 'dark';
-if (getMode === 'dark') body.classList.toggle('dark');
+const fullScreenOn = document.getElementById('fullScreenOn');
+const fullScreenOff = document.getElementById('fullScreenOff');
+const goHome = document.getElementById('goHome');
+
+const videoSelect = document.getElementById('videoSelect');
+const videoQualitySelect = document.getElementById('videoQualitySelect');
+const videoFpsSelect = document.getElementById('videoFpsSelect');
+const audioSelect = document.getElementById('audioSelect');
 
 const userAgent = navigator.userAgent.toLowerCase();
 const isMobileDevice = isMobile();
@@ -73,7 +74,9 @@ let allMessages = [];
 
 myName.innerText = username;
 
+// =====================================================
 // Handle RTC Peer Connection
+// =====================================================
 
 const connectedViewers = {};
 const peerConnections = {};
@@ -122,6 +125,22 @@ socket.on('viewer', (id, iceServers, username) => {
         .catch((e) => console.error(e));
 });
 
+socket.on('candidate', (id, candidate) => {
+    peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate)).catch((e) => console.error(e));
+});
+
+socket.on('disconnectPeer', (id, username) => {
+    peerConnections[id].close();
+    delete peerConnections[id];
+    delete dataChannels[id];
+    delViewer(id, username);
+    connectedPeers.innerText = Object.keys(peerConnections).length;
+});
+
+// =====================================================
+// Handle RTC Data Channels
+// =====================================================
+
 function handleDataChannels(id) {
     dataChannels[id] = peerConnections[id].createDataChannel('mt_bro_dc');
     dataChannels[id].binaryType = 'arraybuffer'; // blob
@@ -168,19 +187,16 @@ function sendToViewersDataChannel(method, action = {}, peerId = '*') {
     }
 }
 
-socket.on('candidate', (id, candidate) => {
-    peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate)).catch((e) => console.error(e));
-});
+// =====================================================
+// Handle theme
+// =====================================================
 
-socket.on('disconnectPeer', (id, username) => {
-    peerConnections[id].close();
-    delete peerConnections[id];
-    delete dataChannels[id];
-    delViewer(id, username);
-    connectedPeers.innerText = Object.keys(peerConnections).length;
-});
+const getMode = window.localStorage.mode || 'dark';
+if (getMode === 'dark') body.classList.toggle('dark');
 
+// =====================================================
 // Handle element display
+// =====================================================
 
 elementDisplay(fullScreenOff, false);
 elementDisplay(messagesForm, false);
@@ -196,7 +212,9 @@ elementDisplay(messagesOpenForm, broadcastSettings.buttons.messagesOpenForm);
 elementDisplay(viewersOpenForm, broadcastSettings.buttons.viewersOpenForm);
 elementDisplay(fullScreenOn, broadcastSettings.buttons.fullScreenOn);
 
+// =====================================================
 // Handle session timer
+// =====================================================
 
 startSessionTime();
 
@@ -212,30 +230,29 @@ function stopSessionTime() {
     clearInterval(sessionTimer);
 }
 
-// Handle events ...
+// =====================================================
+// Handle Devices adaptation
+// =====================================================
 
 if (!isMobileDevice) {
     //makeDraggable(broadcastForm, broadcastFormHeader);
     //makeDraggable(messagesForm, messagesFormHeader);
+    //makeDraggable(viewersForm, viewersFormHeader);
 } else {
-    document.documentElement.style.setProperty('--message-width', '85vw');
-    document.documentElement.style.setProperty('--message-height', '90vh');
+    document.documentElement.style.setProperty('--form-width', '85vw');
+    document.documentElement.style.setProperty('--form-height', '90vh');
 }
 
-recordingStart.addEventListener('click', toggleRecording);
-recordingStop.addEventListener('click', toggleRecording);
-
-navigator.share
-    ? shareRoom.addEventListener('click', shareRoomNavigator)
-    : shareRoom.addEventListener('click', shareRoomQR);
-
-copyRoom.addEventListener('click', copyRoomURL);
-fullScreenOn.addEventListener('click', toggleFullScreenDoc);
-fullScreenOff.addEventListener('click', toggleFullScreenDoc);
-goHome.addEventListener('click', goToHomePage);
+// =====================================================
+// Handle video
+// =====================================================
 
 video.addEventListener('click', toggleFullScreen);
 video.addEventListener('wheel', handleZoom);
+
+function toggleFullScreen() {
+    isFullScreen() ? goOutFullscreen() : goInFullscreen(video);
+}
 
 function handleZoom(e) {
     e.preventDefault();
@@ -246,12 +263,93 @@ function handleZoom(e) {
     video.style.scale = zoom;
 }
 
+// =====================================================
+// Handle copy room url
+// =====================================================
+
+copyRoom.addEventListener('click', copyRoomURL);
+
+// =====================================================
+// Handle share room
+// =====================================================
+
+navigator.share
+    ? shareRoom.addEventListener('click', shareRoomNavigator)
+    : shareRoom.addEventListener('click', shareRoomQR);
+
+// =====================================================
+// Handle share screen
+// =====================================================
+
 if (!isMobileDevice && (navigator.getDisplayMedia || navigator.mediaDevices.getDisplayMedia)) {
     screenShareStart.addEventListener('click', toggleScreen);
     screenShareStop.addEventListener('click', toggleScreen);
 } else {
     elementDisplay(screenShareStart, false);
 }
+
+function toggleScreen() {
+    if (recording && recording.isStreamRecording()) {
+        return popupMessage('toast', 'Recording', 'Recording cam in execution', 'top');
+    }
+    screenShareEnabled = !screenShareEnabled;
+    elementDisplay(screenShareStop, screenShareEnabled);
+    elementDisplay(screenShareStart, !screenShareEnabled);
+    getStream();
+}
+
+// =====================================================
+// Handle recording
+// =====================================================
+
+recordingStart.addEventListener('click', toggleRecording);
+recordingStop.addEventListener('click', toggleRecording);
+
+function toggleRecording() {
+    recording && recording.isStreamRecording() ? stopRecording() : startRecording();
+}
+
+function startRecording() {
+    if (!video.srcObject) {
+        return popupMessage('toast', 'Video', "There isn't a video stream to recording", 'top');
+    } else {
+        recording = new Recording(
+            video.srcObject,
+            recordingLabel,
+            recordingTime,
+            recordingStop,
+            recordingStart,
+            videoSelect,
+            audioSelect,
+        );
+        recording.start();
+    }
+}
+
+function stopRecording() {
+    recording.stop();
+}
+
+function saveRecording() {
+    if (recording && recording.isStreamRecording()) stopRecording();
+}
+
+function startRecordingTimer() {
+    let recElapsedTime = 0;
+    recordingTimer = setInterval(function printTime() {
+        if (recording.isStreamRecording()) {
+            recElapsedTime++;
+            recordingTime.innerText = secondsToHms(recElapsedTime);
+        }
+    }, 1000);
+}
+function stopRecordingTimer() {
+    clearInterval(recordingTimer);
+}
+
+// =====================================================
+// Handle messages form
+// =====================================================
 
 messagesOpenForm.addEventListener('click', toggleMessagesForm);
 messagesCloseForm.addEventListener('click', toggleMessagesForm);
@@ -266,8 +364,6 @@ function toggleMessagesForm() {
     elementDisplay(messagesForm, messagesFormOpen);
     elementDisplay(broadcastForm, !messagesFormOpen, 'grid');
 }
-
-// Handle messages
 
 function saveMessages() {
     if (allMessages.length != 0) {
@@ -323,7 +419,9 @@ function appendMessage(username, message) {
     console.log('Message', messageData);
 }
 
-// handle viewers list
+// =====================================================
+// Handle viewers form
+// =====================================================
 
 viewersOpenForm.addEventListener('click', toggleViewersForm);
 viewersCloseForm.addEventListener('click', toggleViewersForm);
@@ -451,15 +549,12 @@ function disconnectALLViewers(confirmation = true) {
     }
 }
 
-function thereIsPeerConnections() {
-    return Object.keys(peerConnections).length === 0 ? false : true;
-}
+// =====================================================
+// Handle full screen mode
+// =====================================================
 
-function goToHomePage() {
-    stopSessionTime();
-    disconnectALLViewers(false);
-    openURL('/');
-}
+fullScreenOn.addEventListener('click', toggleFullScreenDoc);
+fullScreenOff.addEventListener('click', toggleFullScreenDoc);
 
 function toggleFullScreenDoc() {
     const isDocFullScreen = isFullScreen();
@@ -468,65 +563,21 @@ function toggleFullScreenDoc() {
     elementDisplay(fullScreenOff, !isDocFullScreen);
 }
 
-function toggleFullScreen() {
-    isFullScreen() ? goOutFullscreen() : goInFullscreen(video);
+// =====================================================
+// Handle leave room
+// =====================================================
+
+goHome.addEventListener('click', goToHomePage);
+
+function goToHomePage() {
+    stopSessionTime();
+    disconnectALLViewers(false);
+    openURL('/');
 }
 
-function toggleScreen() {
-    if (recording && recording.isStreamRecording()) {
-        return popupMessage('toast', 'Recording', 'Recording cam in execution', 'top');
-    }
-    screenShareEnabled = !screenShareEnabled;
-    elementDisplay(screenShareStop, screenShareEnabled);
-    elementDisplay(screenShareStart, !screenShareEnabled);
-    getStream();
-}
-
-// Handle recording ...
-
-function toggleRecording() {
-    recording && recording.isStreamRecording() ? stopRecording() : startRecording();
-}
-
-function startRecording() {
-    if (!video.srcObject) {
-        return popupMessage('toast', 'Video', "There isn't a video stream to recording", 'top');
-    } else {
-        recording = new Recording(
-            video.srcObject,
-            recordingLabel,
-            recordingTime,
-            recordingStop,
-            recordingStart,
-            videoSelect,
-            audioSelect,
-        );
-        recording.start();
-    }
-}
-
-function stopRecording() {
-    recording.stop();
-}
-
-function saveRecording() {
-    if (recording && recording.isStreamRecording()) stopRecording();
-}
-
-function startRecordingTimer() {
-    let recElapsedTime = 0;
-    recordingTimer = setInterval(function printTime() {
-        if (recording.isStreamRecording()) {
-            recElapsedTime++;
-            recordingTime.innerText = secondsToHms(recElapsedTime);
-        }
-    }, 1000);
-}
-function stopRecordingTimer() {
-    clearInterval(recordingTimer);
-}
-
-// Handle media stream ...
+// =====================================================
+// Handle media stream
+// =====================================================
 
 videoQualitySelect.onchange = applyVideoConstraints;
 videoFpsSelect.onchange = applyVideoConstraints;
@@ -610,7 +661,9 @@ function getVideoConstraints() {
     return videoConstraints;
 }
 
-// Handle camera, microphone, screen ...
+// =====================================================
+// Handle camera, microphone, screen
+// =====================================================
 
 audioSelect.onchange = getStream;
 videoSelect.onchange = getStream;
@@ -690,6 +743,14 @@ function gotDevices(deviceInfos) {
         }
     }
 }
+
+function thereIsPeerConnections() {
+    return Object.keys(peerConnections).length === 0 ? false : true;
+}
+
+// =====================================================
+// Handle window exit
+// =====================================================
 
 window.onunload = window.onbeforeunload = () => {
     stopSessionTime();

@@ -69,8 +69,8 @@
 
 .messages {
     padding: 1.5rem;
-    width: var(--message-width);
-    height: var(--message-height);
+    width: var(--form-width);
+    height: var(--form-height);
     display: grid;
     grid-gap: 1rem;
     grid-template-columns: auto;
@@ -118,8 +118,8 @@
 
 .viewers {
     padding: 1.5rem;
-    width: var(--message-width);
-    height: var(--message-height);
+    width: var(--form-width);
+    height: var(--form-height);
     grid-template-columns: auto;
     color: var(--text-color);
     background: var(--secondary-color);

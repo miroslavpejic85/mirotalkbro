@@ -9,26 +9,28 @@ console.log('Viewer', {
 });
 
 const body = document.querySelector('body');
-const video = document.querySelector('video');
+
 const viewerForm = document.getElementById('viewerForm');
 const viewerFormHeader = document.getElementById('viewerFormHeader');
+const myName = document.getElementById('myName');
+const sessionTime = document.getElementById('sessionTime');
+const video = document.querySelector('video');
+
+const enableAudio = document.getElementById('enableAudio');
+const disableAudio = document.getElementById('disableAudio');
 const recordingStart = document.getElementById('recordingStart');
 const recordingStop = document.getElementById('recordingStop');
 const recordingLabel = document.getElementById('recordingLabel');
 const recordingTime = document.getElementById('recordingTime');
 const snapshot = document.getElementById('snapshot');
-const goHome = document.getElementById('goHome');
 const fullScreenOn = document.getElementById('fullScreenOn');
 const fullScreenOff = document.getElementById('fullScreenOff');
-const myName = document.getElementById('myName');
-const sessionTime = document.getElementById('sessionTime');
-const enableAudio = document.getElementById('enableAudio');
-const disableAudio = document.getElementById('disableAudio');
+const goHome = document.getElementById('goHome');
 const messageInput = document.getElementById('messageInput');
 const messageSend = document.getElementById('messageSend');
 
-const getMode = window.localStorage.mode || 'dark';
-if (getMode === 'dark') body.classList.toggle('dark');
+const userAgent = navigator.userAgent.toLowerCase();
+const isMobileDevice = isMobile();
 
 let zoom = 1;
 let recording = null;
@@ -37,7 +39,9 @@ let sessionTimer = null;
 
 myName.innerText = username;
 
+// =====================================================
 // Handle RTC Peer Connection
+// =====================================================
 
 let peerConnection;
 let dataChannel;
@@ -71,6 +75,31 @@ socket.on('offer', (id, description, iceServers) => {
         if (event.candidate) socket.emit('candidate', id, event.candidate);
     };
 });
+
+socket.on('candidate', (id, candidate) => {
+    peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
+});
+
+socket.on('connect', () => {
+    socket.emit('viewer', broadcastID, username);
+});
+
+socket.on('broadcaster', () => {
+    socket.emit('viewer', broadcastID, username);
+});
+
+socket.on('broadcasterDisconnect', () => {
+    popupMessage('warning', 'Broadcaster', 'Broadcaster seems away or disconnected.');
+});
+
+function handleError(error) {
+    console.error('Error', error);
+    //popupMessage('warning', 'Ops', error);
+}
+
+// =====================================================
+// Handle RTC Data Channel
+// =====================================================
 
 function handleDataChannel() {
     dataChannel = peerConnection.createDataChannel('mt_bro_dc');
@@ -110,28 +139,16 @@ function handleDataChannelMessage(data) {
     }
 }
 
-socket.on('candidate', (id, candidate) => {
-    peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
-});
+// =====================================================
+// Handle theme
+// =====================================================
 
-socket.on('connect', () => {
-    socket.emit('viewer', broadcastID, username);
-});
+const getMode = window.localStorage.mode || 'dark';
+if (getMode === 'dark') body.classList.toggle('dark');
 
-socket.on('broadcaster', () => {
-    socket.emit('viewer', broadcastID, username);
-});
-
-socket.on('broadcasterDisconnect', () => {
-    popupMessage('warning', 'Broadcaster', 'Broadcaster seems away or disconnected.');
-});
-
-function handleError(error) {
-    console.error('Error', error);
-    //popupMessage('warning', 'Ops', error);
-}
-
+// =====================================================
 // Handle element display
+// =====================================================
 
 elementDisplay(fullScreenOff, false);
 elementDisplay(recordingLabel, false);
@@ -143,7 +160,14 @@ elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn);
 
 messageDisplay(viewerSettings.buttons.message);
 
-// Handle session Timer
+function messageDisplay(display) {
+    elementDisplay(messageInput, display);
+    elementDisplay(messageSend, display);
+}
+
+// =====================================================
+// Handle session timer
+// =====================================================
 
 startSessionTime();
 
@@ -161,28 +185,52 @@ function stopSessionTime() {
 
 // if (!isMobileDevice) makeDraggable(viewerForm, viewerFormHeader);
 
-// Handle events ...
+// =====================================================
+// Handle video
+// =====================================================
 
 video.addEventListener('click', toggleFullScreen);
 video.addEventListener('wheel', handleZoom);
-recordingStart.addEventListener('click', toggleRecording);
-recordingStop.addEventListener('click', toggleRecording);
-snapshot.addEventListener('click', gotSnapshot);
-fullScreenOn.addEventListener('click', toggleFullScreenDoc);
-fullScreenOff.addEventListener('click', toggleFullScreenDoc);
-goHome.addEventListener('click', goToHomePage);
+
+function toggleFullScreen() {
+    isFullScreen() ? goOutFullscreen(video) : goInFullscreen(video);
+}
+
+function handleZoom(e) {
+    e.preventDefault();
+    if (!video.srcObject) return;
+    const delta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
+    delta > 0 ? (zoom *= 1.2) : (zoom /= 1.2);
+    if (zoom < 1) zoom = 1;
+    video.style.scale = zoom;
+}
+
+// =====================================================
+// Handle audio
+// =====================================================
+
 enableAudio.addEventListener('click', setAudioOn);
 disableAudio.addEventListener('click', setAudioOff);
-messageSend.addEventListener('click', sendMessage);
 
-messageInput.onkeydown = (e) => {
-    if (e.code === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        messageSend.click();
-    }
-};
+function setAudioOn() {
+    if (!peerConnection) return;
+    video.muted = false;
+    elementDisplay(enableAudio, false);
+    elementDisplay(disableAudio, true);
+}
 
-// Handle recording ...
+function setAudioOff() {
+    video.muted = true;
+    elementDisplay(disableAudio, false);
+    elementDisplay(enableAudio, true);
+}
+
+// =====================================================
+// Handle recording
+// =====================================================
+
+recordingStart.addEventListener('click', toggleRecording);
+recordingStop.addEventListener('click', toggleRecording);
 
 function toggleRecording() {
     recording && recording.isStreamRecording() ? stopRecording() : startRecording();
@@ -217,7 +265,11 @@ function saveRecording() {
     if (recording && recording.isStreamRecording()) stopRecording();
 }
 
+// =====================================================
 // Handle Snapshot
+// =====================================================
+
+snapshot.addEventListener('click', gotSnapshot);
 
 function gotSnapshot() {
     if (!video.srcObject) {
@@ -236,14 +288,12 @@ function gotSnapshot() {
     saveDataToFile(dataURL, getDataTimeString() + '-snapshot.png');
 }
 
-function handleZoom(e) {
-    e.preventDefault();
-    if (!video.srcObject) return;
-    const delta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
-    delta > 0 ? (zoom *= 1.2) : (zoom /= 1.2);
-    if (zoom < 1) zoom = 1;
-    video.style.scale = zoom;
-}
+// =====================================================
+// Handle full screen mode
+// =====================================================
+
+fullScreenOn.addEventListener('click', toggleFullScreenDoc);
+fullScreenOff.addEventListener('click', toggleFullScreenDoc);
 
 function toggleFullScreenDoc() {
     const isDocFullScreen = isFullScreen();
@@ -252,27 +302,29 @@ function toggleFullScreenDoc() {
     elementDisplay(fullScreenOff, !isDocFullScreen);
 }
 
-function toggleFullScreen() {
-    isFullScreen() ? goOutFullscreen(video) : goInFullscreen(video);
+// =====================================================
+// Handle leave room
+// =====================================================
+
+goHome.addEventListener('click', goToHomePage);
+
+function goToHomePage() {
+    stopSessionTime();
+    openURL('/');
 }
 
-function setAudioOn() {
-    if (!peerConnection) return;
-    video.muted = false;
-    elementDisplay(enableAudio, false);
-    elementDisplay(disableAudio, true);
-}
+// =====================================================
+// Handle messages
+// =====================================================
 
-function setAudioOff() {
-    video.muted = true;
-    elementDisplay(disableAudio, false);
-    elementDisplay(enableAudio, true);
-}
+messageSend.addEventListener('click', sendMessage);
 
-function messageDisplay(display) {
-    elementDisplay(messageInput, display);
-    elementDisplay(messageSend, display);
-}
+messageInput.onkeydown = (e) => {
+    if (e.code === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        messageSend.click();
+    }
+};
 
 function sendMessage() {
     if (peerConnection && messageInput.value != '') {
@@ -288,10 +340,9 @@ function sendMessage() {
     }
 }
 
-function goToHomePage() {
-    stopSessionTime();
-    openURL('/');
-}
+// =====================================================
+// Handle window exit
+// =====================================================
 
 window.onunload = window.onbeforeunload = () => {
     socket.close();
