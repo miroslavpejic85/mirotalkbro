@@ -468,6 +468,13 @@ function searchViewer() {
 }
 
 function addViewer(id, username) {
+    connectedViewers[id] = username;
+    console.log('ConnectedViewers', {
+        connected: username,
+        connectedViewers: connectedViewers,
+    });
+    const trDel = document.getElementById(id);
+    if (trDel) viewersTable.removeChild(trDel);
     const tr = document.createElement('tr');
     const tdUsername = document.createElement('td');
     const tdDisconnect = document.createElement('td');
@@ -482,11 +489,6 @@ function addViewer(id, username) {
     tr.appendChild(tdUsername);
     tr.appendChild(tdDisconnect);
     viewersTable.appendChild(tr);
-    connectedViewers[id] = username;
-    console.log('ConnectedViewers', {
-        connected: username,
-        connectedViewers: connectedViewers,
-    });
     handleDisconnectPeer(button.id);
 }
 
