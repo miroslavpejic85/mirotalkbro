@@ -336,8 +336,10 @@ function sendMessage() {
                 }),
             );
         }
-        messageInput.value = '';
+    } else {
+        popupMessage('toast', 'Video', 'There is no broadcast connected', 'top');
     }
+    messageInput.value = '';
 }
 
 // =====================================================

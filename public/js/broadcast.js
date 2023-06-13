@@ -32,6 +32,7 @@ const messagesOpenForm = document.getElementById('messagesOpenForm');
 const messagesCloseForm = document.getElementById('messagesCloseForm');
 const messagesForm = document.getElementById('messagesForm');
 const messagesFormHeader = document.getElementById('messagesFormHeader');
+const messagesOpenViewersForm = document.getElementById('messagesOpenViewersForm');
 const messagesSave = document.getElementById('messagesSave');
 const messagesClean = document.getElementById('messagesClean');
 const messagesArea = document.getElementById('messagesArea');
@@ -41,6 +42,7 @@ const viewersCloseForm = document.getElementById('viewersCloseForm');
 const viewersForm = document.getElementById('viewersForm');
 const viewersFormHeader = document.getElementById('viewersFormHeader');
 const viewersTable = document.getElementById('viewersTable');
+const viewerOpenMessageForm = document.getElementById('viewerOpenMessageForm');
 const viewersSave = document.getElementById('viewersSave');
 const viewerSearch = document.getElementById('viewerSearch');
 const viewersDisconnect = document.getElementById('viewersDisconnect');
@@ -358,6 +360,7 @@ function stopRecordingTimer() {
 messagesOpenForm.addEventListener('click', toggleMessagesForm);
 messagesCloseForm.addEventListener('click', toggleMessagesForm);
 messagesSave.addEventListener('click', saveMessages);
+messagesOpenViewersForm.addEventListener('click', toggleViewersForm);
 messagesClean.addEventListener('click', cleanMessages);
 
 function toggleMessagesForm() {
@@ -367,6 +370,10 @@ function toggleMessagesForm() {
     messagesFormOpen = !messagesFormOpen;
     elementDisplay(messagesForm, messagesFormOpen);
     elementDisplay(broadcastForm, !messagesFormOpen, 'grid');
+    if (viewersFormOpen) {
+        viewersFormOpen = !viewersFormOpen;
+        elementDisplay(viewersForm, !messagesFormOpen);
+    }
 }
 
 function saveMessages() {
@@ -431,6 +438,7 @@ viewersOpenForm.addEventListener('click', toggleViewersForm);
 viewersCloseForm.addEventListener('click', toggleViewersForm);
 viewersSave.addEventListener('click', saveViewers);
 viewerSearch.addEventListener('keyup', searchViewer);
+viewerOpenMessageForm.addEventListener('click', toggleMessagesForm);
 
 viewersDisconnect.addEventListener('click', disconnectALLViewers);
 
@@ -441,6 +449,10 @@ function toggleViewersForm() {
     viewersFormOpen = !viewersFormOpen;
     elementDisplay(viewersForm, viewersFormOpen);
     elementDisplay(broadcastForm, !viewersFormOpen, 'grid');
+    if (messagesFormOpen) {
+        messagesFormOpen = !messagesFormOpen;
+        elementDisplay(messagesForm, !viewersFormOpen);
+    }
 }
 
 function saveViewers() {
