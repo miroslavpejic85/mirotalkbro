@@ -43,6 +43,10 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
+function isPIPSupported() {
+    return !isMobile() && document.pictureInPictureEnabled;
+}
+
 function isMobile() {
     return !!/Android|webOS|iPhone|iPad|iPod|BB10|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(userAgent || '');
 }
@@ -157,6 +161,16 @@ function isFullScreen() {
         null;
     if (elementFullScreen === null) return false;
     return true;
+}
+
+function togglePictureInPicture(element) {
+    if (element.pictureInPictureElement) {
+        element.exitPictureInPicture();
+    } else if (document.pictureInPictureEnabled) {
+        element.requestPictureInPicture().catch((error) => {
+            console.error('Failed to enter Picture-in-Picture mode', error);
+        });
+    }
 }
 
 function goInFullscreen(element) {

@@ -49,6 +49,7 @@ const viewersDisconnect = document.getElementById('viewersDisconnect');
 
 const fullScreenOn = document.getElementById('fullScreenOn');
 const fullScreenOff = document.getElementById('fullScreenOff');
+const togglePIP = document.getElementById('togglePIP');
 const goHome = document.getElementById('goHome');
 
 const videoSelect = document.getElementById('videoSelect');
@@ -217,6 +218,7 @@ elementDisplay(recordingStart, broadcastSettings.buttons.recordingStart);
 elementDisplay(messagesOpenForm, broadcastSettings.buttons.messagesOpenForm);
 elementDisplay(viewersOpenForm, broadcastSettings.buttons.viewersOpenForm);
 elementDisplay(fullScreenOn, broadcastSettings.buttons.fullScreenOn);
+elementDisplay(togglePIP, broadcastSettings.buttons.pictureInPicture && isPIPSupported());
 
 // =====================================================
 // Handle session timer
@@ -565,6 +567,16 @@ function disconnectALLViewers(confirmation = true) {
             }
         });
     }
+}
+
+// =====================================================
+// Handle picture in picture
+// =====================================================
+
+togglePIP.addEventListener('click', handleVideoPIP);
+
+function handleVideoPIP() {
+    togglePictureInPicture(video);
 }
 
 // =====================================================

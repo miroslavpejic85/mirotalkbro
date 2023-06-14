@@ -9,6 +9,7 @@ const broadcastSettings = {
         messagesOpenForm: true,
         viewersOpenForm: true,
         fullScreenOn: true,
+        pictureInPicture: true,
     },
 };
 
@@ -18,5 +19,6 @@ const viewerSettings = {
         recordingStart: true,
         fullScreenOn: true,
         message: true,
+        pictureInPicture: true,
     },
 };

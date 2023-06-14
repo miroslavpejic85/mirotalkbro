@@ -25,6 +25,7 @@ const recordingTime = document.getElementById('recordingTime');
 const snapshot = document.getElementById('snapshot');
 const fullScreenOn = document.getElementById('fullScreenOn');
 const fullScreenOff = document.getElementById('fullScreenOff');
+const togglePIP = document.getElementById('togglePIP');
 const goHome = document.getElementById('goHome');
 const messageInput = document.getElementById('messageInput');
 const messageSend = document.getElementById('messageSend');
@@ -157,6 +158,7 @@ elementDisplay(disableAudio, false);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn);
+elementDisplay(togglePIP, viewerSettings.buttons.pictureInPicture && isPIPSupported());
 
 messageDisplay(viewerSettings.buttons.message);
 
@@ -286,6 +288,16 @@ function gotSnapshot() {
     context.drawImage(video, 0, 0, width, height);
     dataURL = canvas.toDataURL('image/png'); // or image/jpeg
     saveDataToFile(dataURL, getDataTimeString() + '-snapshot.png');
+}
+
+// =====================================================
+// Handle picture in picture
+// =====================================================
+
+togglePIP.addEventListener('click', handleVideoPIP);
+
+function handleVideoPIP() {
+    togglePictureInPicture(video);
 }
 
 // =====================================================
