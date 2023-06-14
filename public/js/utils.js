@@ -164,8 +164,8 @@ function isFullScreen() {
 }
 
 function togglePictureInPicture(element) {
-    if (element.pictureInPictureElement) {
-        element.exitPictureInPicture();
+    if (document.pictureInPictureElement) {
+        document.exitPictureInPicture();
     } else if (document.pictureInPictureEnabled) {
         element.requestPictureInPicture().catch((error) => {
             console.error('Failed to enter Picture-in-Picture mode', error);
