@@ -719,6 +719,7 @@ getStream().then(getDevices).then(gotDevices);
 function getStream() {
     videoQualitySelect.selectedIndex = 0;
     videoFpsSelect.selectedIndex = 0;
+    videoBtn.style.color = 'white';
 
     if (window.stream) {
         window.stream.getTracks().forEach((track) => {
