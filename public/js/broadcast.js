@@ -21,6 +21,7 @@ const video = document.querySelector('video');
 
 const copyRoom = document.getElementById('copyRoom');
 const shareRoom = document.getElementById('shareRoom');
+const videoBtn = document.getElementById('videoBtn');
 const screenShareStart = document.getElementById('screenShareStart');
 const screenShareStop = document.getElementById('screenShareStop');
 const recordingStart = document.getElementById('recordingStart');
@@ -284,6 +285,17 @@ copyRoom.addEventListener('click', copyRoomURL);
 navigator.share
     ? shareRoom.addEventListener('click', shareRoomNavigator)
     : shareRoom.addEventListener('click', shareRoomQR);
+
+// =====================================================
+// Handle video stream
+// =====================================================
+
+videoBtn.addEventListener('click', toggleVideo);
+
+function toggleVideo() {
+    videoBtn.style.color = videoBtn.style.color == 'red' ? 'white' : 'red';
+    window.stream.getVideoTracks()[0].enabled = !window.stream.getVideoTracks()[0].enabled;
+}
 
 // =====================================================
 // Handle share screen

@@ -14,6 +14,14 @@
     color: var(--text-color);
 }
 
+.broadcast-header-buttons button {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    padding: 0.5rem;
+    margin-left: 5px;
+}
+
 .broadcast-buttons {
     margin: auto;
 }
@@ -165,6 +173,6 @@
 
 @media (max-width: 900px) {
     .broadcast-buttons button {
-        font-size: 0.5rem;
+        font-size: 0.4rem;
     }
 }
