@@ -65,8 +65,6 @@ const isIPadDevice = isIpad();
 const isDesktopDevice = isDesktop();
 
 let zoom = 1;
-let videoQualitySelectedIndex = 0;
-let videoFpsSelectedIndex = 0;
 let isVideoMirrored = false;
 let screenShareEnabled = false;
 let messagesFormOpen = false;
@@ -635,12 +633,12 @@ function applyVideoConstraints() {
         .applyConstraints(videoConstraints)
         .then(() => {
             logStreamSettingsInfo();
-            videoQualitySelectedIndex = videoQualitySelect.selectedIndex;
-            videoFpsSelectedIndex = videoFpsSelect.selectedIndex;
+            localStorage.videoQualitySelectedIndex = videoQualitySelect.selectedIndex;
+            localStorage.videoFpsSelectedIndex = videoFpsSelect.selectedIndex;
         })
         .catch((error) => {
-            videoQualitySelect.selectedIndex = videoQualitySelectedIndex;
-            videoFpsSelect.selectedIndex = videoFpsSelectedIndex;
+            videoQualitySelect.selectedIndex = localStorage.videoQualitySelectedIndex;
+            videoFpsSelect.selectedIndex = localStorage.videoFpsSelectedIndex;
             console.error('setVideoQuality', error);
             popupMessage(
                 'warning',
@@ -714,11 +712,13 @@ function getVideoConstraints() {
 audioSelect.onchange = getStream;
 videoSelect.onchange = getStream;
 
-getStream().then(getDevices).then(gotDevices);
+getStream().then(getDevices).then(gotDevices).then(applyVideoConstraints);
 
 function getStream() {
-    videoQualitySelect.selectedIndex = 0;
-    videoFpsSelect.selectedIndex = 0;
+    videoQualitySelect.selectedIndex = localStorage.videoQualitySelectedIndex
+        ? localStorage.videoQualitySelectedIndex
+        : 0;
+    videoFpsSelect.selectedIndex = localStorage.videoFpsSelectedIndex ? localStorage.videoFpsSelectedIndex : 0;
     videoBtn.style.color = 'white';
 
     if (window.stream) {
