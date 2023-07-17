@@ -734,17 +734,28 @@ function getStream() {
               audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
               video: { deviceId: videoSource ? { exact: videoSource } : undefined },
           };
+
     if (screenShareEnabled) {
         video.classList.remove('mirror');
         isVideoMirrored = false;
-        return navigator.mediaDevices.getDisplayMedia(constraints).then(gotStream).catch(handleError);
+        return navigator.mediaDevices
+            .getDisplayMedia(constraints)
+            .then(gotStream)
+            .then(applyVideoConstraints)
+            .catch(handleError);
         // ToDo: On Screen share, add the possibility to choose the microphone audio or tab audio
     }
+
     if (isDesktopDevice && !isVideoMirrored) {
         video.className = 'mirror';
         isVideoMirrored = true;
     }
-    return navigator.mediaDevices.getUserMedia(constraints).then(gotStream).catch(handleError);
+
+    return navigator.mediaDevices
+        .getUserMedia(constraints)
+        .then(gotStream)
+        .then(applyVideoConstraints)
+        .catch(handleError);
 }
 
 function gotStream(stream) {
