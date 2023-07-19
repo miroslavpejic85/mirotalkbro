@@ -379,7 +379,9 @@ function sendMessage() {
 
 window.onunload = window.onbeforeunload = () => {
     socket.close();
-    peerConnection.close();
+    if (peerConnection) {
+        peerConnection.close();
+    }
     stopSessionTime();
     saveRecording();
 };

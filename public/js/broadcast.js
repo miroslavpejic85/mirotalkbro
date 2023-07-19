@@ -817,11 +817,13 @@ function gotDevices(deviceInfos) {
 
 window.onunload = window.onbeforeunload = () => {
     socket.close();
-    for (let id in peerConnections) {
-        peerConnections[id].close();
+    if (thereIsPeerConnections()) {
+        for (let id in peerConnections) {
+            peerConnections[id].close();
+        }
+        peerConnections = {};
+        dataChannels = {};
     }
-    dataChannels = {};
-    peerConnections = {};
     stopSessionTime();
     saveRecording();
 };
