@@ -71,6 +71,9 @@ socket.on('offer', (id, description, iceServers) => {
     peerConnection.ontrack = (event) => {
         saveRecording();
         attachStream(event.streams[0]);
+        if (event.track.kind === 'audio') {
+            popupEnableAudio();
+        }
     };
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) socket.emit('candidate', id, event.candidate);
