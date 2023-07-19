@@ -712,7 +712,7 @@ function getVideoConstraints() {
 audioSelect.onchange = getStream;
 videoSelect.onchange = getStream;
 
-getStream().then(getDevices).then(gotDevices).then(applyVideoConstraints);
+getStream().then(getDevices).then(gotDevices);
 
 function getStream() {
     videoQualitySelect.selectedIndex = localStorage.videoQualitySelectedIndex
