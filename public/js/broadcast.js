@@ -768,8 +768,17 @@ function gotStream(stream) {
             (option) => option.text === stream.getVideoTracks()[0].label,
         );
     }
-    video.srcObject = stream;
+    attachStream(stream);
     socket.emit('broadcaster', broadcastID);
+}
+
+function attachStream(stream) {
+    video.srcObject = stream;
+    video.playsInline = true;
+    video.autoplay = true;
+    video.muted = true;
+    video.volume = 0;
+    video.controls = false;
 }
 
 function handleError(error) {
@@ -807,7 +816,12 @@ function gotDevices(deviceInfos) {
 // =====================================================
 
 window.onunload = window.onbeforeunload = () => {
-    stopSessionTime();
     socket.close();
+    for (let id in peerConnections) {
+        peerConnections[id].close();
+    }
+    dataChannels = {};
+    peerConnections = {};
+    stopSessionTime();
     saveRecording();
 };

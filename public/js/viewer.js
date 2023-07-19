@@ -70,7 +70,7 @@ socket.on('offer', (id, description, iceServers) => {
 
     peerConnection.ontrack = (event) => {
         saveRecording();
-        video.srcObject = event.streams[0];
+        attachStream(event.streams[0]);
     };
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) socket.emit('candidate', id, event.candidate);
@@ -90,7 +90,7 @@ socket.on('broadcaster', () => {
 });
 
 socket.on('broadcasterDisconnect', () => {
-    popupMessage('warning', 'Broadcaster', 'Broadcaster seems away or disconnected.');
+    location.reload();
 });
 
 function handleError(error) {
@@ -154,7 +154,7 @@ if (getMode === 'dark') body.classList.toggle('dark');
 elementDisplay(fullScreenOff, false);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
-elementDisplay(disableAudio, false);
+elementDisplay(enableAudio, false);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn);
@@ -205,6 +205,17 @@ function handleZoom(e) {
     delta > 0 ? (zoom *= 1.2) : (zoom /= 1.2);
     if (zoom < 1) zoom = 1;
     video.style.scale = zoom;
+}
+
+// =====================================================
+// Handle stream
+// =====================================================
+
+function attachStream(stream) {
+    video.srcObject = stream;
+    video.playsInline = true;
+    video.autoplay = true;
+    video.controls = false;
 }
 
 // =====================================================
