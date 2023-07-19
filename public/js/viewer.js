@@ -154,7 +154,7 @@ if (getMode === 'dark') body.classList.toggle('dark');
 elementDisplay(fullScreenOff, false);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
-elementDisplay(enableAudio, false);
+elementDisplay(disableAudio, false);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn);
@@ -215,6 +215,7 @@ function attachStream(stream) {
     video.srcObject = stream;
     video.playsInline = true;
     video.autoplay = true;
+    video.muted = true;
     video.controls = false;
 }
 
