@@ -15,6 +15,7 @@ const viewerFormHeader = document.getElementById('viewerFormHeader');
 const myName = document.getElementById('myName');
 const sessionTime = document.getElementById('sessionTime');
 const video = document.querySelector('video');
+const videoOff = document.getElementById('videoOff');
 
 const enableAudio = document.getElementById('enableAudio');
 const disableAudio = document.getElementById('disableAudio');
@@ -135,6 +136,9 @@ function handleDataChannelMessage(data) {
     switch (data.method) {
         case 'disconnect':
             openURL('/');
+            break;
+        case 'video':
+            videoOff.style.visibility = data.action.visibility;
             break;
         //...
         default:

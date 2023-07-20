@@ -18,6 +18,7 @@ const myName = document.getElementById('myName');
 const connectedPeers = document.getElementById('connectedPeers');
 const sessionTime = document.getElementById('sessionTime');
 const video = document.querySelector('video');
+const videoOff = document.getElementById('videoOff');
 
 const copyRoom = document.getElementById('copyRoom');
 const shareRoom = document.getElementById('shareRoom');
@@ -152,6 +153,7 @@ function handleDataChannels(id) {
     dataChannels[id].binaryType = 'arraybuffer'; // blob
     dataChannels[id].onopen = (event) => {
         console.log('DataChannels open', event);
+        sendToViewersDataChannel('video', { visibility: videoOff.style.visibility });
     };
     dataChannels[id].onclose = (event) => {
         console.log('DataChannels close', event);
@@ -292,7 +294,9 @@ videoBtn.addEventListener('click', toggleVideo);
 
 function toggleVideo() {
     videoBtn.style.color = videoBtn.style.color == 'red' ? 'white' : 'red';
+    videoOff.style.visibility = videoBtn.style.color == 'red' ? 'visible' : 'hidden';
     window.stream.getVideoTracks()[0].enabled = !window.stream.getVideoTracks()[0].enabled;
+    sendToViewersDataChannel('video', { visibility: videoOff.style.visibility });
 }
 
 // =====================================================
