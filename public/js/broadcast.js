@@ -557,30 +557,26 @@ function delViewer(id, username) {
 }
 
 function disconnectALLViewers(confirmation = true) {
-    const thereIsPeers = thereIsPeerConnections();
-    if (!confirmation && thereIsPeers) {
+    if (!thereIsPeerConnections()) return;
+    if (!confirmation) {
         return sendToViewersDataChannel('disconnect');
     }
-    if (!thereIsPeers) {
-        popupMessage('toast', 'Viewers', "There isn't viewers", 'top');
-    } else {
-        Swal.fire({
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showDenyButton: true,
-            position: 'top',
-            title: 'Disconnect all viewers',
-            text: 'Do you want to disconnect all viewers?',
-            confirmButtonText: `Yes`,
-            denyButtonText: `No`,
-            showClass: { popup: 'animate__animated animate__fadeInDown' },
-            hideClass: { popup: 'animate__animated animate__fadeOutUp' },
-        }).then((result) => {
-            if (result.isConfirmed) {
-                sendToViewersDataChannel('disconnect');
-            }
-        });
-    }
+    Swal.fire({
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showDenyButton: true,
+        position: 'top',
+        title: 'Disconnect all viewers',
+        text: 'Do you want to disconnect all viewers?',
+        confirmButtonText: `Yes`,
+        denyButtonText: `No`,
+        showClass: { popup: 'animate__animated animate__fadeInDown' },
+        hideClass: { popup: 'animate__animated animate__fadeOutUp' },
+    }).then((result) => {
+        if (result.isConfirmed) {
+            sendToViewersDataChannel('disconnect');
+        }
+    });
 }
 
 // =====================================================
