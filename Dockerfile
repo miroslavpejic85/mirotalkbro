@@ -4,7 +4,10 @@ WORKDIR /src
 
 COPY package.json .
 
-RUN npm install
+RUN \
+    npm install && \
+    npm cache clean --force && \
+    rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/* /usr/share/doc/*
 
 COPY app app
 COPY public public
