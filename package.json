@@ -21,8 +21,8 @@
     "author": "Miroslav Pejic",
     "license": "AGPLv3",
     "dependencies": {
-        "@sentry/integrations": "^7.61.1",
-        "@sentry/node": "^7.61.1",
+        "@sentry/integrations": "^7.66.0",
+        "@sentry/node": "^7.66.0",
         "compression": "^1.7.4",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
@@ -31,6 +31,6 @@
         "socket.io": "^4.7.2"
     },
     "devDependencies": {
-        "prettier": "3.0.1"
+        "prettier": "3.0.3"
     }
 }

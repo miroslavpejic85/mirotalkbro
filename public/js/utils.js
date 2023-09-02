@@ -71,6 +71,16 @@ function getUUID4() {
     );
 }
 
+function hasAudioTrack(mediaStream) {
+    const audioTracks = mediaStream.getAudioTracks();
+    return audioTracks.length > 0;
+}
+
+function hasVideoTrack(mediaStream) {
+    const audioTracks = mediaStream.getVideoTracks();
+    return audioTracks.length > 0;
+}
+
 function saveDataToFile(dataURL, fileName) {
     const a = document.createElement('a');
     a.style.display = 'none';

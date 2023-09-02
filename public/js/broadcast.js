@@ -65,6 +65,7 @@ const isTabletDevice = isTablet();
 const isIPadDevice = isIpad();
 const isDesktopDevice = isDesktop();
 
+let broadcastStream = null;
 let zoom = 1;
 let isVideoMirrored = false;
 let screenShareEnabled = false;
@@ -721,11 +722,6 @@ function getStream() {
     videoFpsSelect.selectedIndex = localStorage.videoFpsSelectedIndex ? localStorage.videoFpsSelectedIndex : 0;
     videoBtn.style.color = 'white';
 
-    if (window.stream) {
-        window.stream.getTracks().forEach((track) => {
-            track.stop();
-        });
-    }
     const audioSource = audioSelect.value;
     const videoSource = videoSelect.value;
     const constraints = screenShareEnabled
@@ -740,10 +736,9 @@ function getStream() {
         isVideoMirrored = false;
         return navigator.mediaDevices
             .getDisplayMedia(constraints)
-            .then(gotStream)
+            .then(gotScreenStream)
             .then(applyVideoConstraints)
             .catch(handleError);
-        // ToDo: On Screen share, add the possibility to choose the microphone audio or tab audio
     }
 
     if (isDesktopDevice && !isVideoMirrored) {
@@ -759,7 +754,10 @@ function getStream() {
 }
 
 function gotStream(stream) {
+    stopWindowStream();
+    stopBroadcastStream();
     window.stream = stream;
+    broadcastStream = stream;
     if (!screenShareEnabled) {
         audioSelect.selectedIndex = [...audioSelect.options].findIndex(
             (option) => option.text === stream.getAudioTracks()[0].label,
@@ -772,6 +770,21 @@ function gotStream(stream) {
     socket.emit('broadcaster', broadcastID);
 }
 
+function gotScreenStream(stream) {
+    const tracksToInclude = [];
+    const videoTrack = hasVideoTrack(stream) ? stream.getVideoTracks()[0] : null;
+    const audioTabTrack = hasAudioTrack(stream) ? stream.getAudioTracks()[0] : null;
+    const audioTrack = hasAudioTrack(broadcastStream) ? broadcastStream.getAudioTracks()[0] : null;
+    if (videoTrack) tracksToInclude.push(videoTrack);
+    if (audioTabTrack) tracksToInclude.push(audioTabTrack);
+    if (audioTrack) tracksToInclude.push(audioTrack);
+    const newStream = new MediaStream(tracksToInclude);
+    window.stream = newStream;
+    broadcastStream = newStream;
+    attachStream(newStream);
+    socket.emit('broadcaster', broadcastID);
+}
+
 function attachStream(stream) {
     video.srcObject = stream;
     video.playsInline = true;
@@ -779,6 +792,22 @@ function attachStream(stream) {
     video.muted = true;
     video.volume = 0;
     video.controls = false;
+}
+
+function stopBroadcastStream() {
+    if (broadcastStream) {
+        broadcastStream.getTracks().forEach((track) => {
+            track.stop();
+        });
+    }
+}
+
+function stopWindowStream() {
+    if (window.stream) {
+        window.stream.getTracks().forEach((track) => {
+            track.stop();
+        });
+    }
 }
 
 function handleError(error) {
