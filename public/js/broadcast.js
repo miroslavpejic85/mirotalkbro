@@ -724,12 +724,13 @@ function getStream() {
 
     const audioSource = audioSelect.value;
     const videoSource = videoSelect.value;
-    const constraints = screenShareEnabled
-        ? { audio: true, video: true }
-        : {
-              audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
-              video: { deviceId: videoSource ? { exact: videoSource } : undefined },
-          };
+
+    const screenConstraints = { audio: true, video: true };
+    const cameraConstraints = {
+        audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
+        video: { deviceId: videoSource ? { exact: videoSource } : undefined },
+    };
+    const constraints = screenShareEnabled ? screenConstraints : cameraConstraints;
 
     if (screenShareEnabled) {
         video.classList.remove('mirror');

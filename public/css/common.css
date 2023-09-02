@@ -242,6 +242,10 @@ tr:nth-child(even) {
     background-color: var(--secondary-color);
 }
 
+.color-red {
+    color: red;
+}
+
 .fadeIn {
     -webkit-animation: fadeIn ease-in 1;
     -moz-animation: fadeIn ease-in 1;
