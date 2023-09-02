@@ -24,6 +24,8 @@
 
 .broadcast-buttons {
     margin: auto;
+    display: flex;
+    flex-direction: row-reverse;
 }
 
 .broadcast-buttons button {
@@ -38,6 +40,12 @@
 
 .broadcast button i {
     padding: 0.2rem;
+}
+
+#broadcasterSettingsForm {
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: auto;
 }
 
 .broadcast select {
@@ -169,10 +177,4 @@
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     overflow: auto;
-}
-
-@media (max-width: 900px) {
-    .broadcast-buttons button {
-        font-size: 0.4rem;
-    }
 }

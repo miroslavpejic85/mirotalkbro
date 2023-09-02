@@ -28,6 +28,8 @@ const fullScreenOn = document.getElementById('fullScreenOn');
 const fullScreenOff = document.getElementById('fullScreenOff');
 const togglePIP = document.getElementById('togglePIP');
 const goHome = document.getElementById('goHome');
+const messagesBtn = document.getElementById('messagesBtn');
+const messagesForm = document.getElementById('messagesForm');
 const messageInput = document.getElementById('messageInput');
 const messageSend = document.getElementById('messageSend');
 
@@ -35,6 +37,7 @@ const userAgent = navigator.userAgent.toLowerCase();
 const isMobileDevice = isMobile();
 
 let zoom = 1;
+let messagesFormOpen = true;
 let recording = null;
 let recordingTimer = null;
 let sessionTimer = null;
@@ -193,6 +196,19 @@ function stopSessionTime() {
 }
 
 // if (!isMobileDevice) makeDraggable(viewerForm, viewerFormHeader);
+
+// =====================================================
+// Handle messages
+// =====================================================
+
+messagesBtn.addEventListener('click', toggleMessages);
+
+function toggleMessages() {
+    const display = messagesFormOpen ? false : true;
+    const mode = messagesFormOpen ? 'none' : 'grid';
+    elementDisplay(messagesForm, display, mode);
+    messagesFormOpen = !messagesFormOpen;
+}
 
 // =====================================================
 // Handle video

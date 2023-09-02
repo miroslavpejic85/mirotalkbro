@@ -246,6 +246,10 @@ tr:nth-child(even) {
     color: red;
 }
 
+.hidden {
+    display: none;
+}
+
 .fadeIn {
     -webkit-animation: fadeIn ease-in 1;
     -moz-animation: fadeIn ease-in 1;

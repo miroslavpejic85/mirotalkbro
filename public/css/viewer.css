@@ -16,6 +16,8 @@
 
 .viewer-buttons {
     margin: auto;
+    display: flex;
+    flex-direction: row-reverse;
 }
 
 .viewer-buttons button {
@@ -30,6 +32,12 @@
 
 .viewer button i {
     padding: 0.2rem;
+}
+
+#messagesForm {
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: auto;
 }
 
 .viewer select {
@@ -49,10 +57,4 @@
     border: none;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-}
-
-@media (max-width: 900px) {
-    .viewer-buttons button {
-        font-size: 0.5rem;
-    }
 }

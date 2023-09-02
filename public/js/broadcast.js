@@ -20,6 +20,9 @@ const sessionTime = document.getElementById('sessionTime');
 const video = document.querySelector('video');
 const videoOff = document.getElementById('videoOff');
 
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsForm = document.getElementById('broadcasterSettingsForm');
+
 const copyRoom = document.getElementById('copyRoom');
 const shareRoom = document.getElementById('shareRoom');
 const videoBtn = document.getElementById('videoBtn');
@@ -71,6 +74,7 @@ let isVideoMirrored = false;
 let screenShareEnabled = false;
 let messagesFormOpen = false;
 let viewersFormOpen = false;
+let settingsFormOpen = true;
 let recording = null;
 let recordingTimer = null;
 let sessionTimer = null;
@@ -253,6 +257,19 @@ if (!isMobileDevice) {
 } else {
     document.documentElement.style.setProperty('--form-width', '85vw');
     document.documentElement.style.setProperty('--form-height', '90vh');
+}
+
+// =====================================================
+// Handle settings
+// =====================================================
+
+settingsBtn.addEventListener('click', toggleSettings);
+
+function toggleSettings() {
+    const display = settingsFormOpen ? false : true;
+    const mode = settingsFormOpen ? 'none' : 'grid';
+    elementDisplay(settingsForm, display, mode);
+    settingsFormOpen = !settingsFormOpen;
 }
 
 // =====================================================

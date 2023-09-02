@@ -33,6 +33,7 @@
             </div>
             <label id="recordingLabel" class="pulse">🔴 REC: <span id="recordingTime">0S</span></label>
             <div class="broadcast-buttons">
+                <button id="settingsBtn"><i class="fa-solid fa-sliders"></i></button>
                 <button id="fullScreenOn"><i class="fas fa-expand-alt"></i></button>
                 <button id="fullScreenOff"><i class="fas fa-compress-alt"></i></button>
                 <button id="togglePIP"><i class="fas fa-images"></i></button>
@@ -46,32 +47,34 @@
                 <button id="shareRoom"><i class="fas fa-share-alt"></i></button>
                 <button id="copyRoom"><i class="fas fa-copy"></i></button>
             </div>
-            <label class="not-selectable"><i class="fas fa-video"></i> Video source:</label>
-            <select id="videoSelect"></select>
-            <label class="not-selectable"><i class="fas fa-photo-film"></i> Video quality and fps:</label>
-            <div class="broadcast-quality-fps">
-                <select id="videoQualitySelect">
-                    <option value="default">Default</option>
-                    <option value="qvga">QVGA</option>
-                    <option value="vga">VGA</option>
-                    <option value="hd">HD</option>
-                    <option value="fhd">FULL HD</option>
-                    <option value="2k">2K</option>
-                    <option value="4k">4K</option>
-                </select>
-                <select id="videoFpsSelect">
-                    <option value="default">Default</option>
-                    <option value="60">60 fps</option>
-                    <option value="30">30 fps</option>
-                    <option value="25">25 fps</option>
-                    <option value="20">20 fps</option>
-                    <option value="15">15 fps</option>
-                    <option value="10">10 fps</option>
-                    <option value="5">5 fps</option>
-                </select>
+            <div id="broadcasterSettingsForm" class="animate__animated animate__fadeInDown">
+                <label class="not-selectable"><i class="fas fa-video"></i> Video source:</label>
+                <select id="videoSelect"></select>
+                <label class="not-selectable"><i class="fas fa-photo-film"></i> Video quality and fps:</label>
+                <div class="broadcast-quality-fps">
+                    <select id="videoQualitySelect">
+                        <option value="default">Default</option>
+                        <option value="qvga">QVGA</option>
+                        <option value="vga">VGA</option>
+                        <option value="hd">HD</option>
+                        <option value="fhd">FULL HD</option>
+                        <option value="2k">2K</option>
+                        <option value="4k">4K</option>
+                    </select>
+                    <select id="videoFpsSelect">
+                        <option value="default">Default</option>
+                        <option value="60">60 fps</option>
+                        <option value="30">30 fps</option>
+                        <option value="25">25 fps</option>
+                        <option value="20">20 fps</option>
+                        <option value="15">15 fps</option>
+                        <option value="10">10 fps</option>
+                        <option value="5">5 fps</option>
+                    </select>
+                </div>
+                <label class="not-selectable"><i class="fas fa-microphone"></i> Audio source:</label>
+                <select id="audioSelect"></select>
             </div>
-            <label class="not-selectable"><i class="fas fa-microphone"></i> Audio source:</label>
-            <select id="audioSelect"></select>
         </div>
         <div id="messagesForm" class="messages center fadeIn">
             <div id="messagesFormHeader" class="messages-header">

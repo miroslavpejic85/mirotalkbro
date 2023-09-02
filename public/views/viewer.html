@@ -33,6 +33,7 @@
                 <button id="goHome"><i class="fas fa-times"></i></button>
                 <button id="fullScreenOn"><i class="fas fa-expand-alt"></i></button>
                 <button id="fullScreenOff"><i class="fas fa-compress-alt"></i></button>
+                <button id="messagesBtn"><i class="fas fa-comment"></i></button>
                 <button id="togglePIP"><i class="fas fa-images"></i></button>
                 <button id="snapshot"><i class="fas fa-camera-retro"></i></button>
                 <button id="recordingStart"><i class="fas fa-record-vinyl"></i></button>
@@ -40,8 +41,10 @@
                 <button id="enableAudio"><i class="fas fa-microphone-slash"></i></button>
                 <button id="disableAudio"><i class="fas fa-microphone"></i></button>
             </div>
-            <input id="messageInput" maxlength="1024" name="message" placeholder="Type message..." />
-            <button id="messageSend"><i class="fas fa-paper-plane"></i> Send message</button>
+            <div id="messagesForm" class="animate__animated animate__fadeInDown">
+                <input id="messageInput" maxlength="1024" name="message" placeholder="Type message..." />
+                <button id="messageSend"><i class="fas fa-paper-plane"></i> Send message</button>
+            </div>
         </div>
         <script src="/socket.io/socket.io.js"></script>
         <script src="../js/swal.js"></script>
