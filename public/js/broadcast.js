@@ -104,7 +104,9 @@ socket.on('viewer', (id, iceServers, username) => {
 
     addViewer(id, username);
 
-    popupMessage('toast', 'New viewer', `${username} join`, 'top', 2000);
+    // popupMessage('toast', 'New viewer', `${username} join`, 'top', 2000);
+
+    playSound('viewer');
 
     peerConnection.onconnectionstatechange = (event) => {
         console.log('RTCPeerConnection', {
