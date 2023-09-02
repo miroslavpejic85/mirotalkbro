@@ -313,7 +313,8 @@ navigator.share
 videoBtn.addEventListener('click', toggleVideo);
 
 function toggleVideo() {
-    videoBtn.style.color = videoBtn.style.color == 'red' ? 'white' : 'red';
+    const color = getMode === 'dark' ? 'white' : 'black';
+    videoBtn.style.color = videoBtn.style.color == 'red' ? color : 'red';
     videoOff.style.visibility = videoBtn.style.color == 'red' ? 'visible' : 'hidden';
     window.stream.getVideoTracks()[0].enabled = !window.stream.getVideoTracks()[0].enabled;
     sendToViewersDataChannel('video', { visibility: videoOff.style.visibility });
@@ -739,7 +740,7 @@ function getStream() {
         ? localStorage.videoQualitySelectedIndex
         : 0;
     videoFpsSelect.selectedIndex = localStorage.videoFpsSelectedIndex ? localStorage.videoFpsSelectedIndex : 0;
-    videoBtn.style.color = 'white';
+    videoBtn.style.color = getMode === 'dark' ? 'white' : 'black';
 
     const audioSource = audioSelect.value;
     const videoSource = videoSelect.value;
