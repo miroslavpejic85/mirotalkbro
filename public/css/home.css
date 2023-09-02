@@ -48,7 +48,11 @@
 }
 
 .home select {
-    padding: 1rem;
+    padding: 10px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 0.9rem;
+    color: var(--text-color);
     color: var(--text-color);
     background-color: var(--primary-color);
     cursor: pointer;

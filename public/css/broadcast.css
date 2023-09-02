@@ -43,13 +43,17 @@
 }
 
 #broadcasterSettingsForm {
+    z-index: 0;
     display: grid;
     grid-gap: 1rem;
     grid-template-columns: auto;
 }
 
 .broadcast select {
-    padding: 1rem;
+    padding: 10px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 0.9rem;
     color: var(--text-color);
     background-color: var(--primary-color);
     cursor: pointer;
@@ -74,7 +78,7 @@
 
 .broadcast-quality-fps select {
     width: 50%;
-    margin: 0px 5px;
+    margin: 0px 2px;
 }
 
 .qrRoomContainer {
