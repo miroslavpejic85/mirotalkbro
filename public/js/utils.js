@@ -77,8 +77,8 @@ function hasAudioTrack(mediaStream) {
 }
 
 function hasVideoTrack(mediaStream) {
-    const audioTracks = mediaStream.getVideoTracks();
-    return audioTracks.length > 0;
+    const videoTracks = mediaStream.getVideoTracks();
+    return videoTracks.length > 0;
 }
 
 function saveDataToFile(dataURL, fileName) {
