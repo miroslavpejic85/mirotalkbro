@@ -145,11 +145,9 @@ For a MiroTalk license under conditions other than AGPLv3, please contact us at 
 
 <br/>
 
-Do you find MiroTalk Live Broadcast useful?
+If MiroTalk BRO has been useful for you and want to contribute to its continued success, consider becoming a backer or sponsor by visiting [this link](https://github.com/sponsors/miroslavpejic85).
 
-Support the project by [becoming a backer or sponsor](https://github.com/sponsors/miroslavpejic85).
-
-Thank you! ❤️
+Your support means the world to us, and together, we can make MiroTalk Live Broadcast even better! Thank you for being part of this amazing journey. 🌟
 
 </details>
 
