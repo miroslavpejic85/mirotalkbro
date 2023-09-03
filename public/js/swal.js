@@ -41,6 +41,8 @@ function popupMessage(icon, title, message, position = 'center', timer = 3000) {
             Toast.fire({
                 icon: 'info',
                 title: message,
+                showClass: { popup: 'animate__animated animate__fadeInDown' },
+                hideClass: { popup: 'animate__animated animate__fadeOutUp' },
             });
             break;
         default:
