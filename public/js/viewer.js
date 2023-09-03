@@ -167,7 +167,7 @@ elementDisplay(recordingStop, false);
 elementDisplay(disableAudio, false);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
-elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn);
+elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn && isFullScreenSupported());
 elementDisplay(togglePIP, viewerSettings.buttons.pictureInPicture && isPIPSupported());
 
 messageDisplay(viewerSettings.buttons.message);

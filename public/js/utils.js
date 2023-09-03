@@ -162,6 +162,15 @@ async function shareRoomNavigator() {
     }
 }
 
+function isFullScreenSupported() {
+    return (
+        document.fullscreenEnabled ||
+        document.mozFullScreenEnabled ||
+        document.webkitFullscreenEnabled ||
+        document.msFullscreenEnabled
+    );
+}
+
 function isFullScreen() {
     const elementFullScreen =
         document.fullscreenElement ||

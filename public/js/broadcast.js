@@ -225,7 +225,7 @@ elementDisplay(screenShareStart, broadcastSettings.buttons.screenShareStart);
 elementDisplay(recordingStart, broadcastSettings.buttons.recordingStart);
 elementDisplay(messagesOpenForm, broadcastSettings.buttons.messagesOpenForm);
 elementDisplay(viewersOpenForm, broadcastSettings.buttons.viewersOpenForm);
-elementDisplay(fullScreenOn, broadcastSettings.buttons.fullScreenOn);
+elementDisplay(fullScreenOn, broadcastSettings.buttons.fullScreenOn && isFullScreenSupported());
 elementDisplay(togglePIP, broadcastSettings.buttons.pictureInPicture && isPIPSupported());
 
 // =====================================================
