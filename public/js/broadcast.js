@@ -231,7 +231,7 @@ elementDisplay(viewersOpenForm, broadcastSettings.buttons.viewersOpenForm);
 elementDisplay(fullScreenOn, broadcastSettings.buttons.fullScreenOn && isFullScreenSupported());
 elementDisplay(togglePIP, broadcastSettings.buttons.pictureInPicture && isPIPSupported());
 elementDisplay(settingsBtn, broadcastSettings.options.settings);
-elementDisplay(goHome, broadcastSettings.options.close);
+elementDisplay(goHome, broadcastSettings.buttons.close);
 
 if (broadcastSettings.options.start_full_screen) {
     broadcastForm.classList.remove(...broadcastForm.classList);
