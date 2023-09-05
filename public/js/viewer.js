@@ -12,6 +12,7 @@ const body = document.querySelector('body');
 
 const viewerForm = document.getElementById('viewerForm');
 const viewerFormHeader = document.getElementById('viewerFormHeader');
+const viewerButtons = document.getElementById('viewerButtons');
 const myName = document.getElementById('myName');
 const sessionTime = document.getElementById('sessionTime');
 const video = document.querySelector('video');
@@ -164,17 +165,28 @@ if (getMode === 'dark') body.classList.toggle('dark');
 elementDisplay(fullScreenOff, false);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
-elementDisplay(disableAudio, false);
+elementDisplay(disableAudio, viewerSettings.buttons.audio);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn && isFullScreenSupported());
 elementDisplay(togglePIP, viewerSettings.buttons.pictureInPicture && isPIPSupported());
+elementDisplay(goHome, viewerSettings.buttons.close);
 
 messageDisplay(viewerSettings.buttons.message);
 
 function messageDisplay(display) {
+    elementDisplay(messagesBtn, display);
+    elementDisplay(messagesForm, display, display ? 'grid' : 'none');
     elementDisplay(messageInput, display);
     elementDisplay(messageSend, display);
+}
+
+if (viewerSettings.options.start_full_screen) {
+    viewerForm.classList.remove(...viewerForm.classList);
+    viewerForm.classList.add('full-screen');
+    elementDisplay(viewerFormHeader, false);
+    elementDisplay(viewerButtons, false);
+    elementDisplay(messagesForm, false);
 }
 
 // =====================================================
@@ -253,7 +265,7 @@ function setAudioOn() {
     if (!peerConnection) return;
     video.muted = false;
     elementDisplay(enableAudio, false);
-    elementDisplay(disableAudio, true);
+    elementDisplay(disableAudio, viewerSettings.buttons.audio);
 }
 
 function setAudioOff() {

@@ -14,6 +14,7 @@ const body = document.querySelector('body');
 
 const broadcastForm = document.getElementById('broadcastForm');
 const broadcastFormHeader = document.getElementById('broadcastFormHeader');
+const broadcastButtons = document.getElementById('broadcastButtons');
 const myName = document.getElementById('myName');
 const connectedPeers = document.getElementById('connectedPeers');
 const sessionTime = document.getElementById('sessionTime');
@@ -219,14 +220,26 @@ elementDisplay(viewersForm, false);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
 elementDisplay(screenShareStop, false);
+elementDisplay(settingsForm, broadcastSettings.options.settings, broadcastSettings.options.settings ? 'grid' : 'none');
 elementDisplay(copyRoom, broadcastSettings.buttons.copyRoom);
 elementDisplay(shareRoom, broadcastSettings.buttons.shareRoom);
+elementDisplay(videoBtn, broadcastSettings.buttons.video);
 elementDisplay(screenShareStart, broadcastSettings.buttons.screenShareStart);
 elementDisplay(recordingStart, broadcastSettings.buttons.recordingStart);
 elementDisplay(messagesOpenForm, broadcastSettings.buttons.messagesOpenForm);
 elementDisplay(viewersOpenForm, broadcastSettings.buttons.viewersOpenForm);
 elementDisplay(fullScreenOn, broadcastSettings.buttons.fullScreenOn && isFullScreenSupported());
 elementDisplay(togglePIP, broadcastSettings.buttons.pictureInPicture && isPIPSupported());
+elementDisplay(settingsBtn, broadcastSettings.options.settings);
+elementDisplay(goHome, broadcastSettings.options.close);
+
+if (broadcastSettings.options.start_full_screen) {
+    broadcastForm.classList.remove(...broadcastForm.classList);
+    broadcastForm.classList.add('full-screen');
+    elementDisplay(broadcastFormHeader, false);
+    elementDisplay(broadcastButtons, false);
+    elementDisplay(settingsForm, false);
+}
 
 // =====================================================
 // Handle session timer
