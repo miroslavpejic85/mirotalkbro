@@ -235,7 +235,7 @@ function toggleFullScreen() {
 
 function handleZoom(e) {
     e.preventDefault();
-    if (!video.srcObject) return;
+    if (!video.srcObject || !viewerSettings.options.zoom_video) return;
     const delta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
     delta > 0 ? (zoom *= 1.2) : (zoom /= 1.2);
     if (zoom < 1) zoom = 1;
