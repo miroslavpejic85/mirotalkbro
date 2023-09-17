@@ -166,6 +166,7 @@ elementDisplay(fullScreenOff, false);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
 elementDisplay(disableAudio, viewerSettings.buttons.audio);
+elementDisplay(enableAudio, !viewerSettings.buttons.audio);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn && isFullScreenSupported());

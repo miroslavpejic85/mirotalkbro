@@ -17,6 +17,8 @@ const broadcastSettings = {
         settings: true,
         start_full_screen: false,
         zoom_video: true,
+        show_chat_on_msg: false,
+        speech_msg: false,
     },
 };
 

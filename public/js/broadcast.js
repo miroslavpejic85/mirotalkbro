@@ -69,6 +69,8 @@ const isTabletDevice = isTablet();
 const isIPadDevice = isIpad();
 const isDesktopDevice = isDesktop();
 
+const isSpeechSynthesisSupported = 'speechSynthesis' in window;
+
 let broadcastStream = null;
 let zoom = 1;
 let isVideoMirrored = false;
@@ -175,6 +177,9 @@ function handleDataChannels(id) {
             try {
                 data = JSON.parse(message.data);
                 appendMessage(data.username, data.message);
+                if (isSpeechSynthesisSupported && broadcastSettings.options.speech_msg) {
+                    speechMessage(data.username, data.message);
+                }
             } catch (err) {
                 console.log('Datachannel error', err);
             }
@@ -424,6 +429,9 @@ function toggleMessagesForm() {
         viewersFormOpen = !viewersFormOpen;
         elementDisplay(viewersForm, !messagesFormOpen);
     }
+    if (messagesOpenForm.classList.contains('pulse')) {
+        messagesOpenForm.classList.toggle('pulse');
+    }
 }
 
 function saveMessages() {
@@ -460,7 +468,6 @@ function cleanMessages() {
 
 function appendMessage(username, message) {
     playSound('message');
-    if (!messagesFormOpen) popupMessage('toast', 'New message', `New message from\n${username}`, 'top');
     const timeNow = getTime();
     const messageDiv = document.createElement('div');
     const messageTitle = document.createElement('span');
@@ -478,6 +485,23 @@ function appendMessage(username, message) {
     };
     allMessages.push(messageData);
     console.log('Message', messageData);
+    //
+    if (!messagesFormOpen) {
+        popupMessage('toast', 'New message', `New message from\n${username}`, 'top');
+        if (!messagesOpenForm.classList.contains('pulse')) {
+            messagesOpenForm.classList.toggle('pulse');
+        }
+        if (broadcastSettings.options.show_chat_on_msg) {
+            toggleMessagesForm();
+        }
+    }
+}
+
+function speechMessage(username, msg) {
+    const speech = new SpeechSynthesisUtterance();
+    speech.text = 'New message from:' + username + '. The message is:' + msg;
+    speech.rate = 0.9;
+    window.speechSynthesis.speak(speech);
 }
 
 // =====================================================

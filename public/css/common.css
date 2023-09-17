@@ -304,6 +304,8 @@ tr:nth-child(even) {
 }
 
 .pulse {
+    background-color: var(--hover-color);
+    color: var(--btn-color);
     animation: pulse 3s ease-out;
     animation-iteration-count: infinite;
     -webkit-animation: pulse 3s ease-out;

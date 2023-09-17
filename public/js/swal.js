@@ -63,8 +63,6 @@ function popupEnableAudio() {
         showClass: { popup: 'animate__animated animate__fadeInDown' },
         hideClass: { popup: 'animate__animated animate__fadeOutUp' },
     }).then((result) => {
-        if (result.isConfirmed) {
-            enableAudio.click();
-        }
+        result.isConfirmed ? enableAudio.click() : disableAudio.click();
     });
 }
