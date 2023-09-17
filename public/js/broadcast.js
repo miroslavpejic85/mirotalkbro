@@ -429,8 +429,8 @@ function toggleMessagesForm() {
         viewersFormOpen = !viewersFormOpen;
         elementDisplay(viewersForm, !messagesFormOpen);
     }
-    if (messagesOpenForm.classList.contains('pulse')) {
-        messagesOpenForm.classList.toggle('pulse');
+    if (messagesOpenForm.classList.contains('pulse-bg')) {
+        messagesOpenForm.classList.toggle('pulse-bg');
     }
 }
 
@@ -488,8 +488,8 @@ function appendMessage(username, message) {
     //
     if (!messagesFormOpen) {
         popupMessage('toast', 'New message', `New message from\n${username}`, 'top');
-        if (!messagesOpenForm.classList.contains('pulse')) {
-            messagesOpenForm.classList.toggle('pulse');
+        if (!messagesOpenForm.classList.contains('pulse-bg')) {
+            messagesOpenForm.classList.toggle('pulse-bg');
         }
         if (broadcastSettings.options.show_chat_on_msg) {
             toggleMessagesForm();

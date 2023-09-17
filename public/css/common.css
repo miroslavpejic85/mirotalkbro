@@ -304,6 +304,14 @@ tr:nth-child(even) {
 }
 
 .pulse {
+    animation: pulse 3s ease-out;
+    animation-iteration-count: infinite;
+    -webkit-animation: pulse 3s ease-out;
+    -webkit-animation-iteration-count: infinite;
+    opacity: 0.5;
+}
+
+.pulse-bg {
     background-color: var(--hover-color);
     color: var(--btn-color);
     animation: pulse 3s ease-out;
