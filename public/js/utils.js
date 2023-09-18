@@ -229,6 +229,10 @@ function logStreamSettingsInfo() {
     console.log('StreamInfo', streamInfo);
 }
 
+function escapeSpecialChars(regex) {
+    return regex.replace(/([()[{*+.$^\\|?])/g, '\\$1');
+}
+
 function makeDraggable(element, dragObj) {
     let pos1 = 0,
         pos2 = 0,
