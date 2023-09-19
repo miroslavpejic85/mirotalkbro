@@ -139,7 +139,7 @@ function handleDataChannel() {
 function handleDataChannelMessage(data) {
     switch (data.method) {
         case 'disconnect':
-            openURL('/');
+            openURL(viewerSettings.options.redirect_url);
             break;
         case 'video':
             videoOff.style.visibility = data.action.visibility;
@@ -374,7 +374,7 @@ goHome.addEventListener('click', goToHomePage);
 
 function goToHomePage() {
     stopSessionTime();
-    openURL('/');
+    openURL(viewerSettings.options.redirect_url);
 }
 
 // =====================================================

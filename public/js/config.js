@@ -35,5 +35,6 @@ const viewerSettings = {
     options: {
         start_full_screen: false,
         zoom_video: true,
+        redirect_url: '/',
     },
 };
