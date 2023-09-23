@@ -22,7 +22,7 @@ Then, when you run it with `npm start`, you should see in the console log:
 ```bash
 ngrokHome: 'https://xxxx-xx-xx-xxx-xx.ngrok.io',
 ngrokBroadcast: 'https://xxxx-xx-xx-xxx-xx.ngrok.io/broadcast?id=123&name=Broadcaster',
-ngrokView: 'https://xxxx-xx-xx-xxx-xx.ngrok.io/viewer?id=123&name=Viewer',
+ngrokViewer: 'https://xxxx-xx-xx-xxx-xx.ngrok.io/viewer?id=123&name=Viewer',
 ```
 
 Open the URL in your browser and join as `Broadcaster` or `Viewer`.
