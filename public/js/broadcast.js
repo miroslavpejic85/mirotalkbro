@@ -71,6 +71,43 @@ const isDesktopDevice = isDesktop();
 
 const isSpeechSynthesisSupported = 'speechSynthesis' in window;
 
+// =====================================================
+// Handle ToolTips
+// =====================================================
+
+const broadcastTooltips = [
+    { element: copyRoom, text: 'Copy and share room URL', position: 'top' },
+    { element: shareRoom, text: 'Share room URL', position: 'top' },
+    { element: videoBtn, text: 'Toggle video', position: 'top' },
+    { element: screenShareStart, text: 'Start screen sharing', position: 'top' },
+    { element: screenShareStop, text: 'Stop screen sharing', position: 'top' },
+    { element: recordingStart, text: 'Start recording', position: 'top' },
+    { element: recordingStop, text: 'Stop recording', position: 'top' },
+    { element: messagesOpenForm, text: 'Toggle messages', position: 'top' },
+    { element: viewersOpenForm, text: 'Toggle viewers', position: 'top' },
+    { element: togglePIP, text: 'Toggle picture in picture', position: 'top' },
+    { element: fullScreenOn, text: 'Enable full screen', position: 'top' },
+    { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
+    { element: settingsBtn, text: 'Toggle settings', position: 'top' },
+    { element: goHome, text: 'Go to home page', position: 'top' },
+    { element: messagesClean, text: 'Clean messages', position: 'top' },
+    { element: messagesSave, text: 'Save messages', position: 'top' },
+    { element: messagesOpenViewersForm, text: 'Toggle viewers', position: 'top' },
+    { element: messagesCloseForm, text: 'Close', position: 'top' },
+    { element: viewersDisconnect, text: 'Disconnect all viewers', position: 'top' },
+    { element: viewersSave, text: 'Save viewers', position: 'top' },
+    { element: viewerOpenMessageForm, text: 'Toggle messages', position: 'top' },
+    { element: viewersCloseForm, text: 'Close', position: 'top' },
+];
+
+body.onload = loadBroadcasterToolTip;
+
+function loadBroadcasterToolTip() {
+    broadcastTooltips.forEach(({ element, text, position }) => {
+        setTippy(element, text, position);
+    });
+}
+
 let broadcastStream = null;
 let zoom = 1;
 let isVideoMirrored = false;

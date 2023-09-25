@@ -37,6 +37,31 @@ const messageSend = document.getElementById('messageSend');
 const userAgent = navigator.userAgent.toLowerCase();
 const isMobileDevice = isMobile();
 
+// =====================================================
+// Handle ToolTips
+// =====================================================
+
+const viewerTooltips = [
+    { element: enableAudio, text: 'Enable audio', position: 'top' },
+    { element: disableAudio, text: 'Disable audio', position: 'top' },
+    { element: recordingStart, text: 'Start recording', position: 'top' },
+    { element: recordingStop, text: 'Stop recording', position: 'top' },
+    { element: snapshot, text: 'Take a snapshot', position: 'top' },
+    { element: togglePIP, text: 'Toggle picture in picture', position: 'top' },
+    { element: messagesBtn, text: 'Toggle messages', position: 'top' },
+    { element: fullScreenOn, text: 'Enable full screen', position: 'top' },
+    { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
+    { element: goHome, text: 'Go to home page', position: 'top' },
+];
+
+body.onload = loadViewerToolTip;
+
+function loadViewerToolTip() {
+    viewerTooltips.forEach(({ element, text, position }) => {
+        setTippy(element, text, position);
+    });
+}
+
 let zoom = 1;
 let messagesFormOpen = true;
 let recording = null;
