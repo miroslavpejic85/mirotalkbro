@@ -35,7 +35,7 @@ if (broadcastID) {
 support.addEventListener('click', getSupport);
 
 function getSupport() {
-    openURL('https://github.com/sponsors/miroslavpejic85', true);
+    openURL('https://codecanyon.net/user/miroslavpejic85', true);
 }
 
 // =====================================================
