@@ -745,7 +745,7 @@ function applyVideoConstraints() {
 
 function getVideoConstraints() {
     const videoQuality = videoQualitySelect.value;
-    const videoFrameRate = videoFpsSelect.value == 'default' ? 30 : parseInt(videoFpsSelect.value);
+    const videoFrameRate = videoFpsSelect.value == 'default' ? 30 : parseInt(videoFpsSelect.value, 10);
     let videoConstraints = { frameRate: { ideal: videoFrameRate } };
     switch (videoQuality) {
         case 'default':
