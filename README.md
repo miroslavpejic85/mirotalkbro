@@ -5,8 +5,10 @@ MiroTalk WebRTC Live Broadcast allows to broadcast live video, audio and screen 
 ---
 
 <p align="center">
-    <a href="https://bro.mirotalk.com">bro.mirotalk.com</a>
+    <a href="https://bro.mirotalk.com">Explore MiroTalk BRO</a>
 </p>
+
+---
 
 <p align="center">
     <a href="https://bro.mirotalk.com"><img src="./public/assets/images/ui.png"></a>
@@ -15,7 +17,7 @@ MiroTalk WebRTC Live Broadcast allows to broadcast live video, audio and screen 
 ---
 
 <p align="center">
-    For questions, discussions, help & support, join with us on <a href="https://discord.gg/rgGYfeYW3N">discord</a>
+    Join our community for questions, discussions, and support on <a href="https://discord.gg/rgGYfeYW3N">Discord</a>
 </p>
 
 ---
@@ -38,7 +40,7 @@ $ npm install
 $ npm start
 ```
 
-Start the app using [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/) and optional [official image](https://hub.docker.com/r/mirotalk/bro):
+Start the app using [docker](https://docs.docker.com/engine/install/) - [docker-compose](https://docs.docker.com/compose/) and optional [official image](https://hub.docker.com/r/mirotalk/bro):
 
 ![docker](public/assets/images/docker.png)
 
@@ -85,8 +87,8 @@ You can direct join room as `broadcaster` or `viewer` specifying the room id and
 
 | Params | Type   | Description |
 | ------ | ------ | ----------- |
-| id     | string | room Id     |
-| name   | string | user name   |
+| id     | string | Room Id     |
+| name   | string | User name   |
 
 </details>
 
@@ -134,9 +136,9 @@ Embedding MiroTalk Live Broadcast into a service or app using an iframe.
 
 [![AGPLv3](public/assets/images/AGPLv3.png)](LICENSE)
 
-MiroTalk is free and can be modified and forked. But the conditions of the AGPLv3 (GNU Affero General Public License v3.0) need to be respected. In particular modifications need to be free as well and made available to the public. Get a quick overview of the license at [Choose an open source license](https://choosealicense.com/licenses/agpl-3.0/).
+MiroTalk BRO is free and open-source under the terms of AGPLv3 (GNU Affero General Public License v3.0). Please `respect the license conditions`, In particular `modifications need to be free as well and made available to the public`. Get a quick overview of the license at [Choose an open source license](https://choosealicense.com/licenses/agpl-3.0/).
 
-For a MiroTalk license under conditions other than AGPLv3, please contact us at license.mirotalk@gmail.com.
+To obtain a [MiroTalk BRO license](https://docs.mirotalk.com/license/licensing-options/) with terms different from the AGPLv3, you can conveniently make your [purchase on CodeCanyon](https://codecanyon.net/item/mirotalk-bro-webrtc-p2p-live-broadcast/45887113). This allows you to tailor the licensing conditions to better suit your specific requirements.
 
 </details>
 
