@@ -155,32 +155,32 @@ Your support means the world to us, and together, we can make MiroTalk Live Broa
 
 ---
 
-## Other MiroTalk projects:
-
-<details>
-<summary>MiroTalk C2C</summary>
-
-<br>
-
-[MiroTalk C2C](https://github.com/miroslavpejic85/mirotalkc2c) `peer to peer` real-time video conferences, optimized for cam 2 cam. Unlimited time, unlimited rooms each having 2 participants.
-
-</details>
-
-<details>
-<summary>MiroTalk P2P</summary>
-
-<br>
-
-[MiroTalk P2P](https://github.com/miroslavpejic85/mirotalk) `peer to peer` real-time video conferences, optimized for small groups. Unlimited time, unlimited rooms each having 5-8 participants.
-
-</details>
+## Diving into Additional MiroTalk Projects:
 
 <details>
 <summary>MiroTalk SFU</summary>
 
 <br>
 
-[MiroTalk SFU](https://github.com/miroslavpejic85/mirotalksfu) `selective forwarding unit` real-time video conferences, optimized for large groups. Unlimited time, unlimited rooms each having 8+ participants.
+Try also [MiroTalk SFU](https://github.com/miroslavpejic85/mirotalksfu) `selective forwarding unit` real-time video conferences, optimized for large groups. `Unlimited time, unlimited concurrent rooms` each having 8+ participants, up to ~ 100 per single CPU.
+
+</details>
+
+<details>
+<summary>MiroTalk P2P</summary>
+
+<br/>
+
+Try also [MiroTalk P2P](https://github.com/miroslavpejic85/mirotalk) `peer to peer` real-time video conferences, optimized for small groups. `Unlimited time, unlimited concurrent rooms` each having 5-8 participants.
+
+</details>
+
+<details>
+<summary>MiroTalk C2C</summary>
+
+<br>
+
+Try also [MiroTalk C2C](https://github.com/miroslavpejic85/mirotalkc2c) `peer to peer` real-time video conferences, optimized for cam 2 cam. `Unlimited time, unlimited concurrent rooms` each having 2 participants.
 
 </details>
 
@@ -189,7 +189,7 @@ Your support means the world to us, and together, we can make MiroTalk Live Broa
 
 <br>
 
-[MiroTalk WEB](https://github.com/miroslavpejic85/mirotalkwebrtc) rooms scheduler.
+Try also [MiroTalk WEB](https://github.com/miroslavpejic85/mirotalkwebrtc) a platform that allows for the management of an `unlimited number of users`. Each user must register with their email, username, and password, after which they gain access to their `personal dashboard`. Within the dashboard, users can `manage their rooms and schedule meetings` using the desired version of MiroTalk on a specified date and time. Invitations to these meetings can be sent via email, shared through the web browser, or sent via SMS.
 
 </details>
 
