@@ -1,6 +1,8 @@
-# MiroTalk WebRTC Live Broadcast
+<h1 align="center">MiroTalk WebRTC Live Broadcast</h1>
 
-MiroTalk WebRTC Live Broadcast allows to broadcast live video, audio and screen stream to all connected users (viewers) and receive messages from them. Can handle unlimited rooms, without time limitations, each having a broadcast and many viewers.
+<br />
+
+<p align="center">MiroTalk BRO Live Broadcast allows to broadcast live video, audio and screen stream to all connected users (viewers) and receive messages from them. Can handle unlimited rooms, without time limitations, each having a broadcast and many viewers.</a></p>
 
 ---
 
