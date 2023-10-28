@@ -1,6 +1,6 @@
 {
-    "name": "MiroTalk WebRTC Live Broadcast",
-    "version": "1.0.2",
+    "name": "mirotalkbro",
+    "version": "1.0.3",
     "description": "P2P WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
@@ -22,8 +22,8 @@
     "author": "Miroslav Pejic",
     "license": "AGPLv3",
     "dependencies": {
-        "@sentry/integrations": "^7.70.0",
-        "@sentry/node": "^7.70.0",
+        "@sentry/integrations": "^7.76.0",
+        "@sentry/node": "^7.76.0",
         "compression": "^1.7.4",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
