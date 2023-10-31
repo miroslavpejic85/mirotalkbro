@@ -51,8 +51,8 @@ Start the app using [docker](https://docs.docker.com/engine/install/) - [docker-
 $ cp .env.template .env
 # Copy docker-compose.template.yml in docker-compose.yml and edit it if needed
 $ cp docker-compose.template.yml docker-compose.yml
-# Building the image or get the official one: docker-compose pull
-$ docker-compose build
+# Get official image from Docker Hub
+$ docker pull mirotalk/bro:latest
 # Run the image in a container
 $ docker-compose up #-d
 ```
