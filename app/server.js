@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.3
+ * @version 1.0.31
  */
 
 require('dotenv').config();
@@ -18,13 +18,14 @@ const cors = require('cors');
 const express = require('express');
 const app = express();
 const path = require('path');
+const packageJson = require('../package.json');
 
 const logs = require('./logs');
 const log = new logs('server');
 
 let server; // This server exposed on http or https (self signed certificate)
-let broadcasters = {}; // collect broadcasters grouped by socket.id
-let viewers = {}; // collect viewers grouped by socket.id
+const broadcasters = {}; // collect broadcasters grouped by socket.id
+const viewers = {}; // collect viewers grouped by socket.id
 
 // Query params example
 const broadcast = 'broadcast?id=123&name=Broadcaster';
@@ -51,7 +52,7 @@ const host = process.env.HOST || 'localhost';
 const port = process.env.PORT || 3016;
 
 // Stun and Turn iceServers
-let iceServers = [];
+const iceServers = [];
 const stunServerUrl = process.env.STUN_SERVER_URL;
 const turnServerUrl = process.env.TURN_SERVER_URL;
 const turnServerUsername = process.env.TURN_SERVER_USERNAME;
@@ -252,6 +253,7 @@ async function ngrokStart() {
             ngrokBroadcast: `${tunnelHttps}/${broadcast}`,
             ngrokViewer: `${tunnelHttps}/${viewer}`,
             nodeVersion: process.versions.node,
+            app_version: packageJson.version,
         });
     } catch (err) {
         log.warn('[Error] ngrokStart', err);
@@ -268,6 +270,7 @@ server.listen(port, () => {
             broadcast: `${protocol}://${host}:${port}/${broadcast}`,
             viewer: `${protocol}://${host}:${port}/${viewer}`,
             nodeVersion: process.versions.node,
+            app_version: packageJson.version,
         });
     }
 });
