@@ -196,6 +196,8 @@ function togglePictureInPicture(element) {
     } else if (document.pictureInPictureEnabled) {
         element.requestPictureInPicture().catch((error) => {
             console.error('Failed to enter Picture-in-Picture mode', error);
+            popupMessage('warning', 'PIP', error.message);
+            elementDisplay(element, false);
         });
     }
 }
