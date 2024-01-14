@@ -32,7 +32,7 @@ if (broadcastID) {
 // Support the project - Thank you!
 // =====================================================
 
-support.addEventListener('click', getSupport);
+if (support) support.addEventListener('click', getSupport);
 
 function getSupport() {
     openURL('https://codecanyon.net/user/miroslavpejic85', true);
