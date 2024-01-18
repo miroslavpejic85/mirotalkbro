@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.0.33",
+    "version": "1.0.34",
     "description": "P2P WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
@@ -17,6 +17,7 @@
         "WebRTC",
         "Broadcast",
         "Live streaming",
+        "Live broadcasting",
         "SocketIO"
     ],
     "author": "Miroslav Pejic",
@@ -32,7 +33,7 @@
         "socket.io": "^4.7.4"
     },
     "devDependencies": {
-        "nodemon": "^3.0.2",
-        "prettier": "3.2.2"
+        "nodemon": "^3.0.3",
+        "prettier": "3.2.4"
     }
 }

@@ -5,6 +5,8 @@ console.log('Home', window.location);
 const broadcastID = new URLSearchParams(window.location.search).get('id');
 
 const body = document.querySelector('body');
+
+const supportDiv = document.getElementById('supportDiv');
 const support = document.getElementById('support');
 
 const userName = document.getElementById('userName');
@@ -32,7 +34,7 @@ if (broadcastID) {
 // Support the project - Thank you!
 // =====================================================
 
-if (support) support.addEventListener('click', getSupport);
+support.addEventListener('click', getSupport);
 
 function getSupport() {
     openURL('https://codecanyon.net/user/miroslavpejic85', true);
@@ -111,3 +113,10 @@ function isFieldsOk() {
     window.localStorage.room = broadcasterId.value;
     return true;
 }
+
+// =====================================================
+// Hide Elements
+// =====================================================
+
+//elementDisplay(supportDiv, false);
+//...
