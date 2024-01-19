@@ -38,3 +38,7 @@ const viewerSettings = {
         redirect_url: '/',
     },
 };
+
+const html = {
+    support: true,
+};

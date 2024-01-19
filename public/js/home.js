@@ -118,5 +118,5 @@ function isFieldsOk() {
 // Hide Elements
 // =====================================================
 
-//elementDisplay(supportDiv, false);
+!html.support && elementDisplay(supportDiv, false);
 //...
