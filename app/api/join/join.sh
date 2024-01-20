@@ -7,5 +7,5 @@ MIROTALK_URL="https://bro.mirotalk.com/api/v1/join"
 curl $MIROTALK_URL \
     --header "authorization: $API_KEY_SECRET" \
     --header "Content-Type: application/json" \
-    --data '{"room":"test","name":"mirotalkbro"}' \
+    --data '{"room":"test"}' \
     --request POST

@@ -17,8 +17,7 @@ $headers = [
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
 $data = array(
-    "room"          => "test",
-    "name"          => "mirotalkbro",
+    "room"          => "test"
 );
 $data_string = json_encode($data);
 

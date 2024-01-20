@@ -12,8 +12,7 @@ headers = {
 }
 
 data = {
-    "room": "test",
-    "name": "mirotalkbro",
+    "room": "test"
 }
 
 response = requests.post(

@@ -19,7 +19,6 @@ async function getJoin() {
             },
             body: JSON.stringify({
                 room: 'test',
-                name: 'mirotalkbro',
             }),
         });
         const data = await response.json();
