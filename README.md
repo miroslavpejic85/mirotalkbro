@@ -64,6 +64,7 @@ Server is running {
   home: 'http://localhost:3016',
   broadcast: 'http://localhost:3016/broadcast?id=123&name=Broadcaster',
   viewer: 'http://localhost:3016/viewer?id=123&name=Viewer'
+  viewerHome: 'http://localhost:3016/home?id=123'
 }
 ```
 
@@ -144,6 +145,7 @@ Embedding MiroTalk Live Broadcast into a service or app using an iframe.
 -   [Install your own Stun/Turn](./docs/coturn.md)
 -   [Ngrok](./docs/ngrok.md)
 -   [How to Self-hosting](./docs/self-hosting.md)
+-   [Rest API](./app/api/README.md)
 
 </details>
 

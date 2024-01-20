@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.34
+ * @version 1.0.40
  */
 
 require('dotenv').config();
@@ -18,6 +18,12 @@ const cors = require('cors');
 const express = require('express');
 const app = express();
 const path = require('path');
+
+const ServerApi = require('./api');
+const yamlJS = require('yamljs');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = yamlJS.load(path.join(__dirname + '/api/swagger.yaml'));
+
 const packageJson = require('../package.json');
 
 const logs = require('./logs');
@@ -30,6 +36,7 @@ const viewers = {}; // collect viewers grouped by socket.id
 // Query params example
 const broadcast = 'broadcast?id=123&name=Broadcaster';
 const viewer = 'viewer?id=123&name=Viewer';
+const viewerHome = 'home?id=123';
 
 // Sentry config
 const sentryEnabled = getEnvBoolean(process.env.SENTRY_ENABLED);
@@ -50,6 +57,12 @@ if (sentryEnabled) {
 const protocol = process.env.PROTOCOL || 'http';
 const host = process.env.HOST || 'localhost';
 const port = process.env.PORT || 3016;
+const home = `${protocol}://${host}:${port}`;
+
+// API
+const apiKeySecret = process.env.API_KEY_SECRET || 'mirotalkbro_default_secret';
+const apiBasePath = '/api/v1'; // api endpoint path
+const apiDocs = home + apiBasePath + '/docs'; // api docs
 
 // Stun and Turn iceServers
 const iceServers = [];
@@ -95,10 +108,25 @@ const html = {
 
 app.use(cors());
 app.use(compression());
+app.use(express.json()); // Api parse body data as json
 app.use(express.static(html.public));
+app.use(apiBasePath + '/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument)); // api docs
 
-// All start from here
-app.get('*', (next) => {
+// Logs requests
+app.use((req, res, next) => {
+    log.debug('New request:', {
+        body: req.body,
+        method: req.method,
+        path: req.originalUrl,
+    });
+    next();
+});
+
+app.post('*', function (next) {
+    next();
+});
+
+app.get('*', function (next) {
     next();
 });
 
@@ -150,6 +178,28 @@ app.get(['/viewer'], (req, res) => {
 
 app.get(['*'], (req, res) => {
     return notFound(res);
+});
+
+// API request join room endpoint
+app.post([`${apiBasePath}/join`], (req, res) => {
+    const host = req.headers.host;
+    const authorization = req.headers.authorization;
+    const api = new ServerApi(host, authorization, apiKeySecret);
+    if (!api.isAuthorized()) {
+        log.debug('MiroTalk get join - Unauthorized', {
+            header: req.headers,
+            body: req.body,
+        });
+        return res.status(403).json({ error: 'Unauthorized!' });
+    }
+    const joinURL = api.getJoinURL(req.body);
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ join: joinURL }));
+    log.debug('MiroTalk get join - Authorized', {
+        header: req.headers,
+        body: req.body,
+        join: joinURL,
+    });
 });
 
 function notFound(res) {
@@ -252,6 +302,9 @@ async function ngrokStart() {
             ngrokHome: tunnelHttps,
             ngrokBroadcast: `${tunnelHttps}/${broadcast}`,
             ngrokViewer: `${tunnelHttps}/${viewer}`,
+            ngrokViewerHome: `${tunnelHttps}/${viewerHome}`,
+            apiDocs: apiDocs,
+            apiKeySecret: apiKeySecret,
             nodeVersion: process.versions.node,
             app_version: packageJson.version,
         });
@@ -266,9 +319,12 @@ server.listen(port, () => {
         ngrokStart();
     } else {
         log.info('Server is running', {
-            home: `${protocol}://${host}:${port}`,
-            broadcast: `${protocol}://${host}:${port}/${broadcast}`,
-            viewer: `${protocol}://${host}:${port}/${viewer}`,
+            home: home,
+            broadcast: `${home}/${broadcast}`,
+            viewer: `${home}/${viewer}`,
+            viewerHome: `${home}/${viewerHome}`,
+            apiDocs: apiDocs,
+            apiKeySecret: apiKeySecret,
             nodeVersion: process.versions.node,
             app_version: packageJson.version,
         });
