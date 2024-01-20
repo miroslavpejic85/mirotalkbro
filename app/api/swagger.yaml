@@ -29,6 +29,7 @@ paths:
                       properties:
                           room:
                               type: string
+                              default: 'test'
             consumes:
                 - 'application/json'
             produces:
