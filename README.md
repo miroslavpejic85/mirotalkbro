@@ -63,7 +63,7 @@ Server up and running
 Server is running {
   home: 'http://localhost:3016',
   broadcast: 'http://localhost:3016/broadcast?id=123&name=Broadcaster',
-  viewer: 'http://localhost:3016/viewer?id=123&name=Viewer'
+  viewer: 'http://localhost:3016/viewer?id=123&name=Viewer',
   viewerHome: 'http://localhost:3016/home?id=123'
 }
 ```
