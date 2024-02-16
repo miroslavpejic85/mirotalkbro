@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.40
+ * @version 1.0.41
  */
 
 require('dotenv').config();
@@ -182,8 +182,7 @@ app.get(['*'], (req, res) => {
 
 // API request join room endpoint
 app.post([`${apiBasePath}/join`], (req, res) => {
-    const host = req.headers.host;
-    const authorization = req.headers.authorization;
+    const { host, authorization } = req.headers;
     const api = new ServerApi(host, authorization, apiKeySecret);
     if (!api.isAuthorized()) {
         log.debug('MiroTalk get join - Unauthorized', {
@@ -193,8 +192,7 @@ app.post([`${apiBasePath}/join`], (req, res) => {
         return res.status(403).json({ error: 'Unauthorized!' });
     }
     const joinURL = api.getJoinURL(req.body);
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ join: joinURL }));
+    res.json({ join: joinURL });
     log.debug('MiroTalk get join - Authorized', {
         header: req.headers,
         body: req.body,
@@ -203,8 +201,7 @@ app.post([`${apiBasePath}/join`], (req, res) => {
 });
 
 function notFound(res) {
-    res.setHeader('Content-Type', 'application/json');
-    res.send({ data: '404 not found' });
+    res.json({ data: '404 not found' });
 }
 
 // Socket.io
@@ -294,10 +291,8 @@ async function ngrokStart() {
         await ngrok.authtoken(ngrokAuthToken);
         await ngrok.connect(port);
         const api = ngrok.getApi();
-        const data = await api.listTunnels();
-        const pu0 = data.tunnels[0].public_url;
-        const pu1 = data.tunnels[1].public_url;
-        const tunnelHttps = pu0.startsWith('https') ? pu0 : pu1;
+        const list = await api.listTunnels();
+        const tunnelHttps = list.tunnels[0].public_url;
         log.info('Server is running', {
             ngrokHome: tunnelHttps,
             ngrokBroadcast: `${tunnelHttps}/${broadcast}`,
