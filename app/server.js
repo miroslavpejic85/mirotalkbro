@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.41
+ * @version 1.0.42
  */
 
 require('dotenv').config();
@@ -96,7 +96,28 @@ if (protocol === 'http') {
     server = https.createServer(options, app);
 }
 
-const io = require('socket.io')(server);
+// Cors
+let corsOrigin;
+if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN !== '*') {
+    try {
+        corsOrigin = JSON.parse(process.env.CORS_ORIGIN);
+    } catch (error) {
+        // If parsing fails, handle the error accordingly
+        log.error('Error parsing CORS_ORIGIN:', error.message);
+        corsOrigin = '*'; // or set to a default value
+    }
+} else {
+    corsOrigin = '*';
+}
+
+const corsOptions = {
+    origin: corsOrigin,
+    methods: process.env.CORS_METHOD ? JSON.parse(process.env.CORS_METHODS) : ['GET', 'POST'],
+};
+
+const io = require('socket.io')(server, {
+    cors: corsOptions,
+});
 
 // public html files
 const html = {
@@ -106,7 +127,7 @@ const html = {
     viewer: path.join(__dirname, '../', 'public/views/viewer.html'),
 };
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json()); // Api parse body data as json
 app.use(express.static(html.public));
@@ -294,6 +315,8 @@ async function ngrokStart() {
         const list = await api.listTunnels();
         const tunnelHttps = list.tunnels[0].public_url;
         log.info('Server is running', {
+            iceServers: iceServers,
+            cors: corsOptions,
             ngrokHome: tunnelHttps,
             ngrokBroadcast: `${tunnelHttps}/${broadcast}`,
             ngrokViewer: `${tunnelHttps}/${viewer}`,
@@ -314,6 +337,8 @@ server.listen(port, () => {
         ngrokStart();
     } else {
         log.info('Server is running', {
+            iceServers: iceServers,
+            cors: corsOptions,
             home: home,
             broadcast: `${home}/${broadcast}`,
             viewer: `${home}/${viewer}`,
