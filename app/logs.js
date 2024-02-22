@@ -10,26 +10,29 @@ module.exports = class Logs {
 
     debug(msg, op = '') {
         if (this.debugOn === false) return;
-        console.debug('[' + this.getDataTime() + '] [' + this.appName + '] ' + msg, op);
+        console.debug('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
     }
 
     log(msg, op = '') {
-        console.log('[' + this.getDataTime() + '] [' + this.appName + '] ' + msg, op);
+        console.log('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
     }
 
     info(msg, op = '') {
-        console.info('[' + this.getDataTime() + '] [' + this.appName + '] ' + msg, op);
+        console.info('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
     }
 
     warn(msg, op = '') {
-        console.warn('[' + this.getDataTime() + '] [' + this.appName + '] ' + msg, op);
+        console.warn('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
     }
 
     error(msg, op = '') {
-        console.error('[' + this.getDataTime() + '] [' + this.appName + '] ' + msg, op);
+        console.error('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
     }
 
-    getDataTime() {
-        return new Date().toISOString().replace(/T/, ' ').replace(/Z/, '');
+    getDateTime() {
+        const options = {
+            timeZone: process.env.TZ || 'UTC',
+        };
+        return new Date().toLocaleString('en-US', options);
     }
 };
