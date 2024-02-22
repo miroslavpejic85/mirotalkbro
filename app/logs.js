@@ -6,6 +6,10 @@ module.exports = class Logs {
     constructor(appName = 'mirotalkbro') {
         this.appName = appName;
         this.debugOn = debugOn;
+        this.tmOptions = {
+            timeZone: process.env.TZ || 'UTC',
+            hour12: false,
+        };
     }
 
     debug(msg, op = '') {
@@ -30,9 +34,8 @@ module.exports = class Logs {
     }
 
     getDateTime() {
-        const options = {
-            timeZone: process.env.TZ || 'UTC',
-        };
-        return new Date().toLocaleString('en-US', options);
+        const currentTime = new Date().toLocaleString('en-US', this.tmOptions);
+        const milliseconds = String(new Date().getMilliseconds()).padStart(3, '0');
+        return `${currentTime}:${milliseconds}`;
     }
 };
