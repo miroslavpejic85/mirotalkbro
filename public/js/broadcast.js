@@ -165,7 +165,14 @@ socket.on('viewer', (id, iceServers, username) => {
     stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
 
     peerConnection.onicecandidate = (event) => {
-        if (event.candidate) socket.emit('candidate', id, event.candidate);
+        if (event.candidate) {
+            socket.emit('candidate', id, event.candidate);
+            if (event.candidate.candidate.indexOf('relay') !== -1) {
+                console.warn(
+                    '[TURN RELAY] WebRTC traffic is relayed through a TURN server due to restrictive NAT or firewall configurations',
+                );
+            }
+        }
     };
 
     peerConnection
