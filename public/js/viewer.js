@@ -108,11 +108,6 @@ socket.on('offer', (id, description, iceServers) => {
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
             socket.emit('candidate', id, event.candidate);
-            if (event.candidate.candidate.indexOf('relay') !== -1) {
-                console.warn(
-                    '[TURN RELAY] WebRTC traffic is relayed through a TURN server due to restrictive NAT or firewall configurations',
-                );
-            }
         }
     };
 });
