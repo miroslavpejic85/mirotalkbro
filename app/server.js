@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.45
+ * @version 1.0.46
  */
 
 require('dotenv').config();
@@ -89,9 +89,22 @@ if (protocol === 'http') {
 } else {
     const https = require('https');
     const fs = require('fs');
+
+    const keyPath = path.join(__dirname, 'ssl/key.pem');
+    const certPath = path.join(__dirname, 'ssl/cert.pem');
+
+    if (!fs.existsSync(keyPath)) {
+        log.error('SSL key file not found.');
+        process.exit(1);
+    }
+    if (!fs.existsSync(certPath)) {
+        log.error('SSL certificate file not found.');
+        process.exit(1);
+    }
+
     const options = {
-        key: fs.readFileSync(path.join(__dirname, 'ssl/key.pem'), 'utf-8'),
-        cert: fs.readFileSync(path.join(__dirname, 'ssl/cert.pem'), 'utf-8'),
+        key: fs.readFileSync(keyPath, 'utf-8'),
+        cert: fs.readFileSync(certPath, 'utf-8'),
     };
     server = https.createServer(options, app);
 }
