@@ -67,10 +67,14 @@ function isDesktop() {
 
 function setTippy(elem, content, placement) {
     if (isMobileDevice) return;
-    tippy(elem, {
-        content: content,
-        placement: placement,
-    });
+    try {
+        tippy(elem, {
+            content: content,
+            placement: placement,
+        });
+    } catch (err) {
+        console.error('setTippy error', err.message);
+    }
 }
 
 function getUUID4() {
