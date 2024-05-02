@@ -394,6 +394,7 @@ async function ngrokStart() {
         const list = await api.listTunnels();
         const tunnelHttps = list.tunnels[0].public_url;
         log.info('Server is running', {
+            oidc: OIDC.enabled ? OIDC : false,
             iceServers: iceServers,
             cors: corsOptions,
             ngrokHome: tunnelHttps,
@@ -416,6 +417,7 @@ server.listen(port, () => {
         ngrokStart();
     } else {
         log.info('Server is running', {
+            oidc: OIDC.enabled ? OIDC : false,
             iceServers: iceServers,
             cors: corsOptions,
             home: home,
