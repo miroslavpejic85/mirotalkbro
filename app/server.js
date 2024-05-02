@@ -8,11 +8,12 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.47
+ * @version 1.0.48
  */
 
 require('dotenv').config();
 
+const { auth, requiresAuth } = require('express-openid-connect');
 const compression = require('compression');
 const cors = require('cors');
 const express = require('express');
@@ -141,6 +142,36 @@ const io = require('socket.io')(server, {
     cors: corsOptions,
 });
 
+const OIDC = {
+    enabled: process.env.OIDC_ENABLED ? getEnvBoolean(process.env.OIDC_ENABLED) : false,
+    config: {
+        issuerBaseURL: process.env.OIDC_ISSUER_BASE_URL,
+        clientID: process.env.OIDC_CLIENT_ID,
+        clientSecret: process.env.OIDC_CLIENT_SECRET,
+        baseURL: process.env.OIDC_BASE_URL,
+        secret: process.env.SESSION_SECRET,
+        authorizationParams: {
+            response_type: 'code',
+            scope: 'openid profile email',
+        },
+        authRequired: false,
+        auth0Logout: true,
+        routes: {
+            callback: '/auth/callback',
+            login: false,
+            logout: '/logout',
+        },
+    },
+};
+
+const OIDCAuth = function (req, res, next) {
+    if (OIDC.enabled) {
+        requiresAuth()(req, res, next);
+    } else {
+        next();
+    }
+};
+
 // public html files
 const html = {
     public: path.join(__dirname, '../', 'public'),
@@ -197,23 +228,49 @@ app.use((err, req, res, next) => {
     }
 });
 
-app.get(['/'], (req, res) => {
+// OpenID Connect
+if (OIDC.enabled) {
+    try {
+        app.use(auth(OIDC.config));
+    } catch (err) {
+        log.error(err);
+        process.exit(1);
+    }
+}
+
+app.get('/profile', OIDCAuth, (req, res) => {
+    if (OIDC.enabled) {
+        return res.json(req.oidc.user); // Send user information as JSON
+    }
+    res.sendFile(html.home);
+});
+
+app.get('/auth/callback', (req, res, next) => {
+    next(); // Let express-openid-connect handle this route
+});
+
+app.get('/logout', (req, res) => {
+    if (OIDC.enabled) req.logout();
+    res.redirect('/'); // Redirect to the home page after logout
+});
+
+app.get(['/'], OIDCAuth, (req, res) => {
     return res.sendFile(html.home);
 });
 
-app.get(['/home'], (req, res) => {
+app.get(['/home'], OIDCAuth, (req, res) => {
     //http://localhost:3016/home?id=123
     const { id } = req.query;
     return Object.keys(req.query).length > 0 && id ? res.sendFile(html.home) : notFound(res);
 });
 
-app.get(['/broadcast'], (req, res) => {
+app.get(['/broadcast'], OIDCAuth, (req, res) => {
     //http://localhost:3016/broadcast?id=123&name=broadcaster
     const { id, name } = req.query;
     return Object.keys(req.query).length > 0 && id && name ? res.sendFile(html.broadcast) : notFound(res);
 });
 
-app.get(['/viewer'], (req, res) => {
+app.get(['/viewer'], OIDCAuth, (req, res) => {
     //http://localhost:3016/viewer?id=123&name=viewer
     const { id, name } = req.query;
     return Object.keys(req.query).length > 0 && id && name ? res.sendFile(html.viewer) : notFound(res);
