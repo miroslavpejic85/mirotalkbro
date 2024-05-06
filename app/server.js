@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.48
+ * @version 1.0.49
  */
 
 require('dotenv').config();
@@ -154,7 +154,7 @@ const OIDC = {
             response_type: 'code',
             scope: 'openid profile email',
         },
-        authRequired: false,
+        authRequired: process.env.OIDC_AUTH_REQUIRED ? getEnvBoolean(process.env.OIDC_AUTH_REQUIRED) : false,
         auth0Logout: true,
         routes: {
             callback: '/auth/callback',
