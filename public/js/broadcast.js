@@ -381,7 +381,10 @@ function toggleVideo() {
 // Handle share screen
 // =====================================================
 
-if (!isMobileDevice && (navigator.getDisplayMedia || (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia))) {
+if (
+    !isMobileDevice &&
+    (navigator.getDisplayMedia || (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia))
+) {
     screenShareStart.addEventListener('click', toggleScreen);
     screenShareStop.addEventListener('click', toggleScreen);
 } else {
