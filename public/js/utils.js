@@ -84,11 +84,13 @@ function getUUID4() {
 }
 
 function hasAudioTrack(mediaStream) {
+if(!mediaStream) return false
     const audioTracks = mediaStream.getAudioTracks();
     return audioTracks.length > 0;
 }
 
 function hasVideoTrack(mediaStream) {
+    if(!mediaStream) return false
     const videoTracks = mediaStream.getVideoTracks();
     return videoTracks.length > 0;
 }
