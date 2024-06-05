@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.50
+ * @version 1.0.51
  */
 
 require('dotenv').config();
@@ -19,11 +19,12 @@ const cors = require('cors');
 const express = require('express');
 const app = express();
 const path = require('path');
+const fs = require('fs');
 
 const ServerApi = require('./api');
-const yamlJS = require('yamljs');
+const yaml = require('js-yaml');
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = yamlJS.load(path.join(__dirname + '/api/swagger.yaml'));
+const swaggerDocument = yaml.load(fs.readFileSync(path.join(__dirname, '/api/swagger.yaml'), 'utf8'));
 
 const packageJson = require('../package.json');
 
@@ -89,7 +90,6 @@ if (protocol === 'http') {
     server = http.createServer(app);
 } else {
     const https = require('https');
-    const fs = require('fs');
 
     const keyPath = path.join(__dirname, 'ssl/key.pem');
     const certPath = path.join(__dirname, 'ssl/cert.pem');
