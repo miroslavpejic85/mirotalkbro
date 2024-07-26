@@ -89,6 +89,10 @@ button:hover {
     box-shadow: var(--box-shadow);
 }
 
+.container video:hover {
+    filter: contrast(105%);
+}
+
 .video-off {
     z-index: 2;
     position: absolute;
