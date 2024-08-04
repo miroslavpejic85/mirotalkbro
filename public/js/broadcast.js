@@ -801,6 +801,22 @@ function getVideoConstraints() {
                 frameRate: videoFrameRate,
             };
             break;
+        case '6k':
+            videoConstraints = {
+                width: { exact: 6144 },
+                height: { exact: 3456 },
+                frameRate: videoFrameRate,
+            };
+            break;
+        case '8k':
+            videoConstraints = {
+                width: { exact: 7680 },
+                height: { exact: 4320 },
+                frameRate: videoFrameRate,
+            };
+            break;
+        default:
+            break;
     }
     return videoConstraints;
 }
@@ -944,7 +960,7 @@ function gotDevices(deviceInfos) {
 // Handle window exit
 // =====================================================
 
-window.onunload = window.onbeforeunload = () => {
+window.onbeforeunload = () => {
     socket.close();
     if (thereIsPeerConnections()) {
         for (let id in peerConnections) {
@@ -955,4 +971,5 @@ window.onunload = window.onbeforeunload = () => {
     }
     stopSessionTime();
     saveRecording();
+    return undefined;
 };

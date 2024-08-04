@@ -492,11 +492,12 @@ function sendMessage() {
 // Handle window exit
 // =====================================================
 
-window.onunload = window.onbeforeunload = () => {
+window.onbeforeunload = () => {
     socket.close();
     if (peerConnection) {
         peerConnection.close();
     }
     stopSessionTime();
     saveRecording();
+    return undefined;
 };
