@@ -847,6 +847,9 @@ function getStream() {
     };
     const constraints = screenShareEnabled ? screenConstraints : cameraConstraints;
 
+    stopWindowStream();
+    stopBroadcastStream();
+
     if (screenShareEnabled) {
         video.classList.remove('mirror');
         isVideoMirrored = false;
@@ -870,8 +873,6 @@ function getStream() {
 }
 
 function gotStream(stream) {
-    stopWindowStream();
-    stopBroadcastStream();
     window.stream = stream;
     broadcastStream = stream;
     if (!screenShareEnabled) {
