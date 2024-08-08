@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.55
+ * @version 1.0.56
  */
 
 require('dotenv').config();
@@ -44,10 +44,9 @@ const viewerHome = 'home?id=123';
 const sentryEnabled = getEnvBoolean(process.env.SENTRY_ENABLED);
 if (sentryEnabled) {
     const Sentry = require('@sentry/node');
-    const { CaptureConsole } = require('@sentry/integrations');
     Sentry.init({
         dsn: process.env.SENTRY_DSN,
-        integrations: [new CaptureConsole({ levels: ['warn', 'error'] })],
+        integrations: [Sentry.captureConsoleIntegration({ levels: ['warn', 'error'] })],
         tracesSampleRate: process.env.SENTRY_TRACES_SAMPLE_RATE,
     });
     // Test
