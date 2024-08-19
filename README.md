@@ -2,6 +2,14 @@
 
 <br />
 
+<div align="center">
+
+<a href="">[![Author](https://img.shields.io/badge/Author-miroslav-brightgreen.svg)](https://www.linkedin.com/in/miroslav-pejic-976a07101/)</a>
+<a href="">![License: AGPLv3](https://img.shields.io/badge/License-AGPLv3-blue.svg)</a>
+<a href="">[![Community](https://img.shields.io/badge/Community-forum-pink.svg)](https://discord.gg/rgGYfeYW3N)</a>
+
+</div>
+
 <p align="center">MiroTalk BRO Live Broadcast allows to broadcast live video, audio and screen stream to all connected users (viewers) and receive messages from them. Can handle unlimited rooms, without time limitations, each having a broadcast and many viewers.</a></p>
 
 ---
