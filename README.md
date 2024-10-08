@@ -42,6 +42,10 @@
 Start the app using [nodejs](https://nodejs.org/en/download):
 
 ```bash
+# Clone the project repo
+$ git clone https://github.com/miroslavpejic85/mirotalkbro.git
+# Go to project dir
+$ cd mirotalkbro
 # Copy .env.template in .env and edit it if needed
 $ cp .env.template .env
 # Install dependencies
@@ -55,6 +59,10 @@ Start the app using [docker](https://docs.docker.com/engine/install/) - [docker-
 ![docker](public/assets/images/docker.png)
 
 ```bash
+# Clone the project repo
+$ git clone https://github.com/miroslavpejic85/mirotalkbro.git
+# Go to project dir
+$ cd mirotalkbro
 # Copy .env.template in .env and edit it if needed
 $ cp .env.template .env
 # Copy docker-compose.template.yml in docker-compose.yml and edit it if needed
