@@ -37,7 +37,7 @@
 <details open>
 <summary>Quick Start</summary>
 
-<br/>
+![nodejs](public/assets/images/nodejs.png)
 
 Start the app using [nodejs](https://nodejs.org/en/download):
 
