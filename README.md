@@ -158,10 +158,10 @@ Embedding MiroTalk Live Broadcast into a service or app using an iframe.
 
 <br>
 
--   [Install your own Stun/Turn](./docs/coturn.md)
--   [Ngrok](./docs/ngrok.md)
--   [How to Self-hosting](./docs/self-hosting.md)
--   [Rest API](./app/api/README.md)
+- [Install your own Stun/Turn](./docs/coturn.md)
+- [Ngrok](./docs/ngrok.md)
+- [How to Self-hosting](./docs/self-hosting.md)
+- [Rest API](./app/api/README.md)
 
 </details>
 
@@ -170,7 +170,7 @@ Embedding MiroTalk Live Broadcast into a service or app using an iframe.
 
 <br>
 
--   Gabriel Tanner [webrtc-broadcast-logic](https://gabrieltanner.org/blog/webrtc-video-broadcast/)
+- Gabriel Tanner [webrtc-broadcast-logic](https://gabrieltanner.org/blog/webrtc-video-broadcast/)
 
 </details>
 
