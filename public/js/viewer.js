@@ -28,7 +28,7 @@ const snapshot = document.getElementById('snapshot');
 const fullScreenOn = document.getElementById('fullScreenOn');
 const fullScreenOff = document.getElementById('fullScreenOff');
 const togglePIP = document.getElementById('togglePIP');
-const goHome = document.getElementById('goHome');
+const leave = document.getElementById('leave');
 const messagesBtn = document.getElementById('messagesBtn');
 const messagesForm = document.getElementById('messagesForm');
 const messageInput = document.getElementById('messageInput');
@@ -51,7 +51,7 @@ const viewerTooltips = [
     { element: messagesBtn, text: 'Toggle messages', position: 'top' },
     { element: fullScreenOn, text: 'Enable full screen', position: 'top' },
     { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
-    { element: goHome, text: 'Go to home page', position: 'top' },
+    { element: leave, text: 'Disconnect', position: 'top' },
 ];
 
 body.onload = loadViewerToolTip;
@@ -198,7 +198,7 @@ elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn && isFullScreenSupported());
 elementDisplay(togglePIP, viewerSettings.buttons.pictureInPicture && isPIPSupported());
-elementDisplay(goHome, viewerSettings.buttons.close);
+elementDisplay(leave, viewerSettings.buttons.close);
 
 messageDisplay(viewerSettings.buttons.message);
 
@@ -397,9 +397,9 @@ function toggleFullScreenDoc() {
 // Handle leave room
 // =====================================================
 
-goHome.addEventListener('click', goToHomePage);
+leave.addEventListener('click', disconnectMe);
 
-function goToHomePage() {
+function disconnectMe() {
     stopSessionTime();
     openURL(viewerSettings.options.redirect_url);
 }
