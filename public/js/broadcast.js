@@ -831,6 +831,8 @@ videoSelect.onchange = getStream;
 getStream().then(getDevices).then(gotDevices);
 
 function getStream() {
+    videoOff.style.visibility = 'hidden';
+
     videoQualitySelect.selectedIndex = localStorage.videoQualitySelectedIndex
         ? localStorage.videoQualitySelectedIndex
         : 0;
