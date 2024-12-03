@@ -35,7 +35,9 @@ const viewerSettings = {
     options: {
         start_full_screen: false,
         zoom_video: true,
-        redirect_url: '/',
+        redirect_url: '/disconnect', // URL to redirect viewers when they leave the room
+        disconnect_url: '/disconnect', // URL to redirect viewers when the broadcaster ends the session or disconnects them
+        disconnect_txt: 'Thank you for joining!', // Text to display on disconnect page
     },
 };
 

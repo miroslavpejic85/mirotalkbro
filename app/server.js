@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.0.64
+ * @version 1.0.65
  */
 
 require('dotenv').config();
@@ -177,6 +177,7 @@ const html = {
     home: path.join(__dirname, '../', 'public/views/home.html'),
     broadcast: path.join(__dirname, '../', 'public/views/broadcast.html'),
     viewer: path.join(__dirname, '../', 'public/views/viewer.html'),
+    disconnect: path.join(__dirname, '../', 'public/views/disconnect.html'),
 };
 
 app.use(cors(corsOptions));
@@ -273,6 +274,10 @@ app.get(['/viewer'], (req, res) => {
     //http://localhost:3016/viewer?id=123&name=viewer
     const { id, name } = req.query;
     return Object.keys(req.query).length > 0 && id && name ? res.sendFile(html.viewer) : notFound(res);
+});
+
+app.get(['/disconnect'], (req, res) => {
+    return res.sendFile(html.disconnect);
 });
 
 app.get(['*'], (req, res) => {

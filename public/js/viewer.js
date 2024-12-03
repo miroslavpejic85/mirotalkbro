@@ -166,7 +166,7 @@ function handleDataChannel() {
 function handleDataChannelMessage(data) {
     switch (data.method) {
         case 'disconnect':
-            openURL(viewerSettings.options.redirect_url);
+            openURL(viewerSettings.options.disconnect_url);
             break;
         case 'video':
             videoOff.style.visibility = data.action.visibility;
