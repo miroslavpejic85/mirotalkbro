@@ -751,73 +751,22 @@ function applyVideoConstraints() {
 function getVideoConstraints() {
     const videoQuality = videoQualitySelect.value;
     const videoFrameRate = videoFpsSelect.value == 'default' ? 30 : parseInt(videoFpsSelect.value, 10);
-    let videoConstraints = { frameRate: { ideal: videoFrameRate } };
-    switch (videoQuality) {
-        case 'default':
-            videoConstraints = {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                frameRate: { ideal: videoFrameRate },
-            };
-            break;
-        case 'qvga':
-            videoConstraints = {
-                width: { exact: 320 },
-                height: { exact: 240 },
-                frameRate: videoFrameRate,
-            };
-            break;
-        case 'vga':
-            videoConstraints = {
-                width: { exact: 640 },
-                height: { exact: 480 },
-                frameRate: videoFrameRate,
-            };
-            break;
-        case 'hd':
-            videoConstraints = {
-                width: { exact: 1280 },
-                height: { exact: 720 },
-                frameRate: videoFrameRate,
-            };
-        case 'fhd':
-            videoConstraints = {
-                width: { exact: 1920 },
-                height: { exact: 1080 },
-                frameRate: videoFrameRate,
-            };
-            break;
-        case '2k':
-            videoConstraints = {
-                width: { exact: 2560 },
-                height: { exact: 1440 },
-                frameRate: videoFrameRate,
-            };
-            break;
-        case '4k':
-            videoConstraints = {
-                width: { exact: 3840 },
-                height: { exact: 2160 },
-                frameRate: videoFrameRate,
-            };
-            break;
-        case '6k':
-            videoConstraints = {
-                width: { exact: 6144 },
-                height: { exact: 3456 },
-                frameRate: videoFrameRate,
-            };
-            break;
-        case '8k':
-            videoConstraints = {
-                width: { exact: 7680 },
-                height: { exact: 4320 },
-                frameRate: videoFrameRate,
-            };
-            break;
-        default:
-            break;
-    }
+
+    const qualityMap = {
+        default: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        qvga: { width: { exact: 320 }, height: { exact: 240 } },
+        vga: { width: { exact: 640 }, height: { exact: 480 } },
+        hd: { width: { exact: 1280 }, height: { exact: 720 } },
+        fhd: { width: { exact: 1920 }, height: { exact: 1080 } },
+        '2k': { width: { exact: 2560 }, height: { exact: 1440 } },
+        '4k': { width: { exact: 3840 }, height: { exact: 2160 } },
+        '6k': { width: { exact: 6144 }, height: { exact: 3456 } },
+        '8k': { width: { exact: 7680 }, height: { exact: 4320 } },
+    };
+
+    const videoConstraints = qualityMap[videoQuality] || {};
+    videoConstraints.frameRate = { ideal: videoFrameRate };
+
     return videoConstraints;
 }
 
