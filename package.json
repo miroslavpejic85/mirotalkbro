@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.0.66",
+    "version": "1.0.67",
     "description": "P2P WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
@@ -37,6 +37,6 @@
     "devDependencies": {
         "node-fetch": "^3.3.2",
         "nodemon": "^3.1.7",
-        "prettier": "3.4.1"
+        "prettier": "3.4.2"
     }
 }
