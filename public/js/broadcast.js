@@ -63,11 +63,14 @@ const videoQualitySelect = document.getElementById('videoQualitySelect');
 const videoFpsSelect = document.getElementById('videoFpsSelect');
 const audioSelect = document.getElementById('audioSelect');
 
-const userAgent = navigator.userAgent.toLowerCase();
-const isMobileDevice = isMobile();
-const isTabletDevice = isTablet();
-const isIPadDevice = isIpad();
-const isDesktopDevice = isDesktop();
+const userAgent = navigator.userAgent;
+const parser = new UAParser(userAgent);
+const result = parser.getResult();
+const deviceType = result.device.type || 'desktop';
+const isMobileDevice = deviceType === 'mobile';
+const isTabletDevice = deviceType === 'tablet';
+const isIPadDevice = result.device.model?.toLowerCase() === 'ipad';
+const isDesktopDevice = deviceType === 'desktop';
 
 const isSpeechSynthesisSupported = 'speechSynthesis' in window;
 

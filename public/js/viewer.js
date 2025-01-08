@@ -34,8 +34,11 @@ const messagesForm = document.getElementById('messagesForm');
 const messageInput = document.getElementById('messageInput');
 const messageSend = document.getElementById('messageSend');
 
-const userAgent = navigator.userAgent.toLowerCase();
-const isMobileDevice = isMobile();
+const userAgent = navigator.userAgent;
+const parser = new UAParser(userAgent);
+const result = parser.getResult();
+const deviceType = result.device.type || 'desktop';
+const isMobileDevice = deviceType === 'mobile';
 
 // =====================================================
 // Handle ToolTips

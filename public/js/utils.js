@@ -44,25 +44,7 @@ function getRandomInt(max) {
 }
 
 function isPIPSupported() {
-    return !isMobile() && document.pictureInPictureEnabled;
-}
-
-function isMobile() {
-    return !!/Android|webOS|iPhone|iPad|iPod|BB10|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(userAgent || '');
-}
-
-function isTablet() {
-    return /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/.test(
-        userAgent,
-    );
-}
-
-function isIpad() {
-    return /macintosh/.test(userAgent) && 'ontouchend' in document;
-}
-
-function isDesktop() {
-    return !isMobileDevice && !isTabletDevice && !isIPadDevice;
+    return !isMobileDevice && document.pictureInPictureEnabled;
 }
 
 function setTippy(elem, content, placement) {
