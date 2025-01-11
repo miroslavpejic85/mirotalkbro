@@ -688,6 +688,8 @@ function disconnectALLViewers(confirmation = true) {
 
 togglePIP.addEventListener('click', handleVideoPIP);
 
+handleVideoPIPonExit();
+
 function handleVideoPIP() {
     if (!video.srcObject) {
         popupMessage('toast', 'Picture-in-Picture', 'There is no video for PIP', 'top');

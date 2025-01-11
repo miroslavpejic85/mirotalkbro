@@ -178,6 +178,17 @@ function isFullScreen() {
     return true;
 }
 
+function handleVideoPIPonExit() {
+    video.addEventListener('leavepictureinpicture', (event) => {
+        console.log('Exited PiP mode');
+        if (video.paused) {
+            video.play().catch((error) => {
+                console.error('Error playing video after exit PIP mode', error);
+            });
+        }
+    });
+}
+
 function togglePictureInPicture(element) {
     if (document.pictureInPictureElement) {
         document.exitPictureInPicture();

@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.0.71",
+    "version": "1.0.72",
     "description": "P2P WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
