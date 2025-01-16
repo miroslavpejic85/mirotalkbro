@@ -26,6 +26,8 @@ const settingsForm = document.getElementById('broadcasterSettingsForm');
 
 const copyRoom = document.getElementById('copyRoom');
 const shareRoom = document.getElementById('shareRoom');
+const enableAudio = document.getElementById('enableAudio');
+const disableAudio = document.getElementById('disableAudio');
 const videoBtn = document.getElementById('videoBtn');
 const screenShareStart = document.getElementById('screenShareStart');
 const screenShareStop = document.getElementById('screenShareStop');
@@ -81,6 +83,8 @@ const isSpeechSynthesisSupported = 'speechSynthesis' in window;
 const broadcastTooltips = [
     { element: copyRoom, text: 'Copy and share room URL', position: 'top' },
     { element: shareRoom, text: 'Share room URL', position: 'top' },
+    { element: enableAudio, text: 'Enable audio', position: 'top' },
+    { element: disableAudio, text: 'Disable audio', position: 'top' },
     { element: videoBtn, text: 'Toggle video', position: 'top' },
     { element: screenShareStart, text: 'Start screen sharing', position: 'top' },
     { element: screenShareStop, text: 'Stop screen sharing', position: 'top' },
@@ -147,11 +151,9 @@ socket.on('viewer', (id, iceServers, username) => {
 
     handleDataChannels(id);
 
-    connectedPeers.innerText = Object.keys(peerConnections).length;
-
     addViewer(id, username);
 
-    // popupMessage('toast', 'New viewer', `${username} join`, 'top', 2000);
+    connectedPeers.innerText = Object.keys(peerConnections).length;
 
     playSound('viewer');
 
@@ -270,6 +272,8 @@ elementDisplay(screenShareStop, false);
 elementDisplay(settingsForm, broadcastSettings.options.settings, broadcastSettings.options.settings ? 'grid' : 'none');
 elementDisplay(copyRoom, broadcastSettings.buttons.copyRoom);
 elementDisplay(shareRoom, broadcastSettings.buttons.shareRoom);
+elementDisplay(disableAudio, broadcastSettings.buttons.audio);
+elementDisplay(enableAudio, broadcastSettings.buttons.audio && false);
 elementDisplay(videoBtn, broadcastSettings.buttons.video);
 elementDisplay(screenShareStart, broadcastSettings.buttons.screenShareStart);
 elementDisplay(recordingStart, broadcastSettings.buttons.recordingStart);
@@ -365,6 +369,22 @@ copyRoom.addEventListener('click', copyRoomURL);
 navigator.share
     ? shareRoom.addEventListener('click', shareRoomNavigator)
     : shareRoom.addEventListener('click', shareRoomQR);
+
+// =====================================================
+// Handle audio
+// =====================================================
+
+enableAudio.addEventListener('click', () => toggleAudio(true));
+disableAudio.addEventListener('click', () => toggleAudio(false));
+
+function toggleAudio(enable) {
+    const audioTrack = broadcastStream.getAudioTracks()[0];
+    if (audioTrack) {
+        audioTrack.enabled = enable;
+    }
+    elementDisplay(enableAudio, !enable);
+    elementDisplay(disableAudio, enable && broadcastSettings.buttons.audio);
+}
 
 // =====================================================
 // Handle video stream

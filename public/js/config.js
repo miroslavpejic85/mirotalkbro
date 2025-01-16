@@ -4,8 +4,9 @@ const broadcastSettings = {
     buttons: {
         copyRoom: true,
         shareRoom: true,
-        screenShareStart: true,
+        audio: true,
         video: true,
+        screenShareStart: true,
         recordingStart: true,
         messagesOpenForm: true,
         viewersOpenForm: true,
@@ -24,7 +25,6 @@ const broadcastSettings = {
 
 const viewerSettings = {
     buttons: {
-        audio: true,
         snapshot: true,
         recordingStart: true,
         fullScreenOn: true,

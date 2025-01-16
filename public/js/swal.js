@@ -50,19 +50,28 @@ function popupMessage(icon, title, message, position = 'center', timer = 3000) {
     }
 }
 
-function popupEnableAudio() {
+function popupEnableAutoPlay() {
     Swal.fire({
         allowOutsideClick: false,
         allowEscapeKey: false,
-        showDenyButton: true,
+        showDenyButton: false,
+        icon: 'warning',
         position: 'top',
-        title: 'Broadcaster audio',
-        text: 'Do you want to enable the broadcaster audio?',
-        confirmButtonText: `Yes`,
-        denyButtonText: `No`,
+        title: 'Autoplay is not allowed',
+        text: 'Please click Play to start playback',
+        confirmButtonText: '<i class="fas fa-play"></i>',
         showClass: { popup: 'animate__animated animate__fadeInDown' },
         hideClass: { popup: 'animate__animated animate__fadeOutUp' },
     }).then((result) => {
-        result.isConfirmed ? enableAudio.click() : disableAudio.click();
+        if (result.isConfirmed) {
+            video.play().catch((error) => {
+                console.error('Playback failed', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Playback Error',
+                    text: 'Failed to start playback. Please try again',
+                });
+            });
+        }
     });
 }

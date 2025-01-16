@@ -18,8 +18,6 @@ const sessionTime = document.getElementById('sessionTime');
 const video = document.querySelector('video');
 const videoOff = document.getElementById('videoOff');
 
-const enableAudio = document.getElementById('enableAudio');
-const disableAudio = document.getElementById('disableAudio');
 const recordingStart = document.getElementById('recordingStart');
 const recordingStop = document.getElementById('recordingStop');
 const recordingLabel = document.getElementById('recordingLabel');
@@ -45,8 +43,6 @@ const isMobileDevice = deviceType === 'mobile';
 // =====================================================
 
 const viewerTooltips = [
-    { element: enableAudio, text: 'Enable audio', position: 'top' },
-    { element: disableAudio, text: 'Disable audio', position: 'top' },
     { element: recordingStart, text: 'Start recording', position: 'top' },
     { element: recordingStop, text: 'Stop recording', position: 'top' },
     { element: snapshot, text: 'Take a snapshot', position: 'top' },
@@ -104,10 +100,8 @@ socket.on('offer', (id, description, iceServers) => {
     peerConnection.ontrack = (event) => {
         saveRecording();
         attachStream(event.streams[0]);
-        if (event.track.kind === 'audio') {
-            popupEnableAudio();
-        }
     };
+
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
             socket.emit('candidate', id, event.candidate);
@@ -195,8 +189,6 @@ if (getMode === 'dark') body.classList.toggle('dark');
 elementDisplay(fullScreenOff, false);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
-elementDisplay(disableAudio, viewerSettings.buttons.audio);
-elementDisplay(enableAudio, !viewerSettings.buttons.audio);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn && isFullScreenSupported());
@@ -281,29 +273,15 @@ function attachStream(stream) {
     video.srcObject = stream;
     video.playsInline = true;
     video.autoplay = true;
-    video.muted = true;
     video.controls = false;
 }
 
-// =====================================================
-// Handle audio
-// =====================================================
-
-enableAudio.addEventListener('click', setAudioOn);
-disableAudio.addEventListener('click', setAudioOff);
-
-function setAudioOn() {
-    if (!peerConnection) return;
-    video.muted = false;
-    elementDisplay(enableAudio, false);
-    elementDisplay(disableAudio, viewerSettings.buttons.audio);
-}
-
-function setAudioOff() {
-    video.muted = true;
-    elementDisplay(disableAudio, false);
-    elementDisplay(enableAudio, true);
-}
+video.addEventListener('loadeddata', () => {
+    video.play().catch((error) => {
+        console.error('Autoplay failed', error.message);
+        popupEnableAutoPlay();
+    });
+});
 
 // =====================================================
 // Handle recording
