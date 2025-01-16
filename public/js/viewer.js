@@ -170,7 +170,12 @@ function handleDataChannelMessage(data) {
             break;
         case 'audio':
             playSound('viewer');
-            popupMessage('toast', `Broadcaster audio ${data.action.enable ? 'enabled' : 'disabled'}`, '', 'top');
+            popupMessage(
+                'toast',
+                'Broadcaster',
+                `Broadcaster audio ${data.action.enable ? 'enabled' : 'disabled'}`,
+                'top',
+            );
             break;
         //...
         default:

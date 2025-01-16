@@ -26,7 +26,6 @@
 .broadcast-buttons {
     margin: auto;
     display: flex;
-    flex-direction: row-reverse;
 }
 
 .broadcast-buttons button {
