@@ -168,6 +168,10 @@ function handleDataChannelMessage(data) {
         case 'video':
             videoOff.style.visibility = data.action.visibility;
             break;
+        case 'audio':
+            playSound('viewer');
+            popupMessage('toast', `Broadcaster audio ${data.action.enable ? 'enabled' : 'disabled'}`, '', 'top');
+            break;
         //...
         default:
             console.error('Data channel message not handled', data);

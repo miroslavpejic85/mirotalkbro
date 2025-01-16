@@ -33,14 +33,14 @@ function popupMessage(icon, title, message, position = 'center', timer = 3000) {
             const Toast = Swal.mixin({
                 toast: true,
                 position: position,
-                icon: 'info',
                 showConfirmButton: false,
                 timerProgressBar: true,
                 timer: timer,
             });
             Toast.fire({
                 icon: 'info',
-                title: message,
+                title: title,
+                text: message,
                 showClass: { popup: 'animate__animated animate__fadeInDown' },
                 hideClass: { popup: 'animate__animated animate__fadeOutUp' },
             });

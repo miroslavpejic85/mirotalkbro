@@ -384,6 +384,7 @@ function toggleAudio(enable) {
     }
     elementDisplay(enableAudio, !enable);
     elementDisplay(disableAudio, enable && broadcastSettings.buttons.audio);
+    sendToViewersDataChannel('audio', { enable });
 }
 
 // =====================================================
