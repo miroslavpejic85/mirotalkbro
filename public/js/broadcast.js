@@ -387,10 +387,10 @@ enableAudio.addEventListener('click', () => toggleAudio(true));
 disableAudio.addEventListener('click', () => toggleAudio(false));
 
 function toggleAudio(enable) {
-    if (broadcastStream) return;
-
-    broadcastStream.getAudioTracks()[0].enabled = !broadcastStream.getAudioTracks()[0].enabled;
-
+    const audioTrack = broadcastStream.getAudioTracks()[0];
+    if (audioTrack) {
+        audioTrack.enabled = enable;
+    }
     elementDisplay(enableAudio, !enable);
     elementDisplay(disableAudio, enable && broadcastSettings.buttons.audio);
     sendToViewersDataChannel('audio', { enable });
