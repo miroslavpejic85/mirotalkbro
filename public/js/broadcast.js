@@ -50,6 +50,7 @@ const viewersCloseForm = document.getElementById('viewersCloseForm');
 const viewersForm = document.getElementById('viewersForm');
 const viewersFormHeader = document.getElementById('viewersFormHeader');
 const viewersTable = document.getElementById('viewersTable');
+const viewersShow = document.getElementById('viewersShow');
 const viewerOpenMessageForm = document.getElementById('viewerOpenMessageForm');
 const viewersSave = document.getElementById('viewersSave');
 const viewerSearch = document.getElementById('viewerSearch');
@@ -169,6 +170,10 @@ socket.on('viewer', (id, iceServers, username) => {
 
     stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
 
+    peerConnection.ontrack = (event) => {
+        addViewer(id, username, event.streams[0]);
+    };
+
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
             socket.emit('candidate', id, event.candidate);
@@ -243,6 +248,10 @@ function sendToViewersDataChannel(method, action = {}, peerId = '*') {
         }
     }
     function sendTo(id) {
+        if (dataChannels[id].readyState !== 'open') {
+            console.warn('DataChannel is not open. Current state:', dataChannels[id].readyState);
+            return;
+        }
         dataChannels[id].send(
             JSON.stringify({
                 method: method,
@@ -378,10 +387,10 @@ enableAudio.addEventListener('click', () => toggleAudio(true));
 disableAudio.addEventListener('click', () => toggleAudio(false));
 
 function toggleAudio(enable) {
-    const audioTrack = broadcastStream.getAudioTracks()[0];
-    if (audioTrack) {
-        audioTrack.enabled = enable;
-    }
+    if (broadcastStream) return;
+
+    broadcastStream.getAudioTracks()[0].enabled = !broadcastStream.getAudioTracks()[0].enabled;
+
     elementDisplay(enableAudio, !enable);
     elementDisplay(disableAudio, enable && broadcastSettings.buttons.audio);
     sendToViewersDataChannel('audio', { enable });
@@ -619,28 +628,57 @@ function searchViewer() {
     }
 }
 
-function addViewer(id, username) {
+function addViewer(id, username, stream = null) {
     connectedViewers[id] = username;
-    console.log('ConnectedViewers', {
-        connected: username,
-        connectedViewers: connectedViewers,
-    });
+    console.log('ConnectedViewers', { connected: username, connectedViewers: connectedViewers });
+
     const trDel = document.getElementById(id);
     if (trDel) viewersTable.removeChild(trDel);
+
     const tr = document.createElement('tr');
     const tdUsername = document.createElement('td');
+    const tdVideo = document.createElement('td');
     const tdDisconnect = document.createElement('td');
     const button = document.createElement('button');
-    const p = document.createElement('p');
+
     tr.id = id;
-    p.innerText = username;
-    button.id = `${id}___${username}`;
-    button.innerText = 'Disconnect';
-    tdUsername.appendChild(p);
+    tdUsername.innerText = username;
+
+    viewersShow.classList.remove('hidden');
+    const videoElement = document.createElement('video');
+
+    const { hasVideo, hasAudio } = hasVideoOrAudioTracks(stream);
+
+    let videoPoster;
+
+    if (!hasVideo) {
+        videoPoster = '../assets/images/videoOff.png';
+    } else if (!hasAudio) {
+        videoPoster = '../assets/images/viewer.png';
+    }
+
+    Object.assign(videoElement, {
+        width: 150,
+        height: 100,
+        autoplay: true,
+        controls: false,
+        srcObject: stream,
+        poster: videoPoster,
+    });
+    tdVideo.appendChild(videoElement);
+
+    Object.assign(button, {
+        id: `${id}___${username}`,
+        innerText: 'Disconnect',
+    });
+
     tdDisconnect.appendChild(button);
+
     tr.appendChild(tdUsername);
+    tr.appendChild(tdVideo);
     tr.appendChild(tdDisconnect);
     viewersTable.appendChild(tr);
+
     handleDisconnectPeer(button.id);
 }
 
@@ -886,6 +924,12 @@ function attachStream(stream) {
     video.muted = true;
     video.volume = 0;
     video.controls = false;
+}
+
+function hasVideoOrAudioTracks(stream) {
+    const hasVideo = stream && stream.getVideoTracks().length > 0;
+    const hasAudio = stream && stream.getAudioTracks().length > 0;
+    return { hasVideo, hasAudio };
 }
 
 function stopBroadcastStream() {

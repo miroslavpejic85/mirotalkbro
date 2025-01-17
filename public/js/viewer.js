@@ -18,6 +18,9 @@ const sessionTime = document.getElementById('sessionTime');
 const video = document.querySelector('video');
 const videoOff = document.getElementById('videoOff');
 
+const enableAudio = document.getElementById('enableAudio');
+const disableAudio = document.getElementById('disableAudio');
+const videoBtn = document.getElementById('videoBtn');
 const recordingStart = document.getElementById('recordingStart');
 const recordingStop = document.getElementById('recordingStop');
 const recordingLabel = document.getElementById('recordingLabel');
@@ -43,6 +46,9 @@ const isMobileDevice = deviceType === 'mobile';
 // =====================================================
 
 const viewerTooltips = [
+    { element: enableAudio, text: 'Enable audio', position: 'top' },
+    { element: disableAudio, text: 'Disable Your audio', position: 'top' },
+    { element: videoBtn, text: 'Toggle Your video', position: 'top' },
     { element: recordingStart, text: 'Start recording', position: 'top' },
     { element: recordingStop, text: 'Stop recording', position: 'top' },
     { element: snapshot, text: 'Take a snapshot', position: 'top' },
@@ -75,10 +81,11 @@ myName.innerText = username;
 
 let peerConnection;
 let dataChannel;
+let viewerStream;
 
 const socket = io.connect(window.location.origin);
 
-socket.on('offer', (id, description, iceServers) => {
+socket.on('offer', async (id, description, iceServers) => {
     peerConnection = new RTCPeerConnection({ iceServers: iceServers });
 
     handleDataChannel();
@@ -89,6 +96,13 @@ socket.on('offer', (id, description, iceServers) => {
             signalingState: event.currentTarget.signalingState,
         });
     };
+
+    if (broadcastSettings.options.show_viewers && (viewerSettings.buttons.audio || viewerSettings.buttons.video)) {
+        viewerStream = await getStream();
+        if (viewerStream) {
+            viewerStream.getTracks().forEach((track) => peerConnection.addTrack(track, viewerStream));
+        }
+    }
 
     peerConnection
         .setRemoteDescription(description)
@@ -196,6 +210,9 @@ if (getMode === 'dark') body.classList.toggle('dark');
 // =====================================================
 
 elementDisplay(fullScreenOff, false);
+elementDisplay(disableAudio, broadcastSettings.options.show_viewers && viewerSettings.buttons.audio);
+elementDisplay(enableAudio, broadcastSettings.options.show_viewers && viewerSettings.buttons.audio && false);
+elementDisplay(videoBtn, viewerSettings.buttons.video);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
@@ -255,6 +272,37 @@ function toggleMessages() {
 }
 
 // =====================================================
+// Handle audio stream
+// =====================================================
+
+enableAudio.addEventListener('click', () => toggleAudio(true));
+disableAudio.addEventListener('click', () => toggleAudio(false));
+
+function toggleAudio(enable) {
+    if (!viewerStream) return;
+
+    viewerStream.getAudioTracks()[0].enabled = !viewerStream.getAudioTracks()[0].enabled;
+
+    elementDisplay(enableAudio, !enable);
+    elementDisplay(disableAudio, enable && viewerSettings.buttons.audio);
+}
+
+// =====================================================
+// Handle video stream
+// =====================================================
+
+videoBtn.addEventListener('click', toggleVideo);
+
+function toggleVideo() {
+    if (!viewerStream) return;
+
+    viewerStream.getVideoTracks()[0].enabled = !viewerStream.getVideoTracks()[0].enabled;
+
+    const color = getMode === 'dark' ? 'white' : 'black';
+    videoBtn.style.color = videoBtn.style.color == 'red' ? color : 'red';
+}
+
+// =====================================================
 // Handle video
 // =====================================================
 
@@ -283,6 +331,21 @@ function attachStream(stream) {
     video.playsInline = true;
     video.autoplay = true;
     video.controls = false;
+}
+
+async function getStream() {
+    return navigator.mediaDevices
+        .getUserMedia({
+            video: viewerSettings.buttons.video,
+            audio: viewerSettings.buttons.audio,
+        })
+        .catch((error) => {
+            console.error('Error accessing media devices', error.message);
+            elementDisplay(disableAudio, false);
+            elementDisplay(enableAudio, false);
+            elementDisplay(videoBtn, false);
+            return null;
+        });
 }
 
 video.addEventListener('loadeddata', () => {

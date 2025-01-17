@@ -20,11 +20,14 @@ const broadcastSettings = {
         zoom_video: true,
         show_chat_on_msg: false,
         speech_msg: false,
+        show_viewers: false, // Either viewerSettings.buttons.audio or viewerSettings.buttons.video must be true to address privacy concerns!
     },
 };
 
 const viewerSettings = {
     buttons: {
+        audio: false,
+        video: false,
         snapshot: true,
         recordingStart: true,
         fullScreenOn: true,
