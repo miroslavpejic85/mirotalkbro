@@ -666,7 +666,6 @@ function addViewer(id, username, stream = null) {
 
     videoElement.style.width = '100%';
     videoElement.style.height = '100%';
-    videoElement.style.objectFit = 'cover';
 
     const width = 150;
     const height = Math.round((width / 16) * 9); // Calculate 16:9 height (84px)

@@ -210,7 +210,7 @@ if (getMode === 'dark') body.classList.toggle('dark');
 elementDisplay(fullScreenOff, false);
 elementDisplay(disableAudio, broadcastSettings.options.show_viewers && viewerSettings.buttons.audio);
 elementDisplay(enableAudio, broadcastSettings.options.show_viewers && viewerSettings.buttons.audio && false);
-elementDisplay(videoBtn, viewerSettings.buttons.video);
+elementDisplay(videoBtn, broadcastSettings.options.show_viewers && viewerSettings.buttons.video);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
