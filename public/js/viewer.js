@@ -141,7 +141,6 @@ socket.on('broadcasterDisconnect', () => {
 
 function handleError(error) {
     console.error('Error', error);
-    //popupMessage('warning', 'Ops', error);
 }
 
 // =====================================================
@@ -183,7 +182,6 @@ function handleDataChannelMessage(data) {
             videoOff.style.visibility = data.action.visibility;
             break;
         case 'audio':
-            playSound('viewer');
             popupMessage(
                 'toast',
                 'Broadcaster',

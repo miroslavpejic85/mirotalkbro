@@ -79,6 +79,14 @@ function hasVideoTrack(mediaStream) {
     return mediaStream && mediaStream.getVideoTracks().length > 0;
 }
 
+function stopTracks(mediaStream) {
+    if (mediaStream) {
+        mediaStream.getTracks().forEach((track) => {
+            track.stop();
+        });
+    }
+}
+
 function saveDataToFile(dataURL, fileName) {
     const a = document.createElement('a');
     a.style.display = 'none';
@@ -219,7 +227,7 @@ function goOutFullscreen() {
 }
 
 function logStreamSettingsInfo(stream) {
-    let streamInfo = [];
+    const streamInfo = [];
     if (stream.getVideoTracks()[0]) {
         streamInfo.push({
             video: {
