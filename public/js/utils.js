@@ -218,21 +218,21 @@ function goOutFullscreen() {
     else if (document.msExitFullscreen) document.msExitFullscreen();
 }
 
-function logStreamSettingsInfo() {
+function logStreamSettingsInfo(stream) {
     let streamInfo = [];
-    if (broadcastStream.getVideoTracks()[0]) {
+    if (stream.getVideoTracks()[0]) {
         streamInfo.push({
             video: {
-                label: broadcastStream.getVideoTracks()[0].label,
-                settings: broadcastStream.getVideoTracks()[0].getSettings(),
+                label: stream.getVideoTracks()[0].label,
+                settings: stream.getVideoTracks()[0].getSettings(),
             },
         });
     }
-    if (broadcastStream.getAudioTracks()[0]) {
+    if (stream.getAudioTracks()[0]) {
         streamInfo.push({
             audio: {
-                label: broadcastStream.getAudioTracks()[0].label,
-                settings: broadcastStream.getAudioTracks()[0].getSettings(),
+                label: stream.getAudioTracks()[0].label,
+                settings: stream.getAudioTracks()[0].getSettings(),
             },
         });
     }

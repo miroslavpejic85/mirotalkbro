@@ -796,7 +796,7 @@ function applyVideoConstraints() {
         .getVideoTracks()[0]
         .applyConstraints(videoConstraints)
         .then(() => {
-            logStreamSettingsInfo();
+            logStreamSettingsInfo(broadcastStream);
             localStorage.videoQualitySelectedIndex = videoQualitySelect.selectedIndex;
             localStorage.videoFpsSelectedIndex = videoFpsSelect.selectedIndex;
         })
