@@ -658,13 +658,23 @@ function addViewer(id, username, stream = null) {
     }
 
     Object.assign(videoElement, {
-        width: 150,
-        height: 100,
         autoplay: true,
         controls: false,
         srcObject: stream,
         poster: videoPoster,
     });
+
+    videoElement.style.width = '100%';
+    videoElement.style.height = '100%';
+    videoElement.style.objectFit = 'cover';
+
+    const width = 150;
+    const height = Math.round((width / 16) * 9); // Calculate 16:9 height (84px)
+
+    tdVideo.style.position = 'relative';
+    tdVideo.style.width = `${width}px`;
+    tdVideo.style.height = `${height}px`;
+
     tdVideo.appendChild(videoElement);
 
     Object.assign(button, {
