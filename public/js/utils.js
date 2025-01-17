@@ -65,16 +65,18 @@ function getUUID4() {
     );
 }
 
+function hasVideoOrAudioTracks(mediaStream) {
+    const hasVideo = mediaStream && mediaStream.getVideoTracks().length > 0;
+    const hasAudio = mediaStream && mediaStream.getAudioTracks().length > 0;
+    return { hasVideo, hasAudio };
+}
+
 function hasAudioTrack(mediaStream) {
-    if (!mediaStream) return false;
-    const audioTracks = mediaStream.getAudioTracks();
-    return audioTracks.length > 0;
+    return mediaStream && mediaStream.getAudioTracks().length > 0;
 }
 
 function hasVideoTrack(mediaStream) {
-    if (!mediaStream) return false;
-    const videoTracks = mediaStream.getVideoTracks();
-    return videoTracks.length > 0;
+    return mediaStream && mediaStream.getVideoTracks().length > 0;
 }
 
 function saveDataToFile(dataURL, fileName) {
@@ -217,21 +219,20 @@ function goOutFullscreen() {
 }
 
 function logStreamSettingsInfo() {
-    const stream = window.stream;
     let streamInfo = [];
-    if (stream.getVideoTracks()[0]) {
+    if (broadcastStream.getVideoTracks()[0]) {
         streamInfo.push({
             video: {
-                label: stream.getVideoTracks()[0].label,
-                settings: stream.getVideoTracks()[0].getSettings(),
+                label: broadcastStream.getVideoTracks()[0].label,
+                settings: broadcastStream.getVideoTracks()[0].getSettings(),
             },
         });
     }
-    if (stream.getAudioTracks()[0]) {
+    if (broadcastStream.getAudioTracks()[0]) {
         streamInfo.push({
             audio: {
-                label: stream.getAudioTracks()[0].label,
-                settings: stream.getAudioTracks()[0].getSettings(),
+                label: broadcastStream.getAudioTracks()[0].label,
+                settings: broadcastStream.getAudioTracks()[0].getSettings(),
             },
         });
     }

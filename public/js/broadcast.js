@@ -406,7 +406,7 @@ function toggleVideo() {
     const color = getMode === 'dark' ? 'white' : 'black';
     videoBtn.style.color = videoBtn.style.color == 'red' ? color : 'red';
     videoOff.style.visibility = videoBtn.style.color == 'red' ? 'visible' : 'hidden';
-    window.stream.getVideoTracks()[0].enabled = !window.stream.getVideoTracks()[0].enabled;
+    broadcastStream.getVideoTracks()[0].enabled = !broadcastStream.getVideoTracks()[0].enabled;
     sendToViewersDataChannel('video', { visibility: videoOff.style.visibility });
 }
 
@@ -792,7 +792,7 @@ videoFpsSelect.onchange = applyVideoConstraints;
 
 function applyVideoConstraints() {
     const videoConstraints = getVideoConstraints();
-    window.stream
+    broadcastStream
         .getVideoTracks()[0]
         .applyConstraints(videoConstraints)
         .then(() => {
@@ -801,9 +801,9 @@ function applyVideoConstraints() {
             localStorage.videoFpsSelectedIndex = videoFpsSelect.selectedIndex;
         })
         .catch((error) => {
+            console.error('setVideoQuality Error', error.name, error.message);
             videoQualitySelect.selectedIndex = localStorage.videoQualitySelectedIndex;
             videoFpsSelect.selectedIndex = localStorage.videoFpsSelectedIndex;
-            console.error('setVideoQuality', error);
             popupMessage(
                 'warning',
                 'Video quality/fps',
@@ -862,7 +862,6 @@ function getStream() {
     };
     const constraints = screenShareEnabled ? screenConstraints : cameraConstraints;
 
-    stopWindowStream();
     stopBroadcastStream();
 
     if (screenShareEnabled) {
@@ -888,8 +887,6 @@ function getStream() {
 }
 
 function gotStream(stream) {
-    window.stream = stream;
-    broadcastStream = stream;
     if (!screenShareEnabled) {
         audioSelect.selectedIndex = [...audioSelect.options].findIndex(
             (option) => option.text === stream.getAudioTracks()[0].label,
@@ -911,13 +908,12 @@ function gotScreenStream(stream) {
     if (audioTabTrack) tracksToInclude.push(audioTabTrack);
     if (audioTrack) tracksToInclude.push(audioTrack);
     const newStream = new MediaStream(tracksToInclude);
-    window.stream = newStream;
-    broadcastStream = newStream;
     attachStream(newStream);
     socket.emit('broadcaster', broadcastID);
 }
 
 function attachStream(stream) {
+    broadcastStream = stream;
     video.srcObject = stream;
     video.playsInline = true;
     video.autoplay = true;
@@ -926,23 +922,9 @@ function attachStream(stream) {
     video.controls = false;
 }
 
-function hasVideoOrAudioTracks(stream) {
-    const hasVideo = stream && stream.getVideoTracks().length > 0;
-    const hasAudio = stream && stream.getAudioTracks().length > 0;
-    return { hasVideo, hasAudio };
-}
-
 function stopBroadcastStream() {
     if (broadcastStream) {
         broadcastStream.getTracks().forEach((track) => {
-            track.stop();
-        });
-    }
-}
-
-function stopWindowStream() {
-    if (window.stream) {
-        window.stream.getTracks().forEach((track) => {
             track.stop();
         });
     }
