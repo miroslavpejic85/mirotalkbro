@@ -102,30 +102,54 @@ socket.on('offer', async (id, description, iceServers) => {
         });
     };
 
+    const proceedWithConnection = async () => {
+        peerConnection
+            .setRemoteDescription(description)
+            .then(() => peerConnection.createAnswer())
+            .then((sdp) => peerConnection.setLocalDescription(sdp))
+            .then(() => socket.emit('answer', id, peerConnection.localDescription))
+            .catch(handleError);
+
+        peerConnection.ontrack = (event) => {
+            saveRecording();
+            attachStream(event.streams[0]);
+        };
+
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.emit('candidate', id, event.candidate);
+            }
+        };
+    };
+
     if (broadcastSettings.options.show_viewers && (viewerSettings.buttons.audio || viewerSettings.buttons.video)) {
-        viewerStream = await getStream();
-        if (viewerStream) {
-            viewerStream.getTracks().forEach((track) => peerConnection.addTrack(track, viewerStream));
+        const shareOptions = [];
+        if (viewerSettings.buttons.audio) shareOptions.push('microphone');
+        if (viewerSettings.buttons.video) shareOptions.push('camera');
+        const shareText = `Do you want to share your ${shareOptions.join(' and ')} with the broadcaster? You can enable or disable your ${shareOptions.join(' and ')} at any time later.`;
+
+        const result = await Swal.fire({
+            position: 'top',
+            icon: 'question',
+            text: shareText,
+            showDenyButton: true,
+            confirmButtonText: `Yes`,
+            denyButtonText: `No`,
+            showClass: { popup: 'animate__animated animate__fadeInDown' },
+            hideClass: { popup: 'animate__animated animate__fadeOutUp' },
+        });
+
+        if (result.isConfirmed) {
+            viewerStream = await getStream();
+            if (viewerStream) {
+                viewerStream.getTracks().forEach((track) => peerConnection.addTrack(track, viewerStream));
+            }
+        } else {
+            hideVideoAudioButtons();
         }
     }
 
-    peerConnection
-        .setRemoteDescription(description)
-        .then(() => peerConnection.createAnswer())
-        .then((sdp) => peerConnection.setLocalDescription(sdp))
-        .then(() => socket.emit('answer', id, peerConnection.localDescription))
-        .catch(handleError);
-
-    peerConnection.ontrack = (event) => {
-        saveRecording();
-        attachStream(event.streams[0]);
-    };
-
-    peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-            socket.emit('candidate', id, event.candidate);
-        }
-    };
+    await proceedWithConnection();
 });
 
 socket.on('candidate', (id, candidate) => {
@@ -344,11 +368,15 @@ async function getStream() {
         })
         .catch((error) => {
             console.error('Error accessing media devices', error.message);
-            elementDisplay(disableAudio, false);
-            elementDisplay(enableAudio, false);
-            elementDisplay(videoBtn, false);
+            hideVideoAudioButtons();
             return null;
         });
+}
+
+function hideVideoAudioButtons() {
+    elementDisplay(disableAudio, false);
+    elementDisplay(enableAudio, false);
+    elementDisplay(videoBtn, false);
 }
 
 video.addEventListener('loadeddata', () => {
