@@ -126,7 +126,7 @@ socket.on('offer', async (id, description, iceServers) => {
         const shareOptions = [];
         if (viewerSettings.buttons.audio) shareOptions.push('microphone');
         if (viewerSettings.buttons.video) shareOptions.push('camera');
-        const shareText = `Do you want to share your ${shareOptions.join(' and ')} with the broadcaster? You can enable or disable your ${shareOptions.join(' and ')} at any time later.`;
+        const shareText = `Do you want to share your ${shareOptions.join(' and ')} with the broadcaster? You can enable or disable it at any time later`;
 
         const result = await Swal.fire({
             position: 'top',
