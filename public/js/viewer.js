@@ -70,6 +70,7 @@ function loadViewerToolTip() {
         { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
         { element: leave, text: 'Disconnect', position: 'top' },
     ];
+
     viewerTooltips.forEach(({ element, text, position }) => {
         setTippy(element, text, position);
     });
