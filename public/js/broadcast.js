@@ -108,7 +108,12 @@ const broadcastTooltips = [
     { element: viewersCloseForm, text: 'Close', position: 'top' },
 ];
 
-body.onload = loadBroadcasterToolTip;
+body.onload = onBodyLoad;
+
+function onBodyLoad() {
+    loadBroadcasterToolTip();
+    toggleSettings();
+}
 
 function loadBroadcasterToolTip() {
     broadcastTooltips.forEach(({ element, text, position }) => {

@@ -59,7 +59,12 @@ const viewerTooltips = [
     { element: leave, text: 'Disconnect', position: 'top' },
 ];
 
-body.onload = loadViewerToolTip;
+body.onload = onBodyLoad;
+
+function onBodyLoad() {
+    loadViewerToolTip();
+    toggleMessages();
+}
 
 function loadViewerToolTip() {
     viewerTooltips.forEach(({ element, text, position }) => {
