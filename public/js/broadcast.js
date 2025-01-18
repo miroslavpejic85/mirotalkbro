@@ -172,7 +172,6 @@ socket.on('viewer', (id, iceServers, username) => {
     };
 
     const stream = video.srcObject;
-
     stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
 
     peerConnection.ontrack = (event) => {

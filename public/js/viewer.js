@@ -42,22 +42,8 @@ const deviceType = result.device.type || 'desktop';
 const isMobileDevice = deviceType === 'mobile';
 
 // =====================================================
-// Handle ToolTips
+// Body on Load
 // =====================================================
-
-const viewerTooltips = [
-    { element: enableAudio, text: 'Enable your audio', position: 'top' },
-    { element: disableAudio, text: 'Disable your audio', position: 'top' },
-    { element: videoBtn, text: 'Toggle your video', position: 'top' },
-    { element: recordingStart, text: 'Start recording', position: 'top' },
-    { element: recordingStop, text: 'Stop recording', position: 'top' },
-    { element: snapshot, text: 'Take a snapshot', position: 'top' },
-    { element: togglePIP, text: 'Toggle picture in picture', position: 'top' },
-    { element: messagesBtn, text: 'Toggle messages', position: 'top' },
-    { element: fullScreenOn, text: 'Enable full screen', position: 'top' },
-    { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
-    { element: leave, text: 'Disconnect', position: 'top' },
-];
 
 body.onload = onBodyLoad;
 
@@ -66,7 +52,24 @@ function onBodyLoad() {
     toggleMessages();
 }
 
+// =====================================================
+// Handle ToolTips
+// =====================================================
+
 function loadViewerToolTip() {
+    const viewerTooltips = [
+        { element: enableAudio, text: 'Enable your audio', position: 'top' },
+        { element: disableAudio, text: 'Disable your audio', position: 'top' },
+        { element: videoBtn, text: 'Toggle your video', position: 'top' },
+        { element: recordingStart, text: 'Start recording', position: 'top' },
+        { element: recordingStop, text: 'Stop recording', position: 'top' },
+        { element: snapshot, text: 'Take a snapshot', position: 'top' },
+        { element: togglePIP, text: 'Toggle picture in picture', position: 'top' },
+        { element: messagesBtn, text: 'Toggle messages', position: 'top' },
+        { element: fullScreenOn, text: 'Enable full screen', position: 'top' },
+        { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
+        { element: leave, text: 'Disconnect', position: 'top' },
+    ];
     viewerTooltips.forEach(({ element, text, position }) => {
         setTippy(element, text, position);
     });
@@ -102,26 +105,56 @@ socket.on('offer', async (id, description, iceServers) => {
         });
     };
 
-    const proceedWithConnection = async () => {
-        peerConnection
-            .setRemoteDescription(description)
-            .then(() => peerConnection.createAnswer())
-            .then((sdp) => peerConnection.setLocalDescription(sdp))
-            .then(() => socket.emit('answer', id, peerConnection.localDescription))
-            .catch(handleError);
+    if (viewerStream) {
+        viewerStream.getTracks().forEach((track) => peerConnection.addTrack(track, viewerStream));
+    }
 
-        peerConnection.ontrack = (event) => {
-            saveRecording();
-            attachStream(event.streams[0]);
-        };
-
-        peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
-                socket.emit('candidate', id, event.candidate);
-            }
-        };
+    peerConnection.ontrack = (event) => {
+        saveRecording();
+        attachStream(event.streams[0]);
     };
 
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+            socket.emit('candidate', id, event.candidate);
+        }
+    };
+
+    peerConnection
+        .setRemoteDescription(description)
+        .then(() => peerConnection.createAnswer())
+        .then((sdp) => peerConnection.setLocalDescription(sdp))
+        .then(() => socket.emit('answer', id, peerConnection.localDescription))
+        .catch(handleError);
+});
+
+socket.on('candidate', (id, candidate) => {
+    peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
+});
+
+socket.on('connect', async () => {
+    await checkViewerAudioVideo();
+
+    socket.emit('viewer', broadcastID, username);
+});
+
+socket.on('broadcaster', () => {
+    socket.emit('viewer', broadcastID, username);
+});
+
+socket.on('broadcasterDisconnect', () => {
+    location.reload();
+});
+
+function handleError(error) {
+    console.error('Error', error);
+}
+
+// =====================================================
+// Check Viewer Audio/Video
+// =====================================================
+
+async function checkViewerAudioVideo() {
     if (broadcastSettings.options.show_viewers && (viewerSettings.buttons.audio || viewerSettings.buttons.video)) {
         const shareOptions = [];
         if (viewerSettings.buttons.audio) shareOptions.push('microphone');
@@ -141,35 +174,10 @@ socket.on('offer', async (id, description, iceServers) => {
 
         if (result.isConfirmed) {
             viewerStream = await getStream();
-            if (viewerStream) {
-                viewerStream.getTracks().forEach((track) => peerConnection.addTrack(track, viewerStream));
-            }
         } else {
             hideVideoAudioButtons();
         }
     }
-
-    await proceedWithConnection();
-});
-
-socket.on('candidate', (id, candidate) => {
-    peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
-});
-
-socket.on('connect', () => {
-    socket.emit('viewer', broadcastID, username);
-});
-
-socket.on('broadcaster', () => {
-    socket.emit('viewer', broadcastID, username);
-});
-
-socket.on('broadcasterDisconnect', () => {
-    location.reload();
-});
-
-function handleError(error) {
-    console.error('Error', error);
 }
 
 // =====================================================
