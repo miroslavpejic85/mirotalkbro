@@ -46,9 +46,9 @@ const isMobileDevice = deviceType === 'mobile';
 // =====================================================
 
 const viewerTooltips = [
-    { element: enableAudio, text: 'Enable audio', position: 'top' },
-    { element: disableAudio, text: 'Disable Your audio', position: 'top' },
-    { element: videoBtn, text: 'Toggle Your video', position: 'top' },
+    { element: enableAudio, text: 'Enable your audio', position: 'top' },
+    { element: disableAudio, text: 'Disable your audio', position: 'top' },
+    { element: videoBtn, text: 'Toggle your video', position: 'top' },
     { element: recordingStart, text: 'Start recording', position: 'top' },
     { element: recordingStop, text: 'Stop recording', position: 'top' },
     { element: snapshot, text: 'Take a snapshot', position: 'top' },
