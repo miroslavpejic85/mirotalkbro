@@ -779,6 +779,14 @@ function addViewer(id, username, stream = null) {
         videoElement.addEventListener('wheel', function (e) {
             handleZoom(e, videoElement);
         });
+        videoElement.addEventListener('leavepictureinpicture', (event) => {
+            console.log('Exited PiP mode');
+            if (videoElement.paused) {
+                videoElement.play().catch((error) => {
+                    console.error('Error playing video after exit PIP mode', error);
+                });
+            }
+        });
     }
 
     Object.assign(buttonDisconnect, {
