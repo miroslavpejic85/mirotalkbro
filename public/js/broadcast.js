@@ -251,18 +251,14 @@ function handleDataChannelMessage(data) {
             }
             break;
         case 'audio':
-            console.log('audio', {  username: data.action.username, enabled: data.action.enabled });
+            console.log('audio', { username: data.action.username, enabled: data.action.enabled });
             const viewerAudio = document.getElementById(`${data.action.id}___${data.action.username}___audio`);
-            data.action.enabled
-                ? viewerAudio.classList.remove('color-red')
-                : viewerAudio.classList.add('color-red');
+            data.action.enabled ? viewerAudio.classList.remove('color-red') : viewerAudio.classList.add('color-red');
             break;
         case 'video':
-            console.log('video', {  username: data.action.username, enabled: data.action.enabled });
+            console.log('video', { username: data.action.username, enabled: data.action.enabled });
             const viewerVideo = document.getElementById(`${data.action.id}___${data.action.username}___video`);
-            data.action.enabled
-                ? viewerVideo.classList.remove('color-red')
-                : viewerVideo.classList.add('color-red');
+            data.action.enabled ? viewerVideo.classList.remove('color-red') : viewerVideo.classList.add('color-red');
             break;
         //...
         default:
@@ -384,14 +380,19 @@ function toggleSettings() {
 // Handle video
 // =====================================================
 
-video.addEventListener('click', toggleFullScreen);
-video.addEventListener('wheel', handleZoom);
+video.addEventListener('click', function () {
+    toggleFullScreen(video);
+});
 
-function toggleFullScreen() {
+video.addEventListener('wheel', function (e) {
+    handleZoom(e, video);
+});
+
+function toggleFullScreen(video) {
     isFullScreen() ? goOutFullscreen() : goInFullscreen(video);
 }
 
-function handleZoom(e) {
+function handleZoom(e, video) {
     e.preventDefault();
     if (!video.srcObject || !broadcastSettings.options.zoom_video) return;
     const delta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
@@ -727,6 +728,13 @@ function addViewer(id, username, stream = null) {
             className: 'fas fa-video',
         });
         tdActions.appendChild(buttonVideo);
+
+        videoElement.addEventListener('click', function () {
+            toggleFullScreen(videoElement);
+        });
+        videoElement.addEventListener('wheel', function (e) {
+            handleZoom(e, videoElement);
+        });
     }
 
     Object.assign(buttonDisconnect, {

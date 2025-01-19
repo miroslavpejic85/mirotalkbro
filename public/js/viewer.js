@@ -216,23 +216,13 @@ function handleDataChannelMessage(data) {
         case 'mute':
             if (disableAudio.style.display !== 'none') {
                 disableAudio.click();
-                popupMessage(
-                    'toast',
-                    'Broadcaster',
-                    'Broadcaster muted your microphone',
-                    'top',
-                );
+                popupMessage('toast', 'Broadcaster', 'Broadcaster muted your microphone', 'top');
             }
             break;
         case 'hide':
             if (videoBtn.style.color !== 'red') {
                 videoBtn.click();
-                popupMessage(
-                    'toast',
-                    'Broadcaster',
-                    'Broadcaster hide your camera',
-                    'top',
-                );
+                popupMessage('toast', 'Broadcaster', 'Broadcaster hide your camera', 'top');
             }
             break;
         case 'disconnect':

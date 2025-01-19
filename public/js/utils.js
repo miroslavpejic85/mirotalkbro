@@ -59,7 +59,7 @@ function setTippy(elem, content, placement) {
     }
 }
 
-function getPeerId(id){
+function getPeerId(id) {
     return id.split('___')[0];
 }
 
