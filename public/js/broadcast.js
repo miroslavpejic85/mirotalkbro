@@ -79,6 +79,12 @@ const isDesktopDevice = deviceType === 'desktop';
 
 const isSpeechSynthesisSupported = 'speechSynthesis' in window;
 
+const images = {
+    mute: '../assets/images/mute.png',
+    hide: '../assets/images/hide.png',
+    viewer: '../assets/images/viewer.png',
+};
+
 // =====================================================
 // Body on Load
 // =====================================================
@@ -698,9 +704,9 @@ function addViewer(id, username, stream = null) {
     let videoPoster;
 
     if (!hasVideo) {
-        videoPoster = '../assets/images/videoOff.png';
+        videoPoster = images.hide;
     } else if (!hasAudio) {
-        videoPoster = '../assets/images/viewer.png';
+        videoPoster = images.mute;
     }
 
     Object.assign(videoElement, {
@@ -820,6 +826,7 @@ function muteALLViewers() {
         allowEscapeKey: false,
         showDenyButton: true,
         position: 'top',
+        imageUrl: images.mute,
         title: 'Mute all viewers',
         text: 'Do you want to mute all viewers microphone?',
         confirmButtonText: `Yes`,
@@ -840,6 +847,7 @@ function hideALLViewers() {
         allowEscapeKey: false,
         showDenyButton: true,
         position: 'top',
+        imageUrl: images.hide,
         title: 'Hide all viewers',
         text: 'Do you want to hide all viewers camera?',
         confirmButtonText: `Yes`,
