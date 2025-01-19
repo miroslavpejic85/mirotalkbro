@@ -646,8 +646,8 @@ function addViewer(id, username, stream = null) {
     const tr = document.createElement('tr');
     const tdUsername = document.createElement('td');
     const tdVideo = document.createElement('td');
-    const tdDisconnect = document.createElement('td');
-    const button = document.createElement('button');
+    const tdActions = document.createElement('td');
+    const buttonDisconnect = document.createElement('button');
 
     tr.id = id;
     tdUsername.innerText = username;
@@ -684,25 +684,25 @@ function addViewer(id, username, stream = null) {
 
     tdVideo.appendChild(videoElement);
 
-    Object.assign(button, {
-        id: `${id}___${username}`,
-        innerText: 'Disconnect',
+    Object.assign(buttonDisconnect, {
+        id: `${id}___${username}___disconnect`,
+        className: 'fas fa-plug color-red',
     });
 
-    tdDisconnect.appendChild(button);
+    tdActions.appendChild(buttonDisconnect);
 
     tr.appendChild(tdUsername);
     tr.appendChild(tdVideo);
-    tr.appendChild(tdDisconnect);
+    tr.appendChild(tdActions);
     viewersTable.appendChild(tr);
 
-    handleDisconnectPeer(button.id);
+    handleDisconnectPeer(buttonDisconnect.id);
 }
 
-function handleDisconnectPeer(uuid) {
-    const buttonDisconnect = document.getElementById(uuid);
+function handleDisconnectPeer(id) {
+    const buttonDisconnect = document.getElementById(id);
     buttonDisconnect.addEventListener('click', () => {
-        const words = uuid.split('___');
+        const words = id.split('___');
         const peerId = words[0];
         const peerName = words[1];
         Swal.fire({

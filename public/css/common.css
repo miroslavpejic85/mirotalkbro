@@ -251,6 +251,14 @@ tr:nth-child(even) {
     background-color: var(--secondary-color);
 }
 
+th {
+    width: calc(100% / 3);
+}
+
+td {
+    width: calc(100% / 3);
+}
+
 .color-red {
     color: red;
 }
