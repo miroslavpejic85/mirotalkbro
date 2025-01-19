@@ -27,7 +27,7 @@ const broadcastSettings = {
 const viewerSettings = {
     buttons: {
         audio: true,
-        video: false,
+        video: true,
         snapshot: true,
         recordingStart: true,
         fullScreenOn: true,
