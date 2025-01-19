@@ -264,7 +264,7 @@ td button {
     padding: 8px 16px;
     font-size: 16px;
     background-color: var(--primary-color);
-    color: white;
+    color: var(--text-color);
     border: none;
     border-radius: 1px;
     text-align: center;
@@ -272,7 +272,7 @@ td button {
 }
 
 td button:hover {
-    background-color: var(--primary-color-hover);
+    background-color: var(--secondary-color);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 

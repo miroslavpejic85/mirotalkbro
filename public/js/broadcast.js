@@ -50,7 +50,6 @@ const viewersCloseForm = document.getElementById('viewersCloseForm');
 const viewersForm = document.getElementById('viewersForm');
 const viewersFormHeader = document.getElementById('viewersFormHeader');
 const viewersTable = document.getElementById('viewersTable');
-const viewersShow = document.getElementById('viewersShow');
 const viewerOpenMessageForm = document.getElementById('viewerOpenMessageForm');
 const viewersSave = document.getElementById('viewersSave');
 const viewerSearch = document.getElementById('viewerSearch');
@@ -716,8 +715,6 @@ function addViewer(id, username, stream = null) {
     tr.id = id;
     tdUsername.innerText = username;
 
-    viewersShow.classList.remove('hidden');
-
     const { hasVideo, hasAudio } = hasVideoOrAudioTracks(stream);
 
     let videoPoster;
@@ -1039,7 +1036,7 @@ function getStream() {
     const constraints = screenShareEnabled ? screenConstraints : cameraConstraints;
 
     if (screenShareEnabled) {
-        stopVideoTrack(broadcastStream)
+        stopVideoTrack(broadcastStream);
 
         video.classList.remove('mirror');
         isVideoMirrored = false;
