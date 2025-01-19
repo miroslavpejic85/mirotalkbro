@@ -54,6 +54,8 @@ const viewersShow = document.getElementById('viewersShow');
 const viewerOpenMessageForm = document.getElementById('viewerOpenMessageForm');
 const viewersSave = document.getElementById('viewersSave');
 const viewerSearch = document.getElementById('viewerSearch');
+const viewersMuteAudio = document.getElementById('viewersMuteAudio');
+const viewersHideVideo = document.getElementById('viewersHideVideo');
 const viewersDisconnect = document.getElementById('viewersDisconnect');
 
 const fullScreenOn = document.getElementById('fullScreenOn');
@@ -114,6 +116,8 @@ function loadBroadcasterToolTip() {
         { element: messagesSave, text: 'Save messages', position: 'top' },
         { element: messagesOpenViewersForm, text: 'Toggle viewers', position: 'top' },
         { element: messagesCloseForm, text: 'Close', position: 'top' },
+        { element: viewersMuteAudio, text: 'Mute all viewers microphone', position: 'top' },
+        { element: viewersHideVideo, text: 'Hide all viewers camera', position: 'top' },
         { element: viewersDisconnect, text: 'Disconnect all viewers', position: 'top' },
         { element: viewersSave, text: 'Save viewers', position: 'top' },
         { element: viewerOpenMessageForm, text: 'Toggle messages', position: 'top' },
@@ -319,6 +323,8 @@ elementDisplay(screenShareStart, broadcastSettings.buttons.screenShareStart);
 elementDisplay(recordingStart, broadcastSettings.buttons.recordingStart);
 elementDisplay(messagesOpenForm, broadcastSettings.buttons.messagesOpenForm);
 elementDisplay(viewersOpenForm, broadcastSettings.buttons.viewersOpenForm);
+elementDisplay(viewersHideVideo, broadcastSettings.options.show_viewers && viewerSettings.buttons.video);
+elementDisplay(viewersMuteAudio, broadcastSettings.options.show_viewers && viewerSettings.buttons.audio);
 elementDisplay(fullScreenOn, broadcastSettings.buttons.fullScreenOn && isFullScreenSupported());
 elementDisplay(togglePIP, broadcastSettings.buttons.pictureInPicture && isPIPSupported());
 elementDisplay(settingsBtn, broadcastSettings.options.settings);
@@ -625,6 +631,8 @@ viewersSave.addEventListener('click', saveViewers);
 viewerSearch.addEventListener('keyup', searchViewer);
 viewerOpenMessageForm.addEventListener('click', toggleMessagesForm);
 
+viewersMuteAudio.addEventListener('click', muteALLViewers);
+viewersHideVideo.addEventListener('click', hideALLViewers);
 viewersDisconnect.addEventListener('click', disconnectALLViewers);
 
 function toggleViewersForm() {
@@ -704,6 +712,7 @@ function addViewer(id, username, stream = null) {
 
     videoElement.style.width = '100%';
     videoElement.style.height = '100%';
+    videoElement.style.cursor = 'pointer';
 
     const width = 150;
     const height = Math.round((width / 16) * 9); // Calculate 16:9 height (84px)
@@ -717,7 +726,7 @@ function addViewer(id, username, stream = null) {
     if (hasAudio) {
         Object.assign(buttonAudio, {
             id: `${id}___${username}___audio`,
-            className: 'fas fa-microphone',
+            className: 'fas fa-microphone color-red',
         });
         tdActions.appendChild(buttonAudio);
     }
@@ -725,7 +734,7 @@ function addViewer(id, username, stream = null) {
     if (hasVideo) {
         Object.assign(buttonVideo, {
             id: `${id}___${username}___video`,
-            className: 'fas fa-video',
+            className: 'fas fa-video color-red',
         });
         tdActions.appendChild(buttonVideo);
 
@@ -758,7 +767,7 @@ function handleVideoPeer(id) {
     const buttonAudio = document.getElementById(id);
     if (!buttonAudio) return;
     buttonAudio.addEventListener('click', () => {
-        sendToViewersDataChannel('hide', {}, getPeerId(id));
+        sendToViewersDataChannel('hide');
     });
 }
 
@@ -766,7 +775,7 @@ function handleAudioPeer(id) {
     const buttonVideo = document.getElementById(id);
     if (!buttonVideo) return;
     buttonVideo.addEventListener('click', () => {
-        sendToViewersDataChannel('mute', {}, getPeerId(id));
+        sendToViewersDataChannel('mute');
     });
 }
 
@@ -802,6 +811,46 @@ function delViewer(id, username) {
     const tr = document.getElementById(id);
     viewersTable.removeChild(tr);
     if (!thereIsPeerConnections() && viewersFormOpen) toggleViewersForm();
+}
+
+function muteALLViewers() {
+    if (!thereIsPeerConnections()) return;
+    Swal.fire({
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showDenyButton: true,
+        position: 'top',
+        title: 'Mute all viewers',
+        text: 'Do you want to mute all viewers microphone?',
+        confirmButtonText: `Yes`,
+        denyButtonText: `No`,
+        showClass: { popup: 'animate__animated animate__fadeInDown' },
+        hideClass: { popup: 'animate__animated animate__fadeOutUp' },
+    }).then((result) => {
+        if (result.isConfirmed) {
+            sendToViewersDataChannel('mute');
+        }
+    });
+}
+
+function hideALLViewers() {
+    if (!thereIsPeerConnections()) return;
+    Swal.fire({
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showDenyButton: true,
+        position: 'top',
+        title: 'Hide all viewers',
+        text: 'Do you want to hide all viewers camera?',
+        confirmButtonText: `Yes`,
+        denyButtonText: `No`,
+        showClass: { popup: 'animate__animated animate__fadeInDown' },
+        hideClass: { popup: 'animate__animated animate__fadeOutUp' },
+    }).then((result) => {
+        if (result.isConfirmed) {
+            sendToViewersDataChannel('hide');
+        }
+    });
 }
 
 function disconnectALLViewers(confirmation = true) {

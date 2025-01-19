@@ -151,6 +151,7 @@
     color: var(--text-color);
     display: grid;
     grid-gap: 1rem;
+    text-align: right;
 }
 
 .viewers-header input {

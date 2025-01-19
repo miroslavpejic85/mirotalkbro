@@ -157,27 +157,9 @@ function handleError(error) {
 
 async function checkViewerAudioVideo() {
     if (broadcastSettings.options.show_viewers && (viewerSettings.buttons.audio || viewerSettings.buttons.video)) {
-        const shareOptions = [];
-        if (viewerSettings.buttons.audio) shareOptions.push('microphone');
-        if (viewerSettings.buttons.video) shareOptions.push('camera');
-        const shareText = `Do you want to share your ${shareOptions.join(' and ')} with the broadcaster? You can enable or disable it at any time later`;
-
-        const result = await Swal.fire({
-            position: 'top',
-            icon: 'question',
-            text: shareText,
-            showDenyButton: true,
-            confirmButtonText: `Yes`,
-            denyButtonText: `No`,
-            showClass: { popup: 'animate__animated animate__fadeInDown' },
-            hideClass: { popup: 'animate__animated animate__fadeOutUp' },
-        });
-
-        if (result.isConfirmed) {
-            viewerStream = await getStream();
-        } else {
-            hideVideoAudioButtons();
-        }
+        viewerStream = await getStream();
+        if (viewerSettings.buttons.audio) disableAudio.click();
+        if (viewerSettings.buttons.video) videoBtn.click();
     }
 }
 
