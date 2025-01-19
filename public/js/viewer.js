@@ -213,6 +213,28 @@ function handleDataChannel() {
 
 function handleDataChannelMessage(data) {
     switch (data.method) {
+        case 'mute':
+            if (disableAudio.style.display !== 'none') {
+                disableAudio.click();
+                popupMessage(
+                    'toast',
+                    'Broadcaster',
+                    'Broadcaster muted your microphone',
+                    'top',
+                );
+            }
+            break;
+        case 'hide':
+            if (videoBtn.style.color !== 'red') {
+                videoBtn.click();
+                popupMessage(
+                    'toast',
+                    'Broadcaster',
+                    'Broadcaster hide your camera',
+                    'top',
+                );
+            }
+            break;
         case 'disconnect':
             openURL(viewerSettings.options.disconnect_url);
             break;
@@ -232,6 +254,19 @@ function handleDataChannelMessage(data) {
             console.error('Data channel message not handled', data);
             break;
     }
+}
+
+function sendToBroadcasterDataChannel(method, action = {}) {
+    if (dataChannel.readyState !== 'open') {
+        console.warn('DataChannel is not open. Current state:', dataChannel.readyState);
+        return;
+    }
+    dataChannel.send(
+        JSON.stringify({
+            method: method,
+            action: action,
+        }),
+    );
 }
 
 // =====================================================
@@ -314,13 +349,19 @@ function toggleMessages() {
 enableAudio.addEventListener('click', () => toggleAudio(true));
 disableAudio.addEventListener('click', () => toggleAudio(false));
 
-function toggleAudio(enable) {
+function toggleAudio(enabled) {
     if (!viewerStream) return;
 
     viewerStream.getAudioTracks()[0].enabled = !viewerStream.getAudioTracks()[0].enabled;
 
-    elementDisplay(enableAudio, !enable);
-    elementDisplay(disableAudio, enable && viewerSettings.buttons.audio);
+    elementDisplay(enableAudio, !enabled);
+    elementDisplay(disableAudio, enabled && viewerSettings.buttons.audio);
+
+    sendToBroadcasterDataChannel('audio', {
+        id: socket.id,
+        username: username,
+        enabled: enabled,
+    });
 }
 
 // =====================================================
@@ -335,7 +376,14 @@ function toggleVideo() {
     viewerStream.getVideoTracks()[0].enabled = !viewerStream.getVideoTracks()[0].enabled;
 
     const color = getMode === 'dark' ? 'white' : 'black';
-    videoBtn.style.color = videoBtn.style.color == 'red' ? color : 'red';
+    const enabled = videoBtn.style.color !== 'red';
+    videoBtn.style.color = enabled ? 'red' : color;
+
+    sendToBroadcasterDataChannel('video', {
+        id: socket.id,
+        username: username,
+        enabled: !enabled,
+    });
 }
 
 // =====================================================
@@ -569,14 +617,11 @@ messageInput.oninput = function () {
 
 function sendMessage() {
     if (peerConnection && messageInput.value != '') {
-        if (dataChannel.readyState === 'open') {
-            dataChannel.send(
-                JSON.stringify({
-                    username: username,
-                    message: messageInput.value,
-                }),
-            );
-        }
+        sendToBroadcasterDataChannel('message', {
+            id: socket.id,
+            username: username,
+            message: messageInput.value,
+        });
     } else {
         popupMessage('toast', 'Video', 'There is no broadcast connected', 'top');
     }

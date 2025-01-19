@@ -259,8 +259,29 @@ td {
     width: calc(100% / 3);
 }
 
+td button {
+    width: 100%;
+    padding: 8px 16px;
+    font-size: 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 1px;
+    text-align: center;
+    cursor: pointer;
+}
+
+td button:hover {
+    background-color: var(--primary-color-hover);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .color-red {
     color: red;
+}
+
+.color-white {
+    color: white;
 }
 
 .hidden {

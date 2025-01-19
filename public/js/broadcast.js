@@ -233,15 +233,42 @@ function handleDataChannels(id) {
             let data = {};
             try {
                 data = JSON.parse(message.data);
-                appendMessage(data.username, data.message);
-                if (isSpeechSynthesisSupported && broadcastSettings.options.speech_msg) {
-                    speechMessage(data.username, data.message);
-                }
+                handleDataChannelMessage(data);
+                console.log('Incoming dc data', data);
             } catch (err) {
                 console.log('Datachannel error', err);
             }
         };
     };
+}
+
+function handleDataChannelMessage(data) {
+    switch (data.method) {
+        case 'message':
+            appendMessage(data.action.username, data.action.message);
+            if (isSpeechSynthesisSupported && broadcastSettings.options.speech_msg) {
+                speechMessage(data.username, data.message);
+            }
+            break;
+        case 'audio':
+            console.log('audio', {  username: data.action.username, enabled: data.action.enabled });
+            const viewerAudio = document.getElementById(`${data.action.id}___${data.action.username}___audio`);
+            data.action.enabled
+                ? viewerAudio.classList.remove('color-red')
+                : viewerAudio.classList.add('color-red');
+            break;
+        case 'video':
+            console.log('video', {  username: data.action.username, enabled: data.action.enabled });
+            const viewerVideo = document.getElementById(`${data.action.id}___${data.action.username}___video`);
+            data.action.enabled
+                ? viewerVideo.classList.remove('color-red')
+                : viewerVideo.classList.add('color-red');
+            break;
+        //...
+        default:
+            console.error('Data channel message not handled', data);
+            break;
+    }
 }
 
 function sendToViewersDataChannel(method, action = {}, peerId = '*') {
@@ -647,6 +674,8 @@ function addViewer(id, username, stream = null) {
     const tdUsername = document.createElement('td');
     const tdVideo = document.createElement('td');
     const tdActions = document.createElement('td');
+    const buttonAudio = document.createElement('button');
+    const buttonVideo = document.createElement('button');
     const buttonDisconnect = document.createElement('button');
 
     tr.id = id;
@@ -684,41 +713,73 @@ function addViewer(id, username, stream = null) {
 
     tdVideo.appendChild(videoElement);
 
+    if (hasAudio) {
+        Object.assign(buttonAudio, {
+            id: `${id}___${username}___audio`,
+            className: 'fas fa-microphone',
+        });
+        tdActions.appendChild(buttonAudio);
+    }
+
+    if (hasVideo) {
+        Object.assign(buttonVideo, {
+            id: `${id}___${username}___video`,
+            className: 'fas fa-video',
+        });
+        tdActions.appendChild(buttonVideo);
+    }
+
     Object.assign(buttonDisconnect, {
         id: `${id}___${username}___disconnect`,
         className: 'fas fa-plug color-red',
     });
-
     tdActions.appendChild(buttonDisconnect);
 
     tr.appendChild(tdUsername);
     tr.appendChild(tdVideo);
     tr.appendChild(tdActions);
+
     viewersTable.appendChild(tr);
 
+    handleAudioPeer(buttonAudio.id);
     handleDisconnectPeer(buttonDisconnect.id);
+    handleVideoPeer(buttonVideo.id);
+}
+
+function handleVideoPeer(id) {
+    const buttonAudio = document.getElementById(id);
+    if (!buttonAudio) return;
+    buttonAudio.addEventListener('click', () => {
+        sendToViewersDataChannel('hide', {}, getPeerId(id));
+    });
+}
+
+function handleAudioPeer(id) {
+    const buttonVideo = document.getElementById(id);
+    if (!buttonVideo) return;
+    buttonVideo.addEventListener('click', () => {
+        sendToViewersDataChannel('mute', {}, getPeerId(id));
+    });
 }
 
 function handleDisconnectPeer(id) {
     const buttonDisconnect = document.getElementById(id);
+    if (!buttonDisconnect) return;
     buttonDisconnect.addEventListener('click', () => {
-        const words = id.split('___');
-        const peerId = words[0];
-        const peerName = words[1];
         Swal.fire({
             allowOutsideClick: false,
             allowEscapeKey: false,
             showDenyButton: true,
             position: 'top',
             title: 'Disconnect',
-            text: `Do you want to disconnect ${peerName} ?`,
+            text: `Do you want to disconnect ${getPeerName(id)} ?`,
             confirmButtonText: `Yes`,
             denyButtonText: `No`,
             showClass: { popup: 'animate__animated animate__fadeInDown' },
             hideClass: { popup: 'animate__animated animate__fadeOutUp' },
         }).then((result) => {
             if (result.isConfirmed) {
-                sendToViewersDataChannel('disconnect', {}, peerId);
+                sendToViewersDataChannel('disconnect', {}, getPeerId(id));
             }
         });
     });
