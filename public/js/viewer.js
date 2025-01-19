@@ -229,10 +229,13 @@ function handleDataChannelMessage(data) {
 }
 
 function sendToBroadcasterDataChannel(method, action = {}) {
+    if (!peerConnection || !dataChannel) return;
+
     if (dataChannel.readyState !== 'open') {
         console.warn('DataChannel is not open. Current state:', dataChannel.readyState);
         return;
     }
+
     dataChannel.send(
         JSON.stringify({
             method: method,

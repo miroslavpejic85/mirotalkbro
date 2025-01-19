@@ -218,7 +218,7 @@ socket.on('disconnectPeer', (id, username) => {
 });
 
 function thereIsPeerConnections() {
-    return Object.keys(peerConnections).length === 0 ? false : true;
+    return Object.keys(peerConnections).length > 0;
 }
 
 // =====================================================
@@ -305,6 +305,8 @@ function sendToViewersDataChannel(method, action = {}, peerId = '*') {
         }
     }
     function sendTo(id) {
+        if (!thereIsPeerConnections() || !dataChannels[id]) return;
+
         if (dataChannels[id].readyState !== 'open') {
             console.warn('DataChannel is not open. Current state:', dataChannels[id].readyState);
             return;
