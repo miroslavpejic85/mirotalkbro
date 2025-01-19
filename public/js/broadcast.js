@@ -257,18 +257,34 @@ function handleDataChannelMessage(data) {
         case 'message':
             appendMessage(data.action.username, data.action.message);
             if (isSpeechSynthesisSupported && broadcastSettings.options.speech_msg) {
-                speechMessage(data.username, data.message);
+                speechMessage(data.action.username, data.action.message);
             }
             break;
         case 'audio':
-            console.log('audio', { username: data.action.username, enabled: data.action.enabled });
-            const viewerAudio = document.getElementById(`${data.action.id}___${data.action.username}___audio`);
-            data.action.enabled ? viewerAudio.classList.remove('color-red') : viewerAudio.classList.add('color-red');
+            console.log('audio', { id: data.action.id, username: data.action.username, enabled: data.action.enabled });
+            const viewerAudioStatus = document.getElementById(
+                `${data.action.id}___${data.action.username}___viewerAudioStatus`,
+            );
+            data.action.enabled
+                ? viewerAudioStatus.classList.remove('color-red')
+                : viewerAudioStatus.classList.add('color-red');
             break;
         case 'video':
-            console.log('video', { username: data.action.username, enabled: data.action.enabled });
-            const viewerVideo = document.getElementById(`${data.action.id}___${data.action.username}___video`);
-            data.action.enabled ? viewerVideo.classList.remove('color-red') : viewerVideo.classList.add('color-red');
+            const { id, username, enabled } = data.action;
+            console.log('video', { id, username, enabled });
+
+            const baseId = `${id}___${username}`;
+            const viewerVideoStatus = document.getElementById(`${baseId}___viewerVideoStatus`);
+            const viewerVideoElement = document.getElementById(`${baseId}___viewerVideo`);
+            const viewerVideoElementOff = document.getElementById(`${baseId}___viewerVideoOff`);
+
+            if (viewerVideoStatus && viewerVideoElement && viewerVideoElementOff) {
+                viewerVideoStatus.classList.toggle('color-red', !enabled);
+                viewerVideoElement.classList.toggle('hidden', !enabled);
+                viewerVideoElementOff.classList.toggle('hidden', enabled);
+            } else {
+                console.warn(`Elements not found for viewer with id: ${id}, username: ${username}`);
+            }
             break;
         //...
         default:
@@ -692,12 +708,13 @@ function addViewer(id, username, stream = null) {
     const buttonAudio = document.createElement('button');
     const buttonVideo = document.createElement('button');
     const buttonDisconnect = document.createElement('button');
+    const videoElement = document.createElement('video');
+    const videoElementOff = document.createElement('img');
 
     tr.id = id;
     tdUsername.innerText = username;
 
     viewersShow.classList.remove('hidden');
-    const videoElement = document.createElement('video');
 
     const { hasVideo, hasAudio } = hasVideoOrAudioTracks(stream);
 
@@ -710,15 +727,22 @@ function addViewer(id, username, stream = null) {
     }
 
     Object.assign(videoElement, {
+        id: `${id}___${username}___viewerVideo`,
         autoplay: true,
         controls: false,
         srcObject: stream,
         poster: videoPoster,
     });
 
+    Object.assign(videoElementOff, {
+        id: `${id}___${username}___viewerVideoOff`,
+        src: images.hide,
+    });
+
     videoElement.style.width = '100%';
     videoElement.style.height = '100%';
     videoElement.style.cursor = 'pointer';
+    videoElementOff.classList.add('hidden');
 
     const width = 150;
     const height = Math.round((width / 16) * 9); // Calculate 16:9 height (84px)
@@ -728,10 +752,11 @@ function addViewer(id, username, stream = null) {
     tdVideo.style.height = `${height}px`;
 
     tdVideo.appendChild(videoElement);
+    tdVideo.appendChild(videoElementOff);
 
     if (hasAudio) {
         Object.assign(buttonAudio, {
-            id: `${id}___${username}___audio`,
+            id: `${id}___${username}___viewerAudioStatus`,
             className: 'fas fa-microphone color-red',
         });
         tdActions.appendChild(buttonAudio);
@@ -739,10 +764,15 @@ function addViewer(id, username, stream = null) {
 
     if (hasVideo) {
         Object.assign(buttonVideo, {
-            id: `${id}___${username}___video`,
+            id: `${id}___${username}___viewerVideoStatus`,
             className: 'fas fa-video color-red',
         });
         tdActions.appendChild(buttonVideo);
+
+        if (stream.getVideoTracks()[0].enabled) {
+            videoElement.classList.add('hidden');
+            videoElementOff.classList.remove('hidden');
+        }
 
         videoElement.addEventListener('click', function () {
             toggleFullScreen(videoElement);
@@ -773,7 +803,7 @@ function handleVideoPeer(id) {
     const buttonAudio = document.getElementById(id);
     if (!buttonAudio) return;
     buttonAudio.addEventListener('click', () => {
-        sendToViewersDataChannel('hide');
+        sendToViewersDataChannel('hide', {}, getPeerId(id));
     });
 }
 
@@ -781,7 +811,7 @@ function handleAudioPeer(id) {
     const buttonVideo = document.getElementById(id);
     if (!buttonVideo) return;
     buttonVideo.addEventListener('click', () => {
-        sendToViewersDataChannel('mute');
+        sendToViewersDataChannel('mute', {}, getPeerId(id));
     });
 }
 
