@@ -10,6 +10,8 @@ console.log('Broadcaster', {
     viewer: roomURL,
 });
 
+const dark = window.localStorage.mode === 'dark';
+
 const body = document.querySelector('body');
 
 const broadcastForm = document.getElementById('broadcastForm');
@@ -79,9 +81,13 @@ const isDesktopDevice = deviceType === 'desktop';
 const isSpeechSynthesisSupported = 'speechSynthesis' in window;
 
 const images = {
+    poster: '../assets/images/loader.gif',
     mute: '../assets/images/mute.png',
     hide: '../assets/images/hide.png',
     viewer: '../assets/images/viewer.png',
+    muteLight: '../assets/images/mute-light.png',
+    hideLight: '../assets/images/hide-light.png',
+    viewerLight: '../assets/images/viewer-light.png',
 };
 
 // =====================================================
@@ -717,25 +723,17 @@ function addViewer(id, username, stream = null) {
 
     const { hasVideo, hasAudio } = hasVideoOrAudioTracks(stream);
 
-    let videoPoster;
-
-    if (!hasVideo) {
-        videoPoster = images.hide;
-    } else if (!hasAudio) {
-        videoPoster = images.mute;
-    }
-
     Object.assign(videoElement, {
         id: `${id}___${username}___viewerVideo`,
         autoplay: true,
         controls: false,
         srcObject: stream,
-        poster: videoPoster,
+        poster: images.poster,
     });
 
     Object.assign(videoElementOff, {
         id: `${id}___${username}___viewerVideoOff`,
-        src: images.hide,
+        src: dark ? images.hide : images.hideLight,
     });
 
     videoElement.style.width = '100%';
@@ -863,7 +861,7 @@ function muteALLViewers() {
         allowEscapeKey: false,
         showDenyButton: true,
         position: 'top',
-        imageUrl: images.mute,
+        imageUrl: dark ? images.mute : images.muteLight,
         title: 'Mute all viewers',
         text: 'Do you want to mute all viewers microphone?',
         confirmButtonText: `Yes`,
@@ -884,7 +882,7 @@ function hideALLViewers() {
         allowEscapeKey: false,
         showDenyButton: true,
         position: 'top',
-        imageUrl: images.hide,
+        imageUrl: dark ? images.hide : images.hideLight,
         title: 'Hide all viewers',
         text: 'Do you want to hide all viewers camera?',
         confirmButtonText: `Yes`,
