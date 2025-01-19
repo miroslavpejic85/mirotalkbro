@@ -95,6 +95,22 @@ function stopTracks(mediaStream) {
     }
 }
 
+function stopAudioTrack(mediaStream) {
+    if (mediaStream) {
+        mediaStream.getAudioTracks().forEach((audioTrack) => {
+            audioTrack.stop();
+        });
+    }
+}
+
+function stopVideoTrack(mediaStream) {
+    if (mediaStream) {
+        mediaStream.getVideoTracks().forEach((videoTrack) => {
+            videoTrack.stop();
+        });
+    }
+}
+
 function saveDataToFile(dataURL, fileName) {
     const a = document.createElement('a');
     a.style.display = 'none';

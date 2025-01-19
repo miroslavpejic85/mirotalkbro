@@ -1036,9 +1036,9 @@ function getStream() {
     };
     const constraints = screenShareEnabled ? screenConstraints : cameraConstraints;
 
-    stopTracks(broadcastStream);
-
     if (screenShareEnabled) {
+        stopVideoTrack(broadcastStream)
+
         video.classList.remove('mirror');
         isVideoMirrored = false;
         return navigator.mediaDevices
@@ -1052,6 +1052,8 @@ function getStream() {
         video.className = 'mirror';
         isVideoMirrored = true;
     }
+
+    stopTracks(broadcastStream);
 
     return navigator.mediaDevices
         .getUserMedia(constraints)
@@ -1094,14 +1096,6 @@ function attachStream(stream) {
     video.muted = true;
     video.volume = 0;
     video.controls = false;
-}
-
-function stopBroadcastStream() {
-    if (broadcastStream) {
-        broadcastStream.getTracks().forEach((track) => {
-            track.stop();
-        });
-    }
 }
 
 function handleError(error) {
