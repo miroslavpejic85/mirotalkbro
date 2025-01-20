@@ -1023,48 +1023,52 @@ videoSelect.onchange = getStream;
 getStream().then(getDevices).then(gotDevices);
 
 function getStream() {
-    videoOff.style.visibility = 'hidden';
+    try {
+        videoOff.style.visibility = 'hidden';
 
-    videoQualitySelect.selectedIndex = localStorage.videoQualitySelectedIndex
-        ? localStorage.videoQualitySelectedIndex
-        : 0;
-    videoFpsSelect.selectedIndex = localStorage.videoFpsSelectedIndex ? localStorage.videoFpsSelectedIndex : 0;
-    videoBtn.style.color = getMode === 'dark' ? 'white' : 'black';
+        videoQualitySelect.selectedIndex = localStorage.videoQualitySelectedIndex
+            ? localStorage.videoQualitySelectedIndex
+            : 0;
+        videoFpsSelect.selectedIndex = localStorage.videoFpsSelectedIndex ? localStorage.videoFpsSelectedIndex : 0;
+        videoBtn.style.color = getMode === 'dark' ? 'white' : 'black';
 
-    const audioSource = audioSelect.value;
-    const videoSource = videoSelect.value;
+        const audioSource = audioSelect.value;
+        const videoSource = videoSelect.value;
 
-    const screenConstraints = { audio: true, video: true };
-    const cameraConstraints = {
-        audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
-        video: { deviceId: videoSource ? { exact: videoSource } : undefined },
-    };
-    const constraints = screenShareEnabled ? screenConstraints : cameraConstraints;
+        const screenConstraints = { audio: true, video: true };
+        const cameraConstraints = {
+            audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
+            video: { deviceId: videoSource ? { exact: videoSource } : undefined },
+        };
+        const constraints = screenShareEnabled ? screenConstraints : cameraConstraints;
 
-    if (screenShareEnabled) {
-        stopVideoTrack(broadcastStream);
+        if (screenShareEnabled) {
+            stopVideoTrack(broadcastStream);
 
-        video.classList.remove('mirror');
-        isVideoMirrored = false;
+            video.classList.remove('mirror');
+            isVideoMirrored = false;
+            return navigator.mediaDevices
+                .getDisplayMedia(constraints)
+                .then(gotScreenStream)
+                .then(applyVideoConstraints)
+                .catch(handleError);
+        }
+
+        if (isDesktopDevice && !isVideoMirrored) {
+            video.className = 'mirror';
+            isVideoMirrored = true;
+        }
+
+        stopTracks(broadcastStream);
+
         return navigator.mediaDevices
-            .getDisplayMedia(constraints)
-            .then(gotScreenStream)
+            .getUserMedia(constraints)
+            .then(gotStream)
             .then(applyVideoConstraints)
             .catch(handleError);
+    } catch (error) {
+        handleError("Can't get stream, make sure you are in a secure TLS context (HTTPS) and try again");
     }
-
-    if (isDesktopDevice && !isVideoMirrored) {
-        video.className = 'mirror';
-        isVideoMirrored = true;
-    }
-
-    stopTracks(broadcastStream);
-
-    return navigator.mediaDevices
-        .getUserMedia(constraints)
-        .then(gotStream)
-        .then(applyVideoConstraints)
-        .catch(handleError);
 }
 
 function gotStream(stream) {
