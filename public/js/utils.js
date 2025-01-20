@@ -122,7 +122,7 @@ function handleMediaStreamError(error) {
             break;
         case 'NotReadableError':
         case 'TrackStartError':
-            errorMessage = 'Already in use';
+            errorMessage = 'Device is already in use';
             break;
         case 'OverconstrainedError':
         case 'ConstraintNotSatisfiedError':
@@ -131,6 +131,12 @@ function handleMediaStreamError(error) {
         case 'NotAllowedError':
         case 'PermissionDeniedError':
             errorMessage = 'Permission denied in browser';
+            break;
+        case 'AbortError':
+            errorMessage = 'Operation aborted unexpectedly';
+            break;
+        case 'SecurityError':
+            errorMessage = 'Security error: Check your connection or browser settings';
             break;
         default:
             errorMessage = "Can't get stream, make sure you are in a secure TLS context (HTTPS) and try again";
