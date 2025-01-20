@@ -10,8 +10,6 @@ console.log('Broadcaster', {
     viewer: roomURL,
 });
 
-const dark = window.localStorage.mode === 'dark';
-
 const body = document.querySelector('body');
 
 const broadcastForm = document.getElementById('broadcastForm');
@@ -100,6 +98,14 @@ function onBodyLoad() {
     loadBroadcasterToolTip();
     toggleSettings();
 }
+
+// =====================================================
+// Handle theme
+// =====================================================
+
+const getMode = window.localStorage.mode || 'dark';
+const dark = getMode === 'dark';
+if (dark) body.classList.toggle('dark');
 
 // =====================================================
 // Handle ToolTips
@@ -326,13 +332,6 @@ function sendToViewersDataChannel(method, action = {}, peerId = '*') {
 }
 
 // =====================================================
-// Handle theme
-// =====================================================
-
-const getMode = window.localStorage.mode || 'dark';
-if (getMode === 'dark') body.classList.toggle('dark');
-
-// =====================================================
 // Handle element display
 // =====================================================
 
@@ -476,7 +475,7 @@ function toggleAudio(enable) {
 videoBtn.addEventListener('click', toggleVideo);
 
 function toggleVideo() {
-    const color = getMode === 'dark' ? 'white' : 'black';
+    const color = dark ? 'white' : 'black';
     videoBtn.style.color = videoBtn.style.color == 'red' ? color : 'red';
     videoOff.style.visibility = videoBtn.style.color == 'red' ? 'visible' : 'hidden';
     broadcastStream.getVideoTracks()[0].enabled = !broadcastStream.getVideoTracks()[0].enabled;
@@ -1032,7 +1031,7 @@ function getStream() {
             ? localStorage.videoQualitySelectedIndex
             : 0;
         videoFpsSelect.selectedIndex = localStorage.videoFpsSelectedIndex ? localStorage.videoFpsSelectedIndex : 0;
-        videoBtn.style.color = getMode === 'dark' ? 'white' : 'black';
+        videoBtn.style.color = dark ? 'white' : 'black';
 
         const audioSource = audioSelect.value;
         const videoSource = videoSelect.value;
