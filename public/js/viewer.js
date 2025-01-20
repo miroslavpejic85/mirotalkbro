@@ -339,6 +339,8 @@ function toggleAudio(enabled) {
         username: username,
         enabled: enabled,
     });
+
+    popupMessage('toast', 'Microphone', `Your microphone is ${enabled ? 'on' : 'off'}`, 'top');
 }
 
 // =====================================================
@@ -361,6 +363,8 @@ function toggleVideo() {
         username: username,
         enabled: !enabled,
     });
+
+    popupMessage('toast', 'Camera', `Your camera is ${enabled ? 'off' : 'on'}`, 'top');
 }
 
 // =====================================================
