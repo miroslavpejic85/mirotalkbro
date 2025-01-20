@@ -1112,7 +1112,7 @@ function handleMediaDeviceError(error) {
     if (screenShareEnabled) {
         toggleScreen();
     } else {
-        handleMediaStreamError('Audio/Video', error);
+        handleMediaStreamError(error);
     }
 }
 

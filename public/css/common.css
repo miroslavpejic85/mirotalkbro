@@ -206,6 +206,10 @@ input:checked + .slider:before {
     padding: 0.5rem;
 }
 
+a {
+    color: #0969b4;
+}
+
 .swal2-title,
 .swal2-content {
     background-color: var(--panel-color) !important;

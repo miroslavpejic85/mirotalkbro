@@ -403,7 +403,7 @@ async function getStream() {
         return stream;
     } catch (error) {
         console.error('Failed to access media devices:', error.message);
-        handleMediaStreamError('Audio/Video', error);
+        handleMediaStreamError(error);
         hideVideoAudioButtons();
         return null;
     }

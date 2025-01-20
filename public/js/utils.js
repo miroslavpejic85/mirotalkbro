@@ -111,7 +111,7 @@ function stopVideoTrack(mediaStream) {
     }
 }
 
-function handleMediaStreamError(mediaStreamType, error) {
+function handleMediaStreamError(error) {
     let errorMessage = error;
     let shouldHandleGetUserMediaError = true;
 
@@ -138,25 +138,11 @@ function handleMediaStreamError(mediaStreamType, error) {
             break;
     }
 
-    let popupContent = `
-    <ul style="text-align: left">
-        <li>Media type: ${mediaStreamType}</li>
-        <li>Error name: ${error.name}</li>
-        <li>
-            Error message:
-            <p style="color: red">${errorMessage}</p>
-        </li>`;
-
     if (shouldHandleGetUserMediaError) {
-        popupContent += `
-        <li>Common: <a href="https://blog.addpipe.com/common-getusermedia-errors" target="_blank">getUserMedia errors</a></li>`;
+        errorMessage += `
+        Check the common <a href="https://blog.addpipe.com/common-getusermedia-errors" target="_blank">getUserMedia errors</a></li>`;
     }
-
-    popupContent += `
-        </ul>
-    `;
-
-    popupMessage('warning', 'Access denied', popupContent, 'center');
+    popupMessage('warning', 'Ops', errorMessage, 'center');
 }
 
 function saveDataToFile(dataURL, fileName) {
