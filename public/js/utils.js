@@ -143,7 +143,7 @@ function handleMediaStreamError(mediaStreamType, error) {
         <li>Media type: ${mediaStreamType}</li>
         <li>Error name: ${error.name}</li>
         <li>
-            <p>Error message:</p>
+            Error message:
             <p style="color: red">${errorMessage}</p>
         </li>`;
 

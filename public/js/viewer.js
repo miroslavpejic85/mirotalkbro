@@ -395,17 +395,18 @@ function attachStream(stream) {
 }
 
 async function getStream() {
-    return navigator.mediaDevices
-        .getUserMedia({
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
             video: viewerSettings.buttons.video,
             audio: viewerSettings.buttons.audio,
-        })
-        .catch((error) => {
-            console.error('Error accessing media devices', error.message);
-            handleMediaStreamError('Audio/Video', error);
-            hideVideoAudioButtons();
-            return null;
         });
+        return stream;
+    } catch (error) {
+        console.error('Failed to access media devices:', error.message);
+        handleMediaStreamError('Audio/Video', error);
+        hideVideoAudioButtons();
+        return null;
+    }
 }
 
 function hideVideoAudioButtons() {
