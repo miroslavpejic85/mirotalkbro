@@ -375,6 +375,7 @@ video.addEventListener('click', toggleFullScreen);
 video.addEventListener('wheel', handleZoom);
 
 function toggleFullScreen() {
+    if (isMobileDevice) return;
     isFullScreen() ? goOutFullscreen(video) : goInFullscreen(video);
 }
 
@@ -498,7 +499,6 @@ togglePIP.addEventListener('click', handleVideoPIP);
 handleVideoPIPonExit();
 
 function handleVideoPIP() {
-    if (isMobileDevice) return;
     if (!video.srcObject) {
         popupMessage('toast', 'Picture-in-Picture', 'There is no video for PIP', 'top');
     } else {
