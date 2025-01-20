@@ -111,6 +111,54 @@ function stopVideoTrack(mediaStream) {
     }
 }
 
+function handleMediaStreamError(mediaStreamType, error) {
+    let errorMessage = error;
+    let shouldHandleGetUserMediaError = true;
+
+    switch (error.name) {
+        case 'NotFoundError':
+        case 'DevicesNotFoundError':
+            errorMessage = 'Required track is missing';
+            break;
+        case 'NotReadableError':
+        case 'TrackStartError':
+            errorMessage = 'Already in use';
+            break;
+        case 'OverconstrainedError':
+        case 'ConstraintNotSatisfiedError':
+            errorMessage = 'Constraints cannot be satisfied by available devices';
+            break;
+        case 'NotAllowedError':
+        case 'PermissionDeniedError':
+            errorMessage = 'Permission denied in browser';
+            break;
+        default:
+            errorMessage = "Can't get stream, make sure you are in a secure TLS context (HTTPS) and try again";
+            shouldHandleGetUserMediaError = false;
+            break;
+    }
+
+    let popupContent = `
+    <ul style="text-align: left">
+        <li>Media type: ${mediaStreamType}</li>
+        <li>Error name: ${error.name}</li>
+        <li>
+            <p>Error message:</p>
+            <p style="color: red">${errorMessage}</p>
+        </li>`;
+
+    if (shouldHandleGetUserMediaError) {
+        popupContent += `
+        <li>Common: <a href="https://blog.addpipe.com/common-getusermedia-errors" target="_blank">getUserMedia errors</a></li>`;
+    }
+
+    popupContent += `
+        </ul>
+    `;
+
+    popupMessage('warning', 'Access denied', popupContent, 'center');
+}
+
 function saveDataToFile(dataURL, fileName) {
     const a = document.createElement('a');
     a.style.display = 'none';
