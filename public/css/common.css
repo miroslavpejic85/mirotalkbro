@@ -314,6 +314,7 @@ td button:hover {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 100%;
     color: white;
     font-size: 18px;
     padding: 10px 20px;
