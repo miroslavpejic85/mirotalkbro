@@ -340,7 +340,7 @@ function toggleAudio(enabled) {
         enabled: enabled,
     });
 
-    popupMessage('toast', 'Microphone', `Your microphone is ${enabled ? 'on' : 'off'}`, 'top');
+    checkTrackAndPopup(viewerStream);
 }
 
 // =====================================================
@@ -364,7 +364,7 @@ function toggleVideo() {
         enabled: !enabled,
     });
 
-    popupMessage('toast', 'Camera', `Your camera is ${enabled ? 'off' : 'on'}`, 'top');
+    checkTrackAndPopup(viewerStream);
 }
 
 // =====================================================

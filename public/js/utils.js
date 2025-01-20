@@ -111,6 +111,29 @@ function stopVideoTrack(mediaStream) {
     }
 }
 
+function checkTrackAndPopup(mediaStream) {
+    let message = '';
+
+    const audioTrack = mediaStream.getAudioTracks()[0];
+    const videoTrack = mediaStream.getVideoTracks()[0];
+
+    const on = '<span class="color-green">on</span>';
+    const off = '<span class="color-red">off</span>';
+
+    if (audioTrack) {
+        const audioEnabled = audioTrack.enabled;
+        message = `Your microphone is ${audioEnabled ? on : off}`;
+    }
+
+    if (videoTrack) {
+        const videoEnabled = videoTrack.enabled;
+        const videoMessage = `Your camera is ${videoEnabled ? on : off}`;
+        message = message ? `${message}, ${videoMessage}` : videoMessage;
+    }
+
+    popupMessage('toast', 'Microphone/Camera', message, 'top');
+}
+
 function handleMediaStreamError(error) {
     let errorMessage = error;
     let shouldHandleGetUserMediaError = true;
