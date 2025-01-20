@@ -54,6 +54,14 @@ function onBodyLoad() {
 }
 
 // =====================================================
+// Handle theme
+// =====================================================
+
+const getMode = window.localStorage.mode || 'dark';
+const dark = getMode === 'dark';
+if (dark) body.classList.toggle('dark');
+
+// =====================================================
 // Handle ToolTips
 // =====================================================
 
@@ -245,13 +253,6 @@ function sendToBroadcasterDataChannel(method, action = {}) {
         }),
     );
 }
-
-// =====================================================
-// Handle theme
-// =====================================================
-
-const getMode = window.localStorage.mode || 'dark';
-if (getMode === 'dark') body.classList.toggle('dark');
 
 // =====================================================
 // Handle element display
