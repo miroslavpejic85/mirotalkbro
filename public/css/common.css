@@ -307,9 +307,9 @@ td button:hover {
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    font-size: 12px;
+    font-size: 24px;
     padding: 10px 20px;
-    border-radius: 8px;
+    border-radius: 1rem;
     pointer-events: none;
     text-align: center;
 }
