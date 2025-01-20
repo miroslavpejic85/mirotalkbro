@@ -107,6 +107,10 @@ button:hover {
     transform: translate(-50%, -50%);
 }
 
+video {
+    background: #000;
+}
+
 video:fullscreen {
     object-fit: contain;
 }
@@ -311,7 +315,7 @@ td button:hover {
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    font-size: 24px;
+    font-size: 18px;
     padding: 10px 20px;
     border-radius: 1rem;
     pointer-events: none;
