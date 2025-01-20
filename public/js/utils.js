@@ -251,7 +251,9 @@ async function shareRoomNavigator() {
     try {
         await navigator.share({ url: roomURL });
     } catch (err) {
-        console.error('[Error] navigator share', err);
+        console.error('[Error] navigator share, falling back to QR', err);
+
+        if (!isMobileDevice) shareRoomQR();
     }
 }
 
