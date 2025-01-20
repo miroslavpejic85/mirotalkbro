@@ -308,12 +308,9 @@ td button:hover {
     align-items: center;
 }
 
-.overlay {
+.awaiting-broadcaster {
     z-index: 1;
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     width: 100%;
     color: white;
     font-size: 18px;
