@@ -309,6 +309,12 @@ function makeDraggable(element, dragObj) {
     }
 }
 
+function hideElement(element) {
+    if (!element.classList.contains('hidden')) {
+        element.classList.add('hidden');
+    }
+}
+
 async function playSound(name) {
     const sound = '../assets/sounds/' + name + '.mp3';
     const audioToPlay = new Audio(sound);

@@ -300,6 +300,20 @@ td button:hover {
     align-items: center;
 }
 
+.overlay {
+    z-index: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    pointer-events: none;
+    text-align: center;
+}
+
 .fadeIn {
     -webkit-animation: fadeIn ease-in 1;
     -moz-animation: fadeIn ease-in 1;

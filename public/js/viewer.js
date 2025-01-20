@@ -10,6 +10,7 @@ console.log('Viewer', {
 
 const body = document.querySelector('body');
 
+const waitingBroadcaster = document.getElementById('waitingBroadcaster');
 const viewerForm = document.getElementById('viewerForm');
 const viewerFormHeader = document.getElementById('viewerFormHeader');
 const viewerButtons = document.getElementById('viewerButtons');
@@ -113,6 +114,7 @@ socket.on('offer', async (id, description, iceServers) => {
     peerConnection.ontrack = (event) => {
         saveRecording();
         attachStream(event.streams[0]);
+        hideElement(waitingBroadcaster);
     };
 
     peerConnection.onicecandidate = (event) => {
