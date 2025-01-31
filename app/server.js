@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.21
+ * @version 1.1.22
  */
 
 require('dotenv').config();
@@ -17,6 +17,7 @@ const { auth, requiresAuth } = require('express-openid-connect');
 const compression = require('compression');
 const cors = require('cors');
 const express = require('express');
+const helmet = require('helmet');
 const app = express();
 const path = require('path');
 const fs = require('fs');
@@ -180,6 +181,8 @@ const html = {
     disconnect: path.join(__dirname, '../', 'public/views/disconnect.html'),
 };
 
+app.use(helmet.xssFilter()); // Enable XSS protection
+app.use(helmet.noSniff()); // Enable content type sniffing prevention
 app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json()); // Api parse body data as json
