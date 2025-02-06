@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.22
+ * @version 1.1.23
  */
 
 require('dotenv').config();
@@ -110,6 +110,9 @@ if (protocol === 'http') {
     server = https.createServer(options, app);
 }
 
+// Trust Proxy
+const trustProxy = !!getEnvBoolean(process.env.TRUST_PROXY);
+
 // Cors
 const cors_origin = process.env.CORS_ORIGIN;
 const cors_methods = process.env.CORS_METHODS;
@@ -155,7 +158,7 @@ const OIDC = {
             scope: 'openid profile email',
         },
         authRequired: process.env.OIDC_AUTH_REQUIRED ? getEnvBoolean(process.env.OIDC_AUTH_REQUIRED) : false,
-        auth0Logout: true,
+        auth0Logout: process.env.OIDC_AUTH_LOGOUT ? getEnvBoolean(process.env.OIDC_AUTH_LOGOUT) : true, // Set to true to enable logout with Auth0
         routes: {
             callback: '/auth/callback',
             login: false,
@@ -181,6 +184,7 @@ const html = {
     disconnect: path.join(__dirname, '../', 'public/views/disconnect.html'),
 };
 
+app.set('trust proxy', trustProxy); // Enables trust for proxy headers (e.g., X-Forwarded-For) based on the trustProxy setting
 app.use(helmet.xssFilter()); // Enable XSS protection
 app.use(helmet.noSniff()); // Enable content type sniffing prevention
 app.use(cors(corsOptions));
@@ -416,6 +420,7 @@ async function ngrokStart() {
         const list = await api.listTunnels();
         const tunnelHttps = list.tunnels[0].public_url;
         log.info('Server is running', {
+            trustProxy: trustProxy,
             oidc: OIDC.enabled ? OIDC : false,
             iceServers: iceServers,
             cors: corsOptions,
@@ -439,6 +444,7 @@ server.listen(port, () => {
         ngrokStart();
     } else {
         log.info('Server is running', {
+            trustProxy: trustProxy,
             oidc: OIDC.enabled ? OIDC : false,
             iceServers: iceServers,
             cors: corsOptions,
