@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.23
+ * @version 1.1.24
  */
 
 require('dotenv').config();
@@ -169,11 +169,15 @@ const OIDC = {
 
 const OIDCAuth = function (req, res, next) {
     if (OIDC.enabled) {
+        if (req.oidc.isAuthenticated()) { 
+            log.debug('OIDC ------> User already Authenticated');
+            return next();
+        }
         requiresAuth()(req, res, next);
     } else {
         next();
     }
-};
+}
 
 // public html files
 const html = {
@@ -276,38 +280,38 @@ app.get('/logout', (req, res) => {
     res.redirect('/'); // Redirect to the home page after logout
 });
 
-app.get(['/'], OIDCAuth, (req, res) => {
+app.get('/', OIDCAuth, (req, res) => {
     return res.sendFile(html.home);
 });
 
-app.get(['/home'], (req, res) => {
+app.get('/home', (req, res) => {
     //http://localhost:3016/home?id=123
     const { id } = req.query;
     return Object.keys(req.query).length > 0 && id ? res.sendFile(html.home) : notFound(res);
 });
 
-app.get(['/broadcast'], OIDCAuth, (req, res) => {
+app.get('/broadcast', OIDCAuth, (req, res) => {
     //http://localhost:3016/broadcast?id=123&name=broadcaster
     const { id, name } = req.query;
     return Object.keys(req.query).length > 0 && id && name ? res.sendFile(html.broadcast) : notFound(res);
 });
 
-app.get(['/viewer'], (req, res) => {
+app.get('/viewer', (req, res) => {
     //http://localhost:3016/viewer?id=123&name=viewer
     const { id, name } = req.query;
     return Object.keys(req.query).length > 0 && id && name ? res.sendFile(html.viewer) : notFound(res);
 });
 
-app.get(['/disconnect'], (req, res) => {
+app.get('/disconnect', (req, res) => {
     return res.sendFile(html.disconnect);
 });
 
-app.get(['*'], (req, res) => {
+app.get('*', (req, res) => {
     return notFound(res);
 });
 
 // API request join room endpoint
-app.post([`${apiBasePath}/join`], (req, res) => {
+app.post(`${apiBasePath}/join`, (req, res) => {
     const { host, authorization } = req.headers;
     const api = new ServerApi(host, authorization, apiKeySecret);
     if (!api.isAuthorized()) {
