@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.24
+ * @version 1.1.25
  */
 
 require('dotenv').config();
@@ -189,7 +189,6 @@ const html = {
 };
 
 app.set('trust proxy', trustProxy); // Enables trust for proxy headers (e.g., X-Forwarded-For) based on the trustProxy setting
-app.use(helmet.xssFilter()); // Enable XSS protection
 app.use(helmet.noSniff()); // Enable content type sniffing prevention
 app.use(cors(corsOptions));
 app.use(compression());
