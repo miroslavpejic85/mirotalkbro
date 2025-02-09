@@ -169,7 +169,7 @@ const OIDC = {
 
 const OIDCAuth = function (req, res, next) {
     if (OIDC.enabled) {
-        if (req.oidc.isAuthenticated()) { 
+        if (req.oidc.isAuthenticated()) {
             log.debug('OIDC ------> User already Authenticated');
             return next();
         }
@@ -177,7 +177,7 @@ const OIDCAuth = function (req, res, next) {
     } else {
         next();
     }
-}
+};
 
 // public html files
 const html = {
