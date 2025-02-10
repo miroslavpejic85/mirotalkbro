@@ -214,7 +214,6 @@ app.get('*', function (next) {
     next();
 });
 
-// Remove trailing slashes in url handle bad requests
 app.use((err, req, res, next) => {
     if (err instanceof SyntaxError || err.status === 400 || 'body' in err) {
         log.error('Request Error', {
@@ -224,19 +223,9 @@ app.use((err, req, res, next) => {
         });
         return res.status(400).send({ status: 404, message: err.message }); // Bad request
     }
-
-    // Remove multiple leading slashes & normalize path
-    let cleanPath = req.path.replace(/^\/+/, ''); // Removes all leading slashes
-    let query = req.url.slice(req.path.length);
-
-    // Prevent open redirect attacks by checking if the path is an external domain
-    if (/^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/.test(cleanPath)) {
-        return res.status(400).send('Bad Request: Potential Open Redirect Detected');
-    }
-
-    // If a trailing slash exists, redirect to a clean version
-    if (req.path.endsWith('/') && req.path.length > 1) {
-        return res.redirect(301, '/' + cleanPath + query);
+    if (req.path.substr(-1) === '/' && req.path.length > 1) {
+        let query = req.url.slice(req.path.length);
+        res.redirect(301, req.path.slice(0, -1) + query);
     } else {
         log.debug('New request', {
             // headers: req.headers,
@@ -244,9 +233,8 @@ app.use((err, req, res, next) => {
             method: req.method,
             path: req.originalUrl,
         });
+        next();
     }
-
-    next();
 });
 
 // OpenID Connect - Dynamically set baseURL based on incoming host and protocol
