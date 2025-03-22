@@ -8,11 +8,12 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.28
+ * @version 1.1.29
  */
 
 require('dotenv').config();
 
+const httpolyglot = require('httpolyglot');
 const { auth, requiresAuth } = require('express-openid-connect');
 const compression = require('compression');
 const cors = require('cors');
@@ -32,7 +33,6 @@ const packageJson = require('../package.json');
 const logs = require('./logs');
 const log = new logs('server');
 
-let server; // This server exposed on http or https (self signed certificate)
 const broadcasters = {}; // collect broadcasters grouped by socket.id
 const viewers = {}; // collect viewers grouped by socket.id
 
@@ -56,15 +56,13 @@ if (sentryEnabled) {
 }
 
 // Server
-const protocol = process.env.PROTOCOL || 'http';
-const host = process.env.HOST || 'localhost';
 const port = process.env.PORT || 3016;
-const home = `${protocol}://${host}:${port}`;
+const host = process.env.HOST || `http://localhost:${port}`;
 
 // API
 const apiKeySecret = process.env.API_KEY_SECRET || 'mirotalkbro_default_secret';
 const apiBasePath = '/api/v1'; // api endpoint path
-const apiDocs = home + apiBasePath + '/docs'; // api docs
+const apiDocs = host + apiBasePath + '/docs'; // api docs
 
 // Stun and Turn iceServers
 const iceServers = [];
@@ -84,31 +82,18 @@ const ngrok = require('ngrok');
 const ngrokEnabled = getEnvBoolean(process.env.NGROK_ENABLED);
 const ngrokAuthToken = process.env.NGROK_AUTH_TOKEN;
 
-// Server Listen on
-if (protocol === 'http') {
-    const http = require('http');
-    server = http.createServer(app);
-} else {
-    const https = require('https');
+// Define paths to the SSL key and certificate files
+const keyPath = path.join(__dirname, 'ssl/key.pem');
+const certPath = path.join(__dirname, 'ssl/cert.pem');
 
-    const keyPath = path.join(__dirname, 'ssl/key.pem');
-    const certPath = path.join(__dirname, 'ssl/cert.pem');
+// Read SSL key and certificate files securely
+const options = {
+    key: fs.readFileSync(keyPath, 'utf-8'),
+    cert: fs.readFileSync(certPath, 'utf-8'),
+};
 
-    if (!fs.existsSync(keyPath)) {
-        log.error('SSL key file not found.');
-        process.exit(1);
-    }
-    if (!fs.existsSync(certPath)) {
-        log.error('SSL certificate file not found.');
-        process.exit(1);
-    }
-
-    const options = {
-        key: fs.readFileSync(keyPath, 'utf-8'),
-        cert: fs.readFileSync(certPath, 'utf-8'),
-    };
-    server = https.createServer(options, app);
-}
+// Server both http and https
+const server = httpolyglot.createServer(options, app);
 
 // Trust Proxy
 const trustProxy = !!getEnvBoolean(process.env.TRUST_PROXY);
@@ -449,7 +434,7 @@ async function ngrokStart() {
 }
 
 server.listen(port, () => {
-    if (protocol != 'https' && ngrokEnabled && ngrokAuthToken) {
+    if (ngrokEnabled && ngrokAuthToken) {
         ngrokStart();
     } else {
         log.info('Server is running', {
@@ -457,10 +442,10 @@ server.listen(port, () => {
             oidc: OIDC.enabled ? OIDC : false,
             iceServers: iceServers,
             cors: corsOptions,
-            home: home,
-            broadcast: `${home}/${broadcast}`,
-            viewer: `${home}/${viewer}`,
-            viewerHome: `${home}/${viewerHome}`,
+            home: host,
+            broadcast: `${host}/${broadcast}`,
+            viewer: `${host}/${viewer}`,
+            viewerHome: `${host}/${viewerHome}`,
             apiDocs: apiDocs,
             apiKeySecret: apiKeySecret,
             nodeVersion: process.versions.node,
