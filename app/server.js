@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.29
+ * @version 1.1.30
  */
 
 require('dotenv').config();
@@ -78,7 +78,7 @@ if (turnServerEnabled && turnServerUrl && turnServerUsername && turnServerCreden
 }
 
 // Ngrok
-const ngrok = require('ngrok');
+const ngrok = require('@ngrok/ngrok');
 const ngrokEnabled = getEnvBoolean(process.env.NGROK_ENABLED);
 const ngrokAuthToken = process.env.NGROK_AUTH_TOKEN;
 
@@ -409,10 +409,8 @@ function getEnvBoolean(key, force_true_if_undefined = false) {
 async function ngrokStart() {
     try {
         await ngrok.authtoken(ngrokAuthToken);
-        await ngrok.connect(port);
-        const api = ngrok.getApi();
-        const list = await api.listTunnels();
-        const tunnelHttps = list.tunnels[0].public_url;
+        const listener = await ngrok.forward({ addr: port });
+        const tunnelHttps = listener.url();
         log.info('Server is running', {
             trustProxy: trustProxy,
             oidc: OIDC.enabled ? OIDC : false,
@@ -429,6 +427,7 @@ async function ngrokStart() {
         });
     } catch (err) {
         log.warn('[Error] ngrokStart', err);
+        await ngrok.kill();
         process.exit(1);
     }
 }
