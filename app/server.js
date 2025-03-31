@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.30
+ * @version 1.1.31
  */
 
 require('dotenv').config();
@@ -192,14 +192,6 @@ app.use((req, res, next) => {
     next();
 });
 
-app.post('*', function (next) {
-    next();
-});
-
-app.get('*', function (next) {
-    next();
-});
-
 app.use((err, req, res, next) => {
     if (err instanceof SyntaxError || err.status === 400 || 'body' in err) {
         log.error('Request Error', {
@@ -296,7 +288,7 @@ app.get('/disconnect', (req, res) => {
     return res.sendFile(html.disconnect);
 });
 
-app.get('*', (req, res) => {
+app.use((req, res) => {
     return notFound(res);
 });
 
