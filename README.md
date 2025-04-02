@@ -74,7 +74,7 @@ $ cp docker-compose.template.yml docker-compose.yml
 # Get official image from Docker Hub
 $ docker pull mirotalk/bro:latest
 # Run the image in a container
-$ docker-compose up #-d
+$ docker compose up #-d
 ```
 
 Server up and running
