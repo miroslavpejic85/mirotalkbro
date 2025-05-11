@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.1.34",
+    "version": "1.1.35",
     "description": "P2P WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
@@ -23,13 +23,13 @@
     "author": "Miroslav Pejic",
     "license": "AGPLv3",
     "dependencies": {
-        "@ngrok/ngrok": "1.5.0",
-        "@sentry/node": "^9.15.0",
+        "@ngrok/ngrok": "1.5.1",
+        "@sentry/node": "^9.17.0",
         "compression": "^1.8.0",
         "cors": "^2.8.5",
         "dotenv": "^16.5.0",
         "express": "^5.1.0",
-        "express-openid-connect": "^2.18.0",
+        "express-openid-connect": "^2.18.1",
         "helmet": "^8.1.0",
         "httpolyglot": "0.1.2",
         "js-yaml": "^4.1.0",
