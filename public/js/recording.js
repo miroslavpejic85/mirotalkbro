@@ -8,7 +8,7 @@ class Recording {
         recordingStop,
         recordingStart,
         videoSelect = null,
-        audioSelect = null,
+        audioSelect = null
     ) {
         this._stream = stream;
         this._recordingLabel = recordingLabel;
@@ -97,7 +97,7 @@ class Recording {
 						<li>Size: ${blobFileSize}</li>
 					</ul>
 					Please wait to be processed, then will be downloaded to your ${currentDevice} device.
-				</div>`,
+				</div>`
             );
             this.saveBlobToFile(blob, recFileName);
         } catch (err) {

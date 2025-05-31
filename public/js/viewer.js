@@ -228,7 +228,7 @@ function handleDataChannelMessage(data) {
                 'toast',
                 'Broadcaster',
                 `Broadcaster audio ${data.action.enable ? 'enabled' : 'disabled'}`,
-                'top',
+                'top'
             );
             break;
         //...
@@ -250,7 +250,7 @@ function sendToBroadcasterDataChannel(method, action = {}) {
         JSON.stringify({
             method: method,
             action: action,
-        }),
+        })
     );
 }
 

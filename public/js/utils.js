@@ -69,7 +69,7 @@ function getPeerName(id) {
 
 function getUUID4() {
     return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
-        (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16),
+        (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
     );
 }
 
@@ -232,7 +232,7 @@ function shareRoomQR() {
             <canvas id="qrRoom"></canvas>
         </div>
         <p>No need for apps, simply capture the QR code with your mobile camera Or Invite viewers to join your live broadcast by sending them the following URL</p>
-        <p style="color:#2196f3;">${roomURL}</p>`,
+        <p style="color:#2196f3;">${roomURL}</p>`
     );
     makeRoomQR();
 }

@@ -274,7 +274,7 @@ function handleDataChannelMessage(data) {
         case 'audio':
             console.log('audio', { id: data.action.id, username: data.action.username, enabled: data.action.enabled });
             const viewerAudioStatus = document.getElementById(
-                `${data.action.id}___${data.action.username}___viewerAudioStatus`,
+                `${data.action.id}___${data.action.username}___viewerAudioStatus`
             );
             data.action.enabled
                 ? viewerAudioStatus.classList.remove('color-red')
@@ -326,7 +326,7 @@ function sendToViewersDataChannel(method, action = {}, peerId = '*') {
             JSON.stringify({
                 method: method,
                 action: action,
-            }),
+            })
         );
     }
 }
@@ -529,7 +529,7 @@ function startRecording() {
             recordingStop,
             recordingStart,
             videoSelect,
-            audioSelect,
+            audioSelect
         );
         recording.start();
     }
@@ -987,7 +987,7 @@ function applyVideoConstraints() {
             popupMessage(
                 'warning',
                 'Video quality/fps',
-                "Your device doesn't support the selected video quality and fps, please select the another one.",
+                "Your device doesn't support the selected video quality and fps, please select the another one."
             );
         });
 }
@@ -1075,10 +1075,10 @@ function getStream() {
 function gotStream(stream) {
     if (!screenShareEnabled) {
         audioSelect.selectedIndex = [...audioSelect.options].findIndex(
-            (option) => option.text === stream.getAudioTracks()[0].label,
+            (option) => option.text === stream.getAudioTracks()[0].label
         );
         videoSelect.selectedIndex = [...videoSelect.options].findIndex(
-            (option) => option.text === stream.getVideoTracks()[0].label,
+            (option) => option.text === stream.getVideoTracks()[0].label
         );
     }
     attachStream(stream);
