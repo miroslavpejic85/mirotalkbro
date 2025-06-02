@@ -44,7 +44,23 @@ function getSupport() {
 // Handle username
 // =====================================================
 
-userName.value = window.localStorage.name || `User-${getRandomInt(99999)}`;
+async function getUserName() {
+    try {
+        const { data: profile } = await axios.get('/profile', { timeout: 5000 });
+        if (profile && profile.name) {
+            console.log('AXIOS GET OIDC Profile retrieved successfully', profile);
+            window.localStorage.name = profile.name;
+        }
+    } catch (error) {
+        console.error('AXIOS OIDC Error fetching profile', error.message || error);
+    }
+    const name = window.localStorage.name || `User-${getRandomInt(99999)}`;
+    return name;
+}
+
+(async () => {
+    userName.value = await getUserName();
+})();
 
 // =====================================================
 // Handle broadcaster aka room id

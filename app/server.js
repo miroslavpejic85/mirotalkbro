@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.37
+ * @version 1.1.38
  */
 
 require('dotenv').config();
@@ -248,9 +248,10 @@ if (OIDC.enabled) {
 
 app.get('/profile', OIDCAuth, (req, res) => {
     if (OIDC.enabled) {
+        log.debug('OIDC User profile requested', req.oidc.user);
         return res.json(req.oidc.user); // Send user information as JSON
     }
-    res.sendFile(html.home);
+    return res.json({ profile: false });
 });
 
 app.get('/auth/callback', (req, res, next) => {
