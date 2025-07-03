@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.41
+ * @version 1.1.42
  */
 
 require('dotenv').config();
@@ -44,6 +44,9 @@ const viewerHome = 'home?id=123';
 // Sentry config
 const Sentry = require('@sentry/node');
 const sentryEnabled = getEnvBoolean(process.env.SENTRY_ENABLED);
+const sentryLogLevels = process.env.SENTRY_LOG_LEVELS
+    ? process.env.SENTRY_LOG_LEVELS.split(',').map((level) => level.trim())
+    : ['error'];
 const sentryDSN = process.env.SENTRY_DSN;
 const sentryTracesSampleRate = parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE)
 // Setup sentry client
@@ -55,20 +58,23 @@ if (sentryEnabled && typeof sentryDSN === 'string' && sentryDSN.trim()) {
         tracesSampleRate: sentryTracesSampleRate,
     });
 
-    const originalWarn = console.warn;
-    const originalError = console.error;
-
-    console.warn = function (...args) {
-        Sentry.captureMessage(args.join(' '), 'warning');
-        originalWarn.apply(console, args);
-    };
-
-    console.error = function (...args) {
-        args[0] instanceof Error
-            ? Sentry.captureException(args[0])
-            : Sentry.captureException(new Error(args.join(' ')));
-        originalError.apply(console, args);
-    };
+    const originalConsole = {};
+    sentryLogLevels.forEach((level) => {
+        originalConsole[level] = console[level];
+        console[level] = function (...args) {
+            switch (level) {
+                case 'warn':
+                    Sentry.captureMessage(args.join(' '), 'warning');
+                    break;
+                case 'error':
+                    args[0] instanceof Error
+                        ? Sentry.captureException(args[0])
+                        : Sentry.captureException(new Error(args.join(' ')));
+                    break;
+            }
+            originalConsole[level].apply(console, args);
+        };
+    });
 
     // log.error('Sentry error', { foo: 'bar' });
     // log.warn('Sentry warning');

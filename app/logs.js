@@ -1,7 +1,13 @@
 'use strict';
 
-const debugOn = process.env.DEBUG == 'true';
+const util = require('util');
 
+const options = {
+    depth: null,
+    colors: true,
+};
+
+const debugOn = process.env.DEBUG == 'true';
 module.exports = class Logs {
     constructor(appName = 'mirotalkbro') {
         this.appName = appName;
@@ -14,23 +20,23 @@ module.exports = class Logs {
 
     debug(msg, op = '') {
         if (this.debugOn === false) return;
-        console.debug('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
+        console.debug('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, util.inspect(op, options));
     }
 
     log(msg, op = '') {
-        console.log('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
+        console.log('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, util.inspect(op, options));
     }
 
     info(msg, op = '') {
-        console.info('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
+        console.info('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, util.inspect(op, options));
     }
 
     warn(msg, op = '') {
-        console.warn('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
+        console.warn('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, util.inspect(op, options));
     }
 
     error(msg, op = '') {
-        console.error('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, op);
+        console.error('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, util.inspect(op, options));
     }
 
     getDateTime() {
