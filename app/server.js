@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.40
+ * @version 1.1.41
  */
 
 require('dotenv').config();
@@ -42,17 +42,36 @@ const viewer = 'viewer?id=123&name=Viewer';
 const viewerHome = 'home?id=123';
 
 // Sentry config
+const Sentry = require('@sentry/node');
 const sentryEnabled = getEnvBoolean(process.env.SENTRY_ENABLED);
-if (sentryEnabled) {
-    const Sentry = require('@sentry/node');
+const sentryDSN = process.env.SENTRY_DSN;
+const sentryTracesSampleRate = parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE)
+// Setup sentry client
+if (sentryEnabled && typeof sentryDSN === 'string' && sentryDSN.trim()) {
+    log.info('Sentry monitoring started...');
+
     Sentry.init({
-        dsn: process.env.SENTRY_DSN,
-        integrations: [Sentry.captureConsoleIntegration({ levels: ['warn', 'error'] })],
-        tracesSampleRate: process.env.SENTRY_TRACES_SAMPLE_RATE,
+        dsn: sentryDSN,
+        tracesSampleRate: sentryTracesSampleRate,
     });
-    // Test
-    // log.error('error');
-    // log.warn('warning');
+
+    const originalWarn = console.warn;
+    const originalError = console.error;
+
+    console.warn = function (...args) {
+        Sentry.captureMessage(args.join(' '), 'warning');
+        originalWarn.apply(console, args);
+    };
+
+    console.error = function (...args) {
+        args[0] instanceof Error
+            ? Sentry.captureException(args[0])
+            : Sentry.captureException(new Error(args.join(' ')));
+        originalError.apply(console, args);
+    };
+
+    // log.error('Sentry error', { foo: 'bar' });
+    // log.warn('Sentry warning');
 }
 
 // Server
