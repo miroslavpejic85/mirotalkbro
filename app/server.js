@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.43
+ * @version 1.1.44
  */
 
 require('dotenv').config();
@@ -48,7 +48,7 @@ const sentryLogLevels = process.env.SENTRY_LOG_LEVELS
     ? process.env.SENTRY_LOG_LEVELS.split(',').map((level) => level.trim())
     : ['error'];
 const sentryDSN = process.env.SENTRY_DSN;
-const sentryTracesSampleRate = parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE)
+const sentryTracesSampleRate = parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE);
 // Setup sentry client
 if (sentryEnabled && typeof sentryDSN === 'string' && sentryDSN.trim()) {
     log.info('Sentry monitoring started...');
