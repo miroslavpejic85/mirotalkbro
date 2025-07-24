@@ -1,13 +1,13 @@
 services:
-    mirotalk:
+    mirotalkbro:
         image: mirotalk/bro:latest
         container_name: mirotalkbro
         hostname: mirotalkbro
+        restart: unless-stopped
+        ports:
+            - '${PORT}:${PORT}'
         volumes:
             - .env:/src/.env:ro
             # Optional volumes for real-time updates:
             # - ./app/:/src/app/:ro
             # - ./public/:/src/public/:ro
-        restart: unless-stopped
-        ports:
-            - '${PORT}:${PORT}'
