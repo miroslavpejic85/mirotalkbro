@@ -20,6 +20,7 @@ class Recording {
         this._mediaRecorder = null;
         this._recordedBlobs = [];
         this._recordingStream = false;
+        this._recStartTs = null;
     }
 
     start() {
@@ -33,6 +34,7 @@ class Recording {
                 playSound('recStart');
                 console.log('MediaRecorder started', e);
                 this._recordingStream = true;
+                this._recStartTs = performance.now();
                 this.handleElements();
                 startRecordingTimer();
             });
@@ -79,13 +81,18 @@ class Recording {
         });
     }
 
+    getWebmFixerFn() {
+        const fn = window.FixWebmDuration;
+        return typeof fn === 'function' ? fn : null;
+    }
+
     downloadRecordedStream() {
         try {
             const type = this._recordedBlobs[0].type.includes('mp4') ? 'mp4' : 'webm';
-            const blob = new Blob(this._recordedBlobs, { type: 'video/' + type });
+            const rawBlob = new Blob(this._recordedBlobs, { type: 'video/' + type });
             const recFileName = getDataTimeString() + '-recording.' + type;
             const currentDevice = isMobileDevice ? 'MOBILE' : 'PC';
-            const blobFileSize = this.bytesToSize(blob.size);
+            const blobFileSize = this.bytesToSize(rawBlob.size);
             popupMessage(
                 'clean',
                 'Recording',
@@ -99,7 +106,27 @@ class Recording {
 					Please wait to be processed, then will be downloaded to your ${currentDevice} device.
 				</div>`
             );
-            this.saveBlobToFile(blob, recFileName);
+
+            // Fix WebM duration to make it seekable
+            const fixWebmDuration = async (blob) => {
+                if (type !== 'webm') return blob;
+                try {
+                    const fix = this.getWebmFixerFn();
+                    const durationMs = this._recStartTs ? performance.now() - this._recStartTs : undefined;
+                    const fixed = await fix(blob, durationMs);
+                    return fixed || blob;
+                } catch (e) {
+                    console.warn('WEBM duration fix failed, saving original blob:', e);
+                    return blob;
+                } finally {
+                    this._recStartTs = null;
+                }
+            };
+
+            (async () => {
+                const finalBlob = await fixWebmDuration(rawBlob);
+                this.saveBlobToFile(finalBlob, recFileName);
+            })();
         } catch (err) {
             popupMessage('error', 'Recording', 'Recording save failed: ' + err);
         }
