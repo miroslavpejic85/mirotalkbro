@@ -6,6 +6,10 @@
     padding: 0.5rem;
 }
 
+.support button i {
+    font-size: 1rem;
+}
+
 .fa-arrows-rotate {
     cursor: pointer;
 }
@@ -25,47 +29,106 @@
     background: var(--secondary-color);
     border: var(--border);
     border-radius: var(--border-radius);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .home-header {
     color: var(--text-color);
     display: grid;
     grid-gap: 1rem;
+    text-align: center;
 }
 
-.home-buttons button {
-    padding: 0.5rem;
-    float: right;
-    margin-left: 5px;
+.home label {
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .home i {
-    padding: 0.4rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
 }
 
 .home button i {
-    padding: 0.2rem;
-}
-
-.home select {
-    padding: 10px;
-    height: 40px;
-    line-height: 40px;
-    font-size: 0.9rem;
-    color: var(--text-color);
-    color: var(--text-color);
-    background-color: var(--primary-color);
-    cursor: pointer;
-    border: none;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    padding: 0.3rem;
+    background: none;
+    width: auto;
+    height: auto;
+    border-radius: 0;
 }
 
 .home input {
-    padding: 1rem;
+    padding: 1rem 1.2rem;
+    font-size: 1rem;
     color: var(--input-color);
     background-color: var(--primary-color);
-    border: none;
-    border-radius: var(--border-radius);
+    border: 2px solid transparent;
+    border-radius: calc(var(--border-radius) + 4px);
     box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+}
+
+.home input:hover {
+    border-color: #2196f3;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    transform: translateY(-1px);
+}
+
+.home button {
+    padding: 1rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    border-radius: calc(var(--border-radius) + 4px);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.home button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .home {
+        padding: 1.5rem;
+        min-width: 300px;
+        grid-gap: 1.2rem;
+    }
+
+    .home button {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.9rem;
+    }
+
+    .home input {
+        padding: 0.875rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+.mode-container {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mode-container .switch {
+    margin-left: auto;
+    margin-bottom: 0;
 }
