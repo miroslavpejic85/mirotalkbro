@@ -102,6 +102,17 @@
     transform: translateY(-1px);
 }
 
+/* Ensure all form elements stay within container */
+#broadcasterSettingsForm * {
+    box-sizing: border-box;
+}
+
+#broadcasterSettingsForm select,
+#broadcasterSettingsForm input {
+    max-width: 100%;
+    overflow: hidden;
+}
+
 .broadcast-quality-fps {
     display: flex;
     align-items: center;
