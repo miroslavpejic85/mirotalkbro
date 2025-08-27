@@ -72,9 +72,6 @@ button {
 }
 
 button:hover {
-    transform: translateY(-2px) scale(1.05);
-    -webkit-transform: translateY(-2px) scale(1.05);
-    -moz-transform: translateY(-2px) scale(1.05);
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     box-shadow:
         0 4px 10px rgba(0, 0, 0, 0.3),
