@@ -411,6 +411,7 @@ function toggleSettings() {
     const mode = settingsFormOpen ? 'none' : 'grid';
     elementDisplay(settingsForm, display, mode);
     settingsFormOpen = !settingsFormOpen;
+    video.style.opacity = settingsFormOpen ? 0.3 : 1;
 }
 
 // =====================================================
