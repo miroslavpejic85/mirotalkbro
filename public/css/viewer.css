@@ -42,24 +42,46 @@
 }
 
 .viewer select {
-    padding: 10px;
-    height: 40px;
-    line-height: 40px;
-    font-size: 0.9rem;
-    color: var(--text-color);
+    padding: 12px 16px;
+    height: auto;
+    min-height: 45px;
+    font-size: 0.95rem;
     color: var(--text-color);
     background-color: var(--primary-color);
     cursor: pointer;
-    border: none;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    border: 2px solid transparent;
+    border-radius: calc(var(--border-radius) + 4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.viewer select:hover {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
 }
 
 .viewer input {
-    padding: 1rem;
+    padding: 12px 16px;
+    font-size: 0.95rem;
     color: var(--input-color);
     background-color: var(--primary-color);
-    border: none;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    border: 2px solid transparent;
+    border-radius: calc(var(--border-radius) + 4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.viewer input:hover {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
 }

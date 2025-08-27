@@ -23,6 +23,7 @@ const videoOff = document.getElementById('videoOff');
 
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsForm = document.getElementById('broadcasterSettingsForm');
+const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
 
 const copyRoom = document.getElementById('copyRoom');
 const shareRoom = document.getElementById('shareRoom');
@@ -128,6 +129,7 @@ function loadBroadcasterToolTip() {
         { element: fullScreenOn, text: 'Enable full screen', position: 'top' },
         { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
         { element: settingsBtn, text: 'Toggle settings', position: 'top' },
+        { element: toggleSettingsBtn, text: 'Toggle settings', position: 'top' },
         { element: goHome, text: 'Go to home page', position: 'top' },
         { element: messagesClean, text: 'Clean messages', position: 'top' },
         { element: messagesSave, text: 'Save messages', position: 'top' },
@@ -402,6 +404,7 @@ if (!isMobileDevice) {
 // =====================================================
 
 settingsBtn.addEventListener('click', toggleSettings);
+toggleSettingsBtn.addEventListener('click', toggleSettings);
 
 function toggleSettings() {
     const display = settingsFormOpen ? false : true;
