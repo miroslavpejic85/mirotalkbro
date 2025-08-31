@@ -16,7 +16,7 @@ const viewerFormHeader = document.getElementById('viewerFormHeader');
 const viewerButtons = document.getElementById('viewerButtons');
 const myName = document.getElementById('myName');
 const sessionTime = document.getElementById('sessionTime');
-const video = document.querySelector('video');
+const video = document.getElementById('mainVideo');
 const videoOff = document.getElementById('videoOff');
 
 const enableAudio = document.getElementById('enableAudio');
@@ -41,6 +41,10 @@ const parser = new UAParser(userAgent);
 const result = parser.getResult();
 const deviceType = result.device.type || 'desktop';
 const isMobileDevice = deviceType === 'mobile';
+
+const viewerVideo = document.getElementById('viewerVideo');
+const viewerVideoOff = document.getElementById('viewerVideoOff');
+const viewerVideoContainer = document.getElementById('viewerVideoContainer');
 
 // =====================================================
 // Body on Load
@@ -358,6 +362,15 @@ function toggleVideo() {
     const color = getMode === 'dark' ? 'white' : 'black';
     const enabled = videoBtn.style.color !== 'red';
     videoBtn.style.color = enabled ? 'red' : color;
+
+    // Show/hide viewer video
+    if (viewerStream.getVideoTracks()[0].enabled) {
+        viewerVideo.srcObject = viewerStream;
+        viewerVideoContainer.style.display = 'block';
+    } else {
+        viewerVideoContainer.style.display = 'none';
+        viewerVideo.srcObject = null;
+    }
 
     sendToBroadcasterDataChannel('video', {
         id: socket.id,

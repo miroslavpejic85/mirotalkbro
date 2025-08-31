@@ -22,6 +22,9 @@
         <link rel="stylesheet" href="../css/viewer.css" />
     </head>
     <body>
+        <div id="viewerVideoContainer">
+            <video id="viewerVideo" class="fadeIn" autoplay muted playsinline></video>
+        </div>
         <div id="viewerForm" class="viewer center fadeIn">
             <div id="viewerFormHeader" class="viewer-header not-selectable">
                 <div class="viewer-info">
@@ -30,7 +33,7 @@
                 </div>
             </div>
             <div class="container">
-                <video class="not-selectable"></video>
+                <video id="mainVideo" class="not-selectable"></video>
                 <img id="videoOff" class="video-off" src="../assets/images/videoOff.png" />
                 <div id="awaitingBroadcaster" class="awaiting-broadcaster center pulse">
                     Awaiting the broadcaster...
