@@ -95,7 +95,7 @@ The `Broadcaster` stream the audio, video or screen to all connected viewers and
 The `Viewer` get the audio, video or screen that is streamed from the broadcaster and can send messages to it.
 
 <details open>
-<summary>Hetzner & Contabo</summary>
+<summary>Hetzner, Netcup, Hostinger & Contabo</summary>
 
 <br/>
 
@@ -105,13 +105,32 @@ This application is running for `demonstration purposes` on [Hetzner](https://ww
 
 ---
 
-Use [my personal link](https://hetzner.cloud/?ref=XdRifCzCK3bn) to receive `€⁠20 IN CLOUD CREDITS`.
+👉 Use [my personal link](https://hetzner.cloud/?ref=XdRifCzCK3bn) to receive `€⁠20 IN CLOUD CREDITS`.
+
+---
+
+[![Netcup](public/assets/images/netcup.png)](https://www.netcup.com/en/?ref=309627)
+
+Unlock `enterprise-grade performance` at a price you won’t believe.
+Scalable, reliable, and built for businesses that demand more.
+
+👉 [Power Meets Value with Netcup Root Server](https://www.netcup.com/en/?ref=309627)
+
+---
+
+[![Hostinger](public/assets/images/hostinger.png)](https://hostinger.com/?REFERRALCODE=MIROTALK)
+
+Fast, reliable hosting with 24/7 support and great performance. Start today!
+
+👉 [Check out Hostinger now](https://hostinger.com/?REFERRALCODE=MIROTALK)
 
 ---
 
 [![Contabo](public/assets/images/contabo.png)](https://www.dpbolvw.net/click-101027391-14462707)
 
-Experience also top-tier German web hosting – dedicated servers, VPS, and web hosting at `unbeatable prices`. Reliable, secure, and backed by 24/7 support. [Explore now here](https://www.dpbolvw.net/click-101027391-14462707)
+Experience also top-tier German web hosting – dedicated servers, VPS, and web hosting at `unbeatable prices`.
+
+👉 [Explore now here](https://www.dpbolvw.net/click-101027391-14462707)
 
 ---
 
