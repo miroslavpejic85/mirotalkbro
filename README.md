@@ -95,6 +95,48 @@ The `Broadcaster` stream the audio, video or screen to all connected viewers and
 The `Viewer` get the audio, video or screen that is streamed from the broadcaster and can send messages to it.
 
 <details open>
+<summary>Self-Hosting</summary>
+
+</br>
+
+![setup](/public/assets/images/self-hosting.png)
+
+## **Requirements**
+
+- A clean server running **Ubuntu 22.04 or 24.04 LTS**
+- **Root access** to the Server
+- A **domain or subdomain** pointing to your server’s public IPv4
+
+---
+
+## Note
+
+When **prompted**, simply **enter your domain or subdomain**. Then wait for the installation to complete.
+
+```bash
+# Install MiroTalk BRO
+wget -qO bro-install.sh https://docs.mirotalk.com/scripts/bro/bro-install.sh \
+  && chmod +x bro-install.sh \
+  && ./bro-install.sh
+```
+
+```bash
+# Uninstall MiroTalk BRO
+wget -qO bro-uninstall.sh https://docs.mirotalk.com/scripts/bro/bro-uninstall.sh \
+  && chmod +x bro-uninstall.sh \
+  && ./bro-uninstall.sh
+```
+
+```bash
+# Update MiroTalk BRO
+wget -qO bro-update.sh https://docs.mirotalk.com/scripts/bro/bro-update.sh \
+  && chmod +x bro-update.sh \
+  && ./bro-update.sh
+```
+
+</details>
+
+<details open>
 <summary>Hetzner, Netcup, Hostinger & Contabo</summary>
 
 <br/>
@@ -262,3 +304,7 @@ Try also [MiroTalk WEB](https://github.com/miroslavpejic85/mirotalkwebrtc) a pla
 </details>
 
 ---
+
+---
+
+![Star History Chart](https://app.repohistory.com/api/svg?repo=miroslavpejic85/mirotalkbro&type=Date&background=0D1117&color=62C3F8)
