@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.1.69",
+    "version": "1.1.70",
     "description": "P2P WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
@@ -33,7 +33,7 @@
         "helmet": "^8.1.0",
         "httpolyglot": "0.1.2",
         "js-yaml": "^4.1.1",
-        "socket.io": "^4.8.2",
+        "socket.io": "^4.8.3",
         "swagger-ui-express": "5.0.1",
         "uuid": "~13.0.0"
     },
