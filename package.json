@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.1.72",
+    "version": "1.1.73",
     "description": "P2P WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
@@ -24,9 +24,9 @@
     "license": "AGPLv3",
     "dependencies": {
         "@ngrok/ngrok": "1.7.0",
-        "@sentry/node": "^10.34.0",
+        "@sentry/node": "^10.36.0",
         "compression": "^1.8.1",
-        "cors": "^2.8.5",
+        "cors": "^2.8.6",
         "dotenv": "^17.2.3",
         "express": "^5.2.1",
         "express-openid-connect": "^2.19.4",
@@ -40,6 +40,6 @@
     "devDependencies": {
         "node-fetch": "^3.3.2",
         "nodemon": "^3.1.11",
-        "prettier": "3.8.0"
+        "prettier": "3.8.1"
     }
 }
