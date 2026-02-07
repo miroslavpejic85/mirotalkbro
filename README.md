@@ -210,7 +210,7 @@ Embedding MiroTalk Live Broadcast into a service or app using an iframe.
 
 ```html
 <iframe
-    allow="camera; microphone; display-capture; fullscreen; clipboard-read; clipboard-write; web-share; autoplay"
+    allow="camera; microphone; display-capture; fullscreen; clipboard-read; clipboard-write; web-share; autoplay; picture-in-picture"
     src="https://bro.mirotalk.com"
     style="height: 100vh; width: 100vw; border: 0px;"
 ></iframe>
