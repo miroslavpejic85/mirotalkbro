@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.77
+ * @version 1.1.78
  */
 
 require('dotenv').config();
