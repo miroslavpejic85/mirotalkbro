@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.83
+ * @version 1.1.84
  */
 
 require('dotenv').config();
@@ -58,18 +58,21 @@ if (sentryEnabled && typeof sentryDSN === 'string' && sentryDSN.trim()) {
         tracesSampleRate: sentryTracesSampleRate,
     });
 
+    const stripAnsi = (str) => str.replace(/\u001b\[[0-9;]*m/g, '');
+
     const originalConsole = {};
     sentryLogLevels.forEach((level) => {
         originalConsole[level] = console[level];
         console[level] = function (...args) {
+            const cleanMsg = stripAnsi(args.map(String).join(' '));
             switch (level) {
                 case 'warn':
-                    Sentry.captureMessage(args.join(' '), 'warning');
+                    Sentry.captureMessage(cleanMsg, 'warning');
                     break;
                 case 'error':
                     args[0] instanceof Error
                         ? Sentry.captureException(args[0])
-                        : Sentry.captureException(new Error(args.join(' ')));
+                        : Sentry.captureException(new Error(cleanMsg));
                     break;
             }
             originalConsole[level].apply(console, args);
