@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.82
+ * @version 1.1.83
  */
 
 require('dotenv').config();
@@ -243,33 +243,34 @@ app.use((err, req, res, next) => {
 
 // OpenID Connect - Dynamically set baseURL based on incoming host and protocol
 if (OIDC.enabled) {
-    const getDynamicConfig = (host, protocol) => {
-        const baseURL = `${protocol}://${host}`;
+    if (OIDC.baseUrlDynamic) {
+        // Cache auth middleware per host+protocol to avoid re-creating on every request
+        const authMiddlewareCache = new Map();
 
-        const config = OIDC.baseUrlDynamic
-            ? {
-                  ...OIDC.config,
-                  baseURL,
-              }
-            : OIDC.config;
+        app.use((req, res, next) => {
+            const host = req.headers.host;
+            const protocol = req.protocol === 'https' ? 'https' : 'http';
+            const cacheKey = `${protocol}://${host}`;
 
-        log.debug('OIDC baseURL', config.baseURL);
-
-        return config;
-    };
-
-    // Apply the authentication middleware using dynamic baseURL configuration
-    app.use((req, res, next) => {
-        const host = req.headers.host;
-        const protocol = req.protocol === 'https' ? 'https' : 'http';
-        const dynamicOIDCConfig = getDynamicConfig(host, protocol);
-        try {
-            auth(dynamicOIDCConfig)(req, res, next);
-        } catch (err) {
-            log.error('OIDC Auth Middleware Error', err);
-            process.exit(1);
-        }
-    });
+            let middleware = authMiddlewareCache.get(cacheKey);
+            if (!middleware) {
+                const config = { ...OIDC.config, baseURL: cacheKey };
+                log.debug('OIDC baseURL (dynamic, new)', config.baseURL);
+                try {
+                    middleware = auth(config);
+                } catch (err) {
+                    log.error('OIDC Auth Middleware Error', err);
+                    process.exit(1);
+                }
+                authMiddlewareCache.set(cacheKey, middleware);
+            }
+            middleware(req, res, next);
+        });
+    } else {
+        // Static baseURL: create middleware once
+        log.debug('OIDC baseURL (static)', OIDC.config.baseURL);
+        app.use(auth(OIDC.config));
+    }
 }
 
 app.get('/profile', OIDCAuth, (req, res) => {
