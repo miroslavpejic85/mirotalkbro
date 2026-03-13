@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.1.84
+ * @version 1.1.85
  */
 
 require('dotenv').config();
@@ -475,5 +475,15 @@ server.listen(port, () => {
             nodeVersion: process.versions.node,
             app_version: packageJson.version,
         });
+    }
+});
+
+// Handle client errors (malformed/incomplete HTTP requests) gracefully
+server.on('clientError', (err, socket) => {
+    err.code === 'HPE_HEADER_OVERFLOW' || err.message === 'Parse Error'
+        ? log.warn('Client HTTP parse error', { error: err.message, code: err.code })
+        : log.warn('Client connection error', { error: err.message, code: err.code });
+    if (socket && !socket.destroyed) {
+        socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
     }
 });
