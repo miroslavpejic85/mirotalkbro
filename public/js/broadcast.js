@@ -97,7 +97,6 @@ body.onload = onBodyLoad;
 
 function onBodyLoad() {
     loadBroadcasterToolTip();
-    toggleSettings();
 }
 
 // =====================================================
@@ -154,7 +153,7 @@ let isVideoMirrored = false;
 let screenShareEnabled = false;
 let messagesFormOpen = false;
 let viewersFormOpen = false;
-let settingsFormOpen = true;
+let settingsFormOpen = false;
 let recording = null;
 let recordingTimer = null;
 let sessionTimer = null;
@@ -338,12 +337,9 @@ function sendToViewersDataChannel(method, action = {}, peerId = '*') {
 // =====================================================
 
 elementDisplay(fullScreenOff, false);
-elementDisplay(messagesForm, false);
-elementDisplay(viewersForm, false);
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
 elementDisplay(screenShareStop, false);
-elementDisplay(settingsForm, broadcastSettings.options.settings, broadcastSettings.options.settings ? 'grid' : 'none');
 elementDisplay(copyRoom, broadcastSettings.buttons.copyRoom);
 elementDisplay(shareRoom, broadcastSettings.buttons.shareRoom);
 elementDisplay(disableAudio, broadcastSettings.buttons.audio);
@@ -365,7 +361,8 @@ if (broadcastSettings.options.start_full_screen) {
     broadcastForm.classList.add('full-screen');
     elementDisplay(broadcastFormHeader, false);
     elementDisplay(broadcastButtons, false);
-    elementDisplay(settingsForm, false);
+    settingsForm.classList.remove('panel-open');
+    settingsFormOpen = false;
 }
 
 // =====================================================
@@ -407,11 +404,8 @@ settingsBtn.addEventListener('click', toggleSettings);
 toggleSettingsBtn.addEventListener('click', toggleSettings);
 
 function toggleSettings() {
-    const display = settingsFormOpen ? false : true;
-    const mode = settingsFormOpen ? 'none' : 'grid';
-    elementDisplay(settingsForm, display, mode);
     settingsFormOpen = !settingsFormOpen;
-    video.style.opacity = settingsFormOpen ? 0.3 : 1;
+    settingsForm.classList.toggle('panel-open', settingsFormOpen);
 }
 
 // =====================================================
@@ -575,11 +569,10 @@ function toggleMessagesForm() {
         return popupMessage('toast', 'Messages', "There isn't messages to read", 'top');
     }
     messagesFormOpen = !messagesFormOpen;
-    elementDisplay(messagesForm, messagesFormOpen);
-    elementDisplay(broadcastForm, !messagesFormOpen, 'grid');
+    messagesForm.classList.toggle('panel-open', messagesFormOpen);
     if (viewersFormOpen) {
-        viewersFormOpen = !viewersFormOpen;
-        elementDisplay(viewersForm, !messagesFormOpen);
+        viewersFormOpen = false;
+        viewersForm.classList.remove('panel-open');
     }
     if (messagesOpenForm.classList.contains('pulse-bg')) {
         messagesOpenForm.classList.toggle('pulse-bg');
@@ -675,11 +668,10 @@ function toggleViewersForm() {
         return popupMessage('toast', 'Viewers', "There isn't connected viewers", 'top');
     }
     viewersFormOpen = !viewersFormOpen;
-    elementDisplay(viewersForm, viewersFormOpen);
-    elementDisplay(broadcastForm, !viewersFormOpen, 'grid');
+    viewersForm.classList.toggle('panel-open', viewersFormOpen);
     if (messagesFormOpen) {
-        messagesFormOpen = !messagesFormOpen;
-        elementDisplay(messagesForm, !viewersFormOpen);
+        messagesFormOpen = false;
+        messagesForm.classList.remove('panel-open');
     }
 }
 
@@ -691,41 +683,44 @@ function saveViewers() {
 }
 
 function searchViewer() {
-    let filter, tr, td, i, username;
-    filter = viewerSearch.value.toUpperCase();
-    tr = viewersTable.getElementsByTagName('tr');
-    for (i = 0; i < tr.length; i++) {
-        td = tr[i].getElementsByTagName('td')[0];
-        if (td) {
-            username = td.textContent || td.innerText;
-            if (username.toUpperCase().indexOf(filter) > -1) {
-                tr[i].style.display = '';
-            } else {
-                tr[i].style.display = 'none';
-            }
+    const filter = viewerSearch.value.toUpperCase();
+    const cards = viewersTable.querySelectorAll('.viewer-card');
+    cards.forEach((card) => {
+        const name = card.querySelector('.viewer-card-name');
+        if (name) {
+            const username = name.textContent || name.innerText;
+            card.style.display = username.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
         }
-    }
+    });
 }
 
 function addViewer(id, username, stream = null) {
     connectedViewers[id] = username;
     console.log('ConnectedViewers', { connected: username, connectedViewers: connectedViewers });
 
-    const trDel = document.getElementById(id);
-    if (trDel) viewersTable.removeChild(trDel);
+    const existing = document.getElementById(id);
+    if (existing) viewersTable.removeChild(existing);
 
-    const tr = document.createElement('tr');
-    const tdUsername = document.createElement('td');
-    const tdVideo = document.createElement('td');
-    const tdActions = document.createElement('td');
+    const card = document.createElement('div');
+    const cardHeader = document.createElement('div');
+    const cardName = document.createElement('span');
+    const cardBody = document.createElement('div');
+    const cardFooter = document.createElement('div');
     const buttonAudio = document.createElement('button');
     const buttonVideo = document.createElement('button');
     const buttonDisconnect = document.createElement('button');
     const videoElement = document.createElement('video');
     const videoElementOff = document.createElement('img');
 
-    tr.id = id;
-    tdUsername.innerText = username;
+    card.id = id;
+    card.className = 'viewer-card';
+    cardHeader.className = 'viewer-card-header';
+    cardName.className = 'viewer-card-name';
+    cardBody.className = 'viewer-card-body';
+    cardFooter.className = 'viewer-card-footer';
+
+    cardName.innerText = username;
+    cardHeader.appendChild(cardName);
 
     const { hasVideo, hasAudio } = hasVideoOrAudioTracks(stream);
 
@@ -745,32 +740,30 @@ function addViewer(id, username, stream = null) {
     videoElement.style.width = '100%';
     videoElement.style.height = '100%';
     videoElement.style.cursor = 'pointer';
+    videoElement.style.objectFit = 'cover';
     videoElementOff.classList.add('hidden');
 
-    const width = 150;
-    const height = Math.round((width / 16) * 9); // Calculate 16:9 height (84px)
-
-    tdVideo.style.position = 'relative';
-    tdVideo.style.width = `${width}px`;
-    tdVideo.style.height = `${height}px`;
-
-    tdVideo.appendChild(videoElement);
-    tdVideo.appendChild(videoElementOff);
+    cardBody.appendChild(videoElement);
+    cardBody.appendChild(videoElementOff);
 
     if (hasAudio) {
         Object.assign(buttonAudio, {
             id: `${id}___${username}___viewerAudioStatus`,
-            className: 'fas fa-microphone color-red',
+            className: 'viewer-card-btn color-red',
+            title: 'Mute',
+            innerHTML: '<i class="fas fa-microphone"></i>',
         });
-        tdActions.appendChild(buttonAudio);
+        cardFooter.appendChild(buttonAudio);
     }
 
     if (hasVideo) {
         Object.assign(buttonVideo, {
             id: `${id}___${username}___viewerVideoStatus`,
-            className: 'fas fa-video color-red',
+            className: 'viewer-card-btn color-red',
+            title: 'Hide video',
+            innerHTML: '<i class="fas fa-video"></i>',
         });
-        tdActions.appendChild(buttonVideo);
+        cardFooter.appendChild(buttonVideo);
 
         if (stream.getVideoTracks()[0].enabled) {
             videoElement.classList.add('hidden');
@@ -795,15 +788,17 @@ function addViewer(id, username, stream = null) {
 
     Object.assign(buttonDisconnect, {
         id: `${id}___${username}___disconnect`,
-        className: 'fas fa-plug color-red',
+        className: 'viewer-card-btn viewer-card-btn-danger',
+        title: 'Disconnect',
+        innerHTML: '<i class="fas fa-plug"></i>',
     });
-    tdActions.appendChild(buttonDisconnect);
+    cardFooter.appendChild(buttonDisconnect);
 
-    tr.appendChild(tdUsername);
-    tr.appendChild(tdVideo);
-    tr.appendChild(tdActions);
+    card.appendChild(cardHeader);
+    card.appendChild(cardBody);
+    card.appendChild(cardFooter);
 
-    viewersTable.appendChild(tr);
+    viewersTable.appendChild(card);
 
     handleAudioPeer(buttonAudio.id);
     handleDisconnectPeer(buttonDisconnect.id);
@@ -855,8 +850,8 @@ function delViewer(id, username) {
         disconnected: username,
         connectedViewers: connectedViewers,
     });
-    const tr = document.getElementById(id);
-    viewersTable.removeChild(tr);
+    const card = document.getElementById(id);
+    if (card) viewersTable.removeChild(card);
     if (!thereIsPeerConnections() && viewersFormOpen) toggleViewersForm();
 }
 

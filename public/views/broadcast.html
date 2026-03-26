@@ -18,13 +18,16 @@
 
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="../css/common.css" />
         <link rel="stylesheet" href="../css/broadcast.css" />
     </head>
     <body>
-        <div id="broadcastForm" class="broadcast center fadeIn">
+        <div id="broadcastForm" class="broadcast fadeIn">
             <div id="broadcastFormHeader" class="broadcast-header not-selectable">
                 <div class="broadcast-info">
+                    <span class="live-badge">LIVE</span>
                     <i class="fas fa-user"></i> <span id="myName">Broadcaster</span> <i class="fas fa-eye"></i
                     ><span id="connectedPeers">0</span> <i class="fas fa-clock"></i> <span id="sessionTime">0s</span>
                 </div>
@@ -54,13 +57,20 @@
                 <button id="viewersOpenForm"><i class="fas fa-eye"></i></button>
                 <button id="settingsBtn"><i class="fa-solid fa-sliders"></i></button>
             </div>
-            <div id="broadcasterSettingsForm" class="center animate__animated animate__zoomIn">
-                <div class="broadcast-header-buttons">
-                    <button id="toggleSettingsBtn"><i class="fas fa-times"></i></button>
+        <div id="broadcasterSettingsForm" class="settings panel-drawer fadeIn">
+            <div class="settings-panel-header">
+                <div class="settings-title">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Settings</span>
                 </div>
-                <label class="not-selectable"><i class="fas fa-video"></i> Video source:</label>
+                <button id="toggleSettingsBtn" class="panel-close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="settings-section">
+                <label class="settings-label not-selectable"><i class="fas fa-video"></i> Video source</label>
                 <select id="videoSelect"></select>
-                <label class="not-selectable"><i class="fas fa-photo-film"></i> Video quality and fps:</label>
+            </div>
+            <div class="settings-section">
+                <label class="settings-label not-selectable"><i class="fas fa-photo-film"></i> Quality & FPS</label>
                 <div class="broadcast-quality-fps">
                     <select id="videoQualitySelect">
                         <option value="default">Default</option>
@@ -84,44 +94,53 @@
                         <option value="5">5 fps</option>
                     </select>
                 </div>
-                <label class="not-selectable"><i class="fas fa-microphone"></i> Audio source:</label>
+            </div>
+            <div class="settings-section">
+                <label class="settings-label not-selectable"><i class="fas fa-microphone"></i> Audio source</label>
                 <select id="audioSelect"></select>
             </div>
         </div>
-        <div id="messagesForm" class="messages center fadeIn">
+        <div id="messagesForm" class="messages panel-drawer fadeIn">
             <div id="messagesFormHeader" class="messages-header">
-                <div class="messages-buttons">
-                    <button id="messagesCloseForm"><i class="fas fa-times"></i></button>
-                    <button id="messagesOpenViewersForm"><i class="fas fa-eye"></i></button>
-                    <button id="messagesSave"><i class="fas fa-save"></i></button>
-                    <button id="messagesClean"><i class="fas fa-trash"></i></button>
-                </div>
                 <div class="messages-info">
                     <label class="not-selectable"><i class="fas fa-message"></i> Messages</label>
+                </div>
+                <div class="messages-buttons">
+                    <button id="messagesClean" title="Clear all"><i class="fas fa-trash"></i></button>
+                    <button id="messagesSave" title="Save"><i class="fas fa-save"></i></button>
+                    <button id="messagesOpenViewersForm" title="Viewers"><i class="fas fa-eye"></i></button>
+                    <button id="messagesCloseForm" class="panel-close-btn" title="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             </div>
             <div id="messagesArea" class="messages-incoming"></div>
         </div>
-        <div id="viewersForm" class="viewers center fadeIn">
+        <div id="viewersForm" class="viewers panel-drawer fadeIn">
             <div id="viewersHeader" class="viewers-header">
-                <div class="viewers-buttons">
-                    <button id="viewersCloseForm"><i class="fas fa-times"></i></button>
-                    <button id="viewerOpenMessageForm"><i class="fas fa-message"></i></button>
-                    <button id="viewersSave"><i class="fas fa-save"></i></button>
-                    <button id="viewersDisconnect"><i class="fas fa-plug color-red"></i></button>
-                    <button id="viewersHideVideo"><i class="fas fa-video color-red"></i></button>
-                    <button id="viewersMuteAudio"><i class="fas fa-microphone color-red"></i></button>
+                <div class="viewers-title-row">
+                    <div class="viewers-info">
+                        <label class="not-selectable"><i class="fas fa-eye"></i> Viewers</label>
+                    </div>
+                    <button id="viewersCloseForm" class="panel-close-btn" title="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
                 <input id="viewerSearch" type="text" placeholder=" 🔍 Search viewer..." name="search" />
+                <div class="viewers-toolbar">
+                    <div class="viewers-buttons">
+                        <button id="viewerOpenMessageForm" title="Messages"><i class="fas fa-message"></i></button>
+                        <button id="viewersSave" title="Save list"><i class="fas fa-save"></i></button>
+                    </div>
+                    <div class="viewers-buttons viewers-buttons-danger">
+                        <button id="viewersMuteAudio" title="Mute all"><i class="fas fa-microphone"></i></button>
+                        <button id="viewersHideVideo" title="Hide all video"><i class="fas fa-video"></i></button>
+                        <button id="viewersDisconnect" title="Disconnect all"><i class="fas fa-plug"></i></button>
+                    </div>
+                </div>
             </div>
             <div class="viewers-area">
-                <table id="viewersTable">
-                    <tr>
-                        <th>Name</th>
-                        <th>Video</th>
-                        <th>Actions</th>
-                    </tr>
-                </table>
+                <div id="viewersTable" class="viewers-grid"></div>
             </div>
         </div>
         <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.8"></script>
@@ -136,6 +155,7 @@
         <script defer src="../js/config.js"></script>
         <script defer src="../js/broadcast.js"></script>
         <script defer src="../js/recording.js"></script>
+        <script defer src="../js/ux.js"></script>
         <script async src="../js/stats.js"></script>
     </body>
 </html>

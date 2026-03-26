@@ -10,6 +10,7 @@ const supportDiv = document.getElementById('supportDiv');
 const support = document.getElementById('support');
 
 const userName = document.getElementById('userName');
+const userNameRandom = document.getElementById('userNameRandom');
 const broadcasterIdLabel = document.getElementById('broadcasterIdLabel');
 const broadcasterId = document.getElementById('broadcasterId');
 const broadcasterIdRandom = document.getElementById('broadcasterIdRandom');
@@ -72,6 +73,49 @@ broadcasterIdRandom.addEventListener('click', setRandomId);
 
 function setRandomId() {
     broadcasterId.value = getUUID4();
+}
+
+userNameRandom.addEventListener('click', setRandomName);
+
+function setRandomName() {
+    const adjectives = [
+        'Happy',
+        'Brave',
+        'Swift',
+        'Clever',
+        'Eager',
+        'Gentle',
+        'Kind',
+        'Lucky',
+        'Noble',
+        'Witty',
+        'Bold',
+        'Calm',
+        'Daring',
+        'Fierce',
+        'Grand',
+    ];
+    const animals = [
+        'Fox',
+        'Bear',
+        'Wolf',
+        'Eagle',
+        'Hawk',
+        'Lion',
+        'Tiger',
+        'Panda',
+        'Otter',
+        'Raven',
+        'Lynx',
+        'Falcon',
+        'Cobra',
+        'Shark',
+        'Bison',
+    ];
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const animal = animals[Math.floor(Math.random() * animals.length)];
+    const num = Math.floor(Math.random() * 100);
+    userName.value = `${adj}${animal}${num}`;
 }
 
 // =====================================================

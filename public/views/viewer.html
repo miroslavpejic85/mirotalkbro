@@ -18,6 +18,8 @@
 
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="../css/common.css" />
         <link rel="stylesheet" href="../css/viewer.css" />
     </head>
@@ -25,9 +27,10 @@
         <div id="viewerVideoContainer">
             <video id="viewerVideo" class="fadeIn" autoplay muted playsinline></video>
         </div>
-        <div id="viewerForm" class="viewer center fadeIn">
+        <div id="viewerForm" class="viewer fadeIn">
             <div id="viewerFormHeader" class="viewer-header not-selectable">
                 <div class="viewer-info">
+                    <span class="live-badge">LIVE</span>
                     <i class="fas fa-user"></i> <span id="myName">Viewer</span> <i class="fas fa-clock"></i>
                     <span id="sessionTime">0s</span>
                 </div>
@@ -53,9 +56,18 @@
                 <button id="fullScreenOff"><i class="fas fa-compress-alt"></i></button>
                 <button id="leave"><i class="fas fa-times color-red"></i></button>
             </div>
-            <div id="messagesForm" class="animate__animated animate__zoomIn">
+        </div>
+        <div id="messagesForm" class="viewer-messages panel-drawer">
+            <div class="viewer-messages-header">
+                <div class="viewer-messages-info">
+                    <label class="not-selectable"><i class="fas fa-message"></i> Messages</label>
+                </div>
+                <button id="messagesCloseBtn" class="panel-close-btn" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="viewerMessagesArea" class="viewer-messages-area"></div>
+            <div class="viewer-messages-compose">
                 <input id="messageInput" maxlength="1024" name="message" placeholder="Type message..." />
-                <button id="messageSend"><i class="fas fa-paper-plane"></i> Send message</button>
+                <button id="messageSend" title="Send"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
         <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.8"></script>
@@ -68,6 +80,7 @@
         <script defer src="../js/config.js"></script>
         <script defer src="../js/viewer.js"></script>
         <script defer src="../js/recording.js"></script>
+        <script defer src="../js/ux.js"></script>
         <script async src="../js/stats.js"></script>
     </body>
 </html>

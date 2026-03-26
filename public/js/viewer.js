@@ -33,6 +33,8 @@ const togglePIP = document.getElementById('togglePIP');
 const leave = document.getElementById('leave');
 const messagesBtn = document.getElementById('messagesBtn');
 const messagesForm = document.getElementById('messagesForm');
+const messagesCloseBtn = document.getElementById('messagesCloseBtn');
+const viewerMessagesArea = document.getElementById('viewerMessagesArea');
 const messageInput = document.getElementById('messageInput');
 const messageSend = document.getElementById('messageSend');
 
@@ -54,7 +56,6 @@ body.onload = onBodyLoad;
 
 function onBodyLoad() {
     loadViewerToolTip();
-    toggleMessages();
 }
 
 // =====================================================
@@ -90,7 +91,7 @@ function loadViewerToolTip() {
 }
 
 let zoom = 1;
-let messagesFormOpen = true;
+let messagesFormOpen = false;
 let recording = null;
 let recordingTimer = null;
 let sessionTimer = null;
@@ -278,9 +279,6 @@ messageDisplay(viewerSettings.buttons.message);
 
 function messageDisplay(display) {
     elementDisplay(messagesBtn, display);
-    elementDisplay(messagesForm, display, display ? 'grid' : 'none');
-    elementDisplay(messageInput, display);
-    elementDisplay(messageSend, display);
 }
 
 if (viewerSettings.options.start_full_screen) {
@@ -288,7 +286,8 @@ if (viewerSettings.options.start_full_screen) {
     viewerForm.classList.add('full-screen');
     elementDisplay(viewerFormHeader, false);
     elementDisplay(viewerButtons, false);
-    elementDisplay(messagesForm, false);
+    messagesForm.classList.remove('panel-open');
+    messagesFormOpen = false;
 }
 
 // =====================================================
@@ -316,12 +315,11 @@ function stopSessionTime() {
 // =====================================================
 
 messagesBtn.addEventListener('click', toggleMessages);
+messagesCloseBtn.addEventListener('click', toggleMessages);
 
 function toggleMessages() {
-    const display = messagesFormOpen ? false : true;
-    const mode = messagesFormOpen ? 'none' : 'grid';
-    elementDisplay(messagesForm, display, mode);
     messagesFormOpen = !messagesFormOpen;
+    messagesForm.classList.toggle('panel-open', messagesFormOpen);
 }
 
 // =====================================================
@@ -615,6 +613,7 @@ messageInput.oninput = function () {
 
 function sendMessage() {
     if (peerConnection && messageInput.value != '') {
+        appendViewerMessage(messageInput.value);
         sendToBroadcasterDataChannel('message', {
             id: socket.id,
             username: username,
@@ -624,6 +623,21 @@ function sendMessage() {
         popupMessage('toast', 'Video', 'There is no broadcast connected', 'top');
     }
     messageInput.value = '';
+}
+
+function appendViewerMessage(text) {
+    const msg = document.createElement('div');
+    msg.className = 'viewer-msg';
+    const time = document.createElement('div');
+    time.className = 'viewer-msg-time';
+    time.innerText = getTime();
+    const body = document.createElement('div');
+    body.className = 'viewer-msg-text';
+    body.innerText = text;
+    msg.appendChild(time);
+    msg.appendChild(body);
+    viewerMessagesArea.appendChild(msg);
+    viewerMessagesArea.scrollTop = viewerMessagesArea.scrollHeight;
 }
 
 // =====================================================
