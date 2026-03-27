@@ -55,7 +55,7 @@ async function getUserName() {
     } catch (error) {
         console.error('AXIOS OIDC Error fetching profile', error.message || error);
     }
-    const name = window.localStorage.name || `User-${getRandomInt(99999)}`;
+    const name = window.localStorage.name || getRandomName();
     return name;
 }
 
@@ -78,44 +78,7 @@ function setRandomId() {
 userNameRandom.addEventListener('click', setRandomName);
 
 function setRandomName() {
-    const adjectives = [
-        'Happy',
-        'Brave',
-        'Swift',
-        'Clever',
-        'Eager',
-        'Gentle',
-        'Kind',
-        'Lucky',
-        'Noble',
-        'Witty',
-        'Bold',
-        'Calm',
-        'Daring',
-        'Fierce',
-        'Grand',
-    ];
-    const animals = [
-        'Fox',
-        'Bear',
-        'Wolf',
-        'Eagle',
-        'Hawk',
-        'Lion',
-        'Tiger',
-        'Panda',
-        'Otter',
-        'Raven',
-        'Lynx',
-        'Falcon',
-        'Cobra',
-        'Shark',
-        'Bison',
-    ];
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const animal = animals[Math.floor(Math.random() * animals.length)];
-    const num = Math.floor(Math.random() * 100);
-    userName.value = `${adj}${animal}${num}`;
+    userName.value = getRandomName();
 }
 
 // =====================================================

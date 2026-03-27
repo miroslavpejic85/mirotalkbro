@@ -43,6 +43,47 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
+function getRandomName() {
+    const adjectives = [
+        'Happy',
+        'Brave',
+        'Swift',
+        'Clever',
+        'Eager',
+        'Gentle',
+        'Kind',
+        'Lucky',
+        'Noble',
+        'Witty',
+        'Bold',
+        'Calm',
+        'Daring',
+        'Fierce',
+        'Grand',
+    ];
+    const animals = [
+        'Fox',
+        'Bear',
+        'Wolf',
+        'Eagle',
+        'Hawk',
+        'Lion',
+        'Tiger',
+        'Panda',
+        'Otter',
+        'Raven',
+        'Lynx',
+        'Falcon',
+        'Cobra',
+        'Shark',
+        'Bison',
+    ];
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const animal = animals[Math.floor(Math.random() * animals.length)];
+    const num = Math.floor(Math.random() * 100);
+    return `${adj}${animal}${num}`;
+}
+
 function isPIPSupported() {
     return !isMobileDevice && document.pictureInPictureEnabled;
 }
