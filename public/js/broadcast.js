@@ -1001,6 +1001,9 @@ messageInput.addEventListener('keydown', (e) => {
 });
 
 function sendBroadcasterMessage() {
+    if (!thereIsPeerConnections()) {
+        return popupMessage('toast', 'Messages', "There isn't connected viewers", 'top');
+    }
     if (messageInput.value.trim() === '') return;
     const message = messageInput.value;
     appendMessage(username, message, true);

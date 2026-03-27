@@ -120,6 +120,7 @@ let sfuConsumers = new Map(); // producerId -> consumer
 let sfuProducers = new Map(); // kind -> producer
 let sfuJoined = false; // guard to prevent double SFU join
 let isFirstConnect = true; // track first vs reconnect
+let isBroadcasterConnected = false; // track if broadcaster is present
 
 const socket = io.connect(window.location.origin);
 
@@ -239,6 +240,7 @@ socket.on('connect', async () => {
 });
 
 socket.on('broadcaster', () => {
+    isBroadcasterConnected = true;
     if (broadcastingMode === 'sfu') {
         if (!sfuJoined) sfuJoinBroadcast();
     } else {
@@ -247,6 +249,7 @@ socket.on('broadcaster', () => {
 });
 
 socket.on('broadcasterDisconnect', () => {
+    isBroadcasterConnected = false;
     location.reload();
 });
 
@@ -306,6 +309,7 @@ async function sfuJoinBroadcast() {
 
         // Get existing producers and consume them
         const { producers } = await sfuSocketRequest('sfu-getProducers', broadcastID);
+        if (producers.length > 0) isBroadcasterConnected = true;
         for (const { producerId, kind } of producers) {
             await sfuConsumeProducer(producerId, kind);
         }
@@ -1139,7 +1143,7 @@ messageInput.oninput = function () {
 };
 
 function sendMessage() {
-    const canSend = broadcastingMode === 'sfu' ? true : !!peerConnection;
+    const canSend = broadcastingMode === 'sfu' ? sfuJoined && isBroadcasterConnected : !!peerConnection;
     if (canSend && messageInput.value != '') {
         appendViewerMessage(messageInput.value);
         sendToBroadcasterDataChannel('message', {
