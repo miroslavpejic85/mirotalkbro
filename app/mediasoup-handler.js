@@ -537,6 +537,12 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             log.debug('sfu-connectViewerSendTransport', { broadcastID, socketId: socket.id });
             callback({ connected: true });
         } catch (error) {
+            // Tolerate duplicate connect calls (race between concurrent producers)
+            if (error.message && error.message.includes('connect() already called')) {
+                log.debug('sfu-connectViewerSendTransport already connected', { broadcastID, socketId: socket.id });
+                callback({ connected: true });
+                return;
+            }
             log.error('sfu-connectViewerSendTransport error', error.message);
             callback({ error: error.message });
         }
