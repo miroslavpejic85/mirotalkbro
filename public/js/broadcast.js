@@ -420,10 +420,10 @@ async function sfuProduceStream(stream) {
             }
             const produceOptions = {
                 track: videoTrack,
-                codecOptions: simulcast.codecOptions,
             };
             if (simulcast.enabled && !isScreenShare) {
                 produceOptions.encodings = simulcast.encodings;
+                produceOptions.codecOptions = simulcast.codecOptions;
             }
             const videoProducer = await sfuSendTransport.produce(produceOptions);
             sfuProducers.set('video', videoProducer);

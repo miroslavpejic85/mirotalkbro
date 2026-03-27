@@ -850,6 +850,36 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         }
     });
 
+    // Set preferred layers on a consumer (viewer quality selector)
+    socket.on('sfu-setPreferredLayers', async ({ broadcastID, consumerId, spatialLayer, temporalLayer }, callback) => {
+        try {
+            const room = getRoom(broadcastID);
+            if (!room) throw new Error('Room not found');
+
+            let consumer = null;
+            const viewer = room.viewers.get(socket.id);
+            if (viewer) {
+                for (const [, c] of viewer.consumers) {
+                    if (c.id === consumerId) {
+                        consumer = c;
+                        break;
+                    }
+                }
+            }
+
+            if (!consumer) throw new Error('Consumer not found');
+
+            const layers = { spatialLayer };
+            if (typeof temporalLayer === 'number') layers.temporalLayer = temporalLayer;
+            await consumer.setPreferredLayers(layers);
+            log.debug('sfu-setPreferredLayers', { consumerId, spatialLayer, temporalLayer });
+            callback({ ok: true });
+        } catch (error) {
+            log.error('sfu-setPreferredLayers error', error.message);
+            callback({ error: error.message });
+        }
+    });
+
     // Replace track / update producer
     socket.on('sfu-replaceProducer', async ({ broadcastID, producerId, kind, rtpParameters, appData }, callback) => {
         try {

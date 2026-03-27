@@ -30,6 +30,7 @@ const snapshot = document.getElementById('snapshot');
 const fullScreenOn = document.getElementById('fullScreenOn');
 const fullScreenOff = document.getElementById('fullScreenOff');
 const togglePIP = document.getElementById('togglePIP');
+const qualitySelect = document.getElementById('qualitySelect');
 const leave = document.getElementById('leave');
 const messagesBtn = document.getElementById('messagesBtn');
 const messagesForm = document.getElementById('messagesForm');
@@ -81,6 +82,7 @@ function loadViewerToolTip() {
         { element: recordingStop, text: 'Stop recording', position: 'top' },
         { element: snapshot, text: 'Take a snapshot', position: 'top' },
         { element: togglePIP, text: 'Toggle picture in picture', position: 'top' },
+        { element: qualitySelect, text: 'Video quality', position: 'top' },
         { element: messagesBtn, text: 'Toggle messages', position: 'top' },
         { element: fullScreenOn, text: 'Enable full screen', position: 'top' },
         { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
@@ -449,12 +451,7 @@ async function sfuProduceViewerStream() {
             sfuProducers.set('audio', producer);
         }
         if (videoTrack) {
-            const produceOptions = { track: videoTrack };
-            if (simulcast.enabled) {
-                produceOptions.encodings = simulcast.encodings;
-                produceOptions.codecOptions = simulcast.codecOptions;
-            }
-            const producer = await sfuSendTransport.produce(produceOptions);
+            const producer = await sfuSendTransport.produce({ track: videoTrack });
             sfuProducers.set('video', producer);
         }
     } catch (error) {
@@ -659,6 +656,7 @@ elementDisplay(snapshot, viewerSettings.buttons.snapshot);
 elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn && isFullScreenSupported());
 elementDisplay(togglePIP, viewerSettings.buttons.pictureInPicture && isPIPSupported());
+elementDisplay(qualitySelect, viewerSettings.buttons.qualitySelect);
 elementDisplay(leave, viewerSettings.buttons.close);
 
 messageDisplay(viewerSettings.buttons.message);
@@ -966,6 +964,85 @@ function handleVideoPIP() {
     } else {
         togglePictureInPicture(video);
     }
+}
+
+// =====================================================
+// Handle quality selector (SFU simulcast layer)
+// =====================================================
+
+qualitySelect.addEventListener('click', handleQualitySelect);
+
+let selectedQualityLayer = '-1';
+
+function handleQualitySelect() {
+    if (broadcastingMode !== 'sfu') {
+        popupMessage('toast', 'Quality', 'Quality selector is only available in SFU mode', 'top');
+        return;
+    }
+
+    // Find the video consumer
+    let videoConsumer = null;
+    for (const [, c] of sfuConsumers) {
+        if (c.kind === 'video' && !c.closed) {
+            videoConsumer = c;
+            break;
+        }
+    }
+
+    if (!videoConsumer) {
+        popupMessage('toast', 'Quality', 'No video stream available', 'top');
+        return;
+    }
+
+    const layers = [
+        { label: 'Auto', spatial: -1 },
+        { label: 'Low (1/4)', spatial: 0 },
+        { label: 'Medium (1/2)', spatial: 1 },
+        { label: 'High (Full)', spatial: 2 },
+    ];
+
+    const inputOptions = {};
+    layers.forEach((l) => {
+        inputOptions[l.spatial] = l.label;
+    });
+
+    Swal.fire({
+        position: 'top',
+        title: 'Video Quality',
+        input: 'select',
+        inputOptions: inputOptions,
+        inputValue: selectedQualityLayer,
+        showCancelButton: true,
+        confirmButtonText: 'Apply',
+        showClass: { popup: 'animate__animated animate__fadeInDown' },
+        hideClass: { popup: 'animate__animated animate__fadeOutUp' },
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const spatialLayer = parseInt(result.value);
+            selectedQualityLayer = result.value;
+            try {
+                if (spatialLayer === -1) {
+                    // Auto: set to highest layer, let mediasoup adapt
+                    await sfuSocketRequest('sfu-setPreferredLayers', {
+                        broadcastID,
+                        consumerId: videoConsumer.id,
+                        spatialLayer: 2,
+                    });
+                } else {
+                    await sfuSocketRequest('sfu-setPreferredLayers', {
+                        broadcastID,
+                        consumerId: videoConsumer.id,
+                        spatialLayer: spatialLayer,
+                    });
+                }
+                const label = layers.find((l) => l.spatial === spatialLayer)?.label || 'Auto';
+                popupMessage('toast', 'Quality', `Video quality set to: ${label}`, 'top');
+            } catch (error) {
+                console.error('Failed to set quality', error);
+                popupMessage('toast', 'Quality', 'Failed to set video quality', 'top');
+            }
+        }
+    });
 }
 
 // =====================================================

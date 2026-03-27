@@ -33,6 +33,7 @@ const viewerSettings = {
         fullScreenOn: true,
         message: true,
         pictureInPicture: true,
+        qualitySelect: false,
         close: true,
     },
     options: {
