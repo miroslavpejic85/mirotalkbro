@@ -113,8 +113,8 @@ function findValidAddress(addresses) {
 // mediasoup configuration
 // =====================================================
 
-const RTC_MIN_PORT = parseInt(process.env.MEDIASOUP_RTC_MIN_PORT) || 25000;
-const RTC_MAX_PORT = parseInt(process.env.MEDIASOUP_RTC_MAX_PORT) || 29999;
+const RTC_MIN_PORT = parseInt(process.env.MEDIASOUP_RTC_MIN_PORT) || 20000;
+const RTC_MAX_PORT = parseInt(process.env.MEDIASOUP_RTC_MAX_PORT) || 20099;
 
 const config = {
     // Worker settings

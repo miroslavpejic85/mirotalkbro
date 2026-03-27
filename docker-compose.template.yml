@@ -4,8 +4,14 @@ services:
         container_name: mirotalkbro
         hostname: mirotalkbro
         restart: unless-stopped
+        # The following ports are only required if 'network_mode: host' is NOT enabled.
+        # If you enable 'network_mode: host', you can comment out or remove the 'ports' section below.
+        # network_mode: 'host'
         ports:
             - '${PORT}:${PORT}'
+            # if BROADCASTING=sfu, expose the RTC port range for mediasoup (both UDP and TCP)
+            # - '${MEDIASOUP_RTC_MIN_PORT}-${MEDIASOUP_RTC_MAX_PORT}:${MEDIASOUP_RTC_MIN_PORT}-${MEDIASOUP_RTC_MAX_PORT}/udp'
+            # - '${MEDIASOUP_RTC_MIN_PORT}-${MEDIASOUP_RTC_MAX_PORT}:${MEDIASOUP_RTC_MIN_PORT}-${MEDIASOUP_RTC_MAX_PORT}/tcp'
         volumes:
             - .env:/src/.env:ro
             # Optional volumes for real-time updates:
