@@ -449,7 +449,12 @@ async function sfuProduceViewerStream() {
             sfuProducers.set('audio', producer);
         }
         if (videoTrack) {
-            const producer = await sfuSendTransport.produce({ track: videoTrack });
+            const produceOptions = { track: videoTrack };
+            if (simulcast.enabled) {
+                produceOptions.encodings = simulcast.encodings;
+                produceOptions.codecOptions = simulcast.codecOptions;
+            }
+            const producer = await sfuSendTransport.produce(produceOptions);
             sfuProducers.set('video', producer);
         }
     } catch (error) {

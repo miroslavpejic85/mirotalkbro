@@ -44,6 +44,21 @@ const viewerSettings = {
     },
 };
 
+// Simulcast encodings for video producers (broadcaster & viewer)
+// Each layer defines a spatial layer with rid, max bitrate, and scale-down factor.
+// The SFU can forward different layers to different consumers based on bandwidth.
+const simulcast = {
+    enabled: true,
+    encodings: [
+        { rid: 'r0', maxBitrate: 100000, scaleResolutionDownBy: 4 }, // Low:    1/4 resolution
+        { rid: 'r1', maxBitrate: 300000, scaleResolutionDownBy: 2 }, // Medium: 1/2 resolution
+        { rid: 'r2', maxBitrate: 900000, scaleResolutionDownBy: 1 }, // High:   full resolution
+    ],
+    codecOptions: {
+        videoGoogleStartBitrate: 1000,
+    },
+};
+
 const html = {
     support: true,
 };

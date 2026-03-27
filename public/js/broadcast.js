@@ -408,6 +408,7 @@ async function sfuProduceStream(stream) {
     }
 
     if (videoTrack) {
+        const isScreenShare = screenShareEnabled;
         const existingVideo = sfuProducers.get('video');
         if (existingVideo && !existingVideo.closed) {
             // Replace track on existing producer (e.g. camera -> screen share)
@@ -417,12 +418,14 @@ async function sfuProduceStream(stream) {
                 existingVideo.close();
                 sfuProducers.delete('video');
             }
-            const videoProducer = await sfuSendTransport.produce({
+            const produceOptions = {
                 track: videoTrack,
-                codecOptions: {
-                    videoGoogleStartBitrate: 1000,
-                },
-            });
+                codecOptions: simulcast.codecOptions,
+            };
+            if (simulcast.enabled && !isScreenShare) {
+                produceOptions.encodings = simulcast.encodings;
+            }
+            const videoProducer = await sfuSendTransport.produce(produceOptions);
             sfuProducers.set('video', videoProducer);
             videoProducer.on('transportclose', () => {
                 sfuProducers.delete('video');
