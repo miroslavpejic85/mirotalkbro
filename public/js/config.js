@@ -61,5 +61,5 @@ const simulcast = {
 };
 
 const html = {
-    support: true,
+    support: { enabled: true, url: 'https://docs.mirotalk.com/about' },
 };

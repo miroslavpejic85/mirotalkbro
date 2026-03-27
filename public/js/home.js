@@ -38,7 +38,7 @@ if (broadcastID) {
 support.addEventListener('click', getSupport);
 
 function getSupport() {
-    openURL('https://codecanyon.net/user/miroslavpejic85', true);
+    openURL(html.support.url, true);
 }
 
 // =====================================================
@@ -141,5 +141,5 @@ function isFieldsOk() {
 // Hide Elements
 // =====================================================
 
-!html.support && elementDisplay(supportDiv, false);
+!html.support.enabled && elementDisplay(supportDiv, false);
 //...

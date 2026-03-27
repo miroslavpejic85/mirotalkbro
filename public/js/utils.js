@@ -153,26 +153,25 @@ function stopVideoTrack(mediaStream) {
 }
 
 function checkTrackAndPopup(mediaStream) {
-    let message = '';
-
     const audioTrack = mediaStream.getAudioTracks()[0];
     const videoTrack = mediaStream.getVideoTracks()[0];
 
-    const on = '<span class="color-green">on</span>';
-    const off = '<span class="color-red">off</span>';
+    const parts = [];
 
     if (audioTrack) {
-        const audioEnabled = audioTrack.enabled;
-        message = `Your microphone is ${audioEnabled ? on : off}`;
+        const on = audioTrack.enabled;
+        parts.push(
+            `<i class="fas fa-microphone${on ? '' : '-slash'} ${on ? 'color-green' : 'color-red'}"></i> Mic ${on ? 'on' : 'off'}`
+        );
     }
-
     if (videoTrack) {
-        const videoEnabled = videoTrack.enabled;
-        const videoMessage = `Your camera is ${videoEnabled ? on : off}`;
-        message = message ? `${message}, ${videoMessage}` : videoMessage;
+        const on = videoTrack.enabled;
+        parts.push(
+            `<i class="fas fa-video${on ? '' : '-slash'} ${on ? 'color-green' : 'color-red'}"></i> Cam ${on ? 'on' : 'off'}`
+        );
     }
 
-    popupMessage('toast', 'Microphone/Camera', message, 'top');
+    if (parts.length) popupMessage('toast', 'Media', parts.join(' &nbsp;│&nbsp; '), 'top');
 }
 
 function handleMediaStreamError(error) {
