@@ -218,6 +218,45 @@
     font-size: var(--font-sm);
 }
 
+.broadcasting-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    background: var(--surface-color);
+    border: var(--border);
+    transition: all var(--transition-normal);
+}
+
+.broadcasting-mode-badge .mode-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+}
+
+.broadcasting-mode-badge .mode-text {
+    line-height: 1;
+}
+
+.broadcasting-mode-badge.mode-sfu,
+.broadcasting-mode-badge.mode-p2p {
+    color: #90caf9;
+    background: rgba(21, 101, 192, 0.15);
+    border-color: rgba(21, 101, 192, 0.3);
+}
+
+.broadcasting-mode-badge.mode-sfu .mode-dot,
+.broadcasting-mode-badge.mode-p2p .mode-dot {
+    background: #42a5f5;
+    box-shadow: 0 0 6px rgba(66, 165, 245, 0.5);
+}
+
 .broadcast select,
 .settings select {
     padding: var(--space-sm) var(--space-md);

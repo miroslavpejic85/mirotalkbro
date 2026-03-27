@@ -197,6 +197,13 @@ socket.on('broadcastingMode', (mode) => {
     broadcastingMode = mode;
     console.log('Broadcasting mode:', broadcastingMode);
 
+    const modeLabel = document.getElementById('broadcastingModeLabel');
+    if (modeLabel) {
+        const modeText = modeLabel.querySelector('.mode-text');
+        if (modeText) modeText.textContent = broadcastingMode.toUpperCase();
+        modeLabel.className = 'broadcasting-mode-badge mode-' + broadcastingMode;
+    }
+
     // SFU reconnect: if we already had SFU state, the server restarted and all
     // mediasoup state is gone. Reset and re-broadcast with a fresh stream.
     if (broadcastingMode === 'sfu' && sfuSendTransport && broadcastStream) {
