@@ -148,6 +148,12 @@
     background: var(--surface-color);
 }
 
+.viewer-messages-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
 .viewer-messages-info label {
     font-size: var(--font-base);
     font-weight: 600;
@@ -185,6 +191,11 @@
     font-size: var(--font-xs);
     color: var(--text-secondary);
     margin-bottom: 2px;
+}
+
+.viewer-msg-broadcaster {
+    color: var(--accent-color);
+    font-weight: 600;
 }
 
 .viewer-messages-area .viewer-msg-text {

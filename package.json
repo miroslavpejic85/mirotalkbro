@@ -1,10 +1,12 @@
 {
     "name": "mirotalkbro",
-    "version": "1.2.00",
+    "version": "1.3.00",
     "description": "P2P WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
         "lint": "npx prettier --write .",
+        "build:mediasoup-client": "npx esbuild node_modules/mediasoup-client/lib/index.js --bundle --format=iife --global-name=mediasoupClient --outfile=public/js/mediasoup-client.js --platform=browser",
+        "postinstall": "npm run build:mediasoup-client",
         "start": "node app/server.js",
         "start-dev": "nodemon app/server.js",
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -33,11 +35,14 @@
         "helmet": "^8.1.0",
         "httpolyglot": "0.1.2",
         "js-yaml": "^4.1.1",
+        "mediasoup": "^3.19.19",
+        "mediasoup-client": "^3.18.7",
         "socket.io": "^4.8.3",
         "swagger-ui-express": "5.0.1",
         "uuid": "~13.0.0"
     },
     "devDependencies": {
+        "esbuild": "^0.27.4",
         "node-fetch": "^3.3.2",
         "nodemon": "^3.1.14",
         "prettier": "3.8.1"

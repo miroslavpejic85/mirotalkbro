@@ -41,6 +41,10 @@
                 <div id="awaitingBroadcaster" class="awaiting-broadcaster center pulse">
                     Awaiting the broadcaster...
                 </div>
+                <div id="reconnectingOverlay" class="reconnecting-overlay">
+                    <div class="spinner"></div>
+                    <span>Reconnecting...</span>
+                </div>
             </div>
             <label id="recordingLabel" class="pulse">🔴 REC: <span id="recordingTime">0S</span></label>
             <div id="viewerButtons" class="viewer-buttons">
@@ -62,7 +66,13 @@
                 <div class="viewer-messages-info">
                     <label class="not-selectable"><i class="fas fa-message"></i> Messages</label>
                 </div>
-                <button id="messagesCloseBtn" class="panel-close-btn" title="Close"><i class="fas fa-times"></i></button>
+                <div class="viewer-messages-buttons">
+                    <button id="messagesClean" title="Clear all"><i class="fas fa-trash"></i></button>
+                    <button id="messagesSave" title="Save"><i class="fas fa-save"></i></button>
+                    <button id="messagesCloseBtn" class="panel-close-btn" title="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
             <div id="viewerMessagesArea" class="viewer-messages-area"></div>
             <div class="viewer-messages-compose">
@@ -75,6 +85,7 @@
         <script defer src="https://cdnjs.cloudflare.com/ajax/libs/tippy.js/6.3.7/tippy-bundle.umd.min.js"></script>
         <script defer src="https://cdnjs.cloudflare.com/ajax/libs/UAParser.js/1.0.37/ua-parser.min.js"></script>
         <script defer src="/socket.io/socket.io.js"></script>
+        <script defer src="../js/mediasoup-client.js"></script>
         <script defer src="../js/swal.js"></script>
         <script defer src="../js/utils.js"></script>
         <script defer src="../js/config.js"></script>

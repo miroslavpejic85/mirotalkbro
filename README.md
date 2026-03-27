@@ -41,6 +41,24 @@
 <details open>
 <summary>Quick Start</summary>
 
+<br/>
+
+![mediasoup](public/assets/images/mediasoup.png)
+
+If `BROADCASTING=sfu`, ensure you have all the [requirements](https://mediasoup.org/documentation/v3/mediasoup/installation/#requirements) installed.
+
+Requirements install example for `Ubuntu 24.04 LTS`
+
+```bash
+# Gcc g++ make
+$ apt-get update
+$ apt-get install -y build-essential
+# Python 3 and pip
+$ apt-get install -y python3 python3-pip
+```
+
+---
+
 ![nodejs](public/assets/images/nodejs.png)
 
 Start the app using [nodejs](https://nodejs.org/en/download):

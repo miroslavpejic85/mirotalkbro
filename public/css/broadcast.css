@@ -323,7 +323,7 @@
     display: grid;
     gap: 0;
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
     color: var(--text-color);
     background: var(--secondary-color);
     border-left: var(--border);
@@ -414,6 +414,10 @@
     background-color: var(--surface-hover);
 }
 
+.message-name-self {
+    color: var(--text-secondary) !important;
+}
+
 .messages-incoming div:last-child {
     margin-bottom: 0;
 }
@@ -433,6 +437,57 @@
     border-bottom: none;
     line-height: 1.55;
     word-wrap: break-word;
+}
+
+.messages-compose {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    border-top: var(--border);
+    background: var(--surface-color);
+}
+
+.messages-compose input {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-sm);
+    color: var(--text-color);
+    background-color: var(--secondary-color);
+    border: var(--border);
+    border-radius: var(--border-radius);
+    transition: all var(--transition-fast);
+}
+
+.messages-compose input:focus {
+    border-color: var(--accent-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.messages-compose input::placeholder {
+    color: var(--text-secondary);
+}
+
+.messages-compose button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.messages-compose button:hover {
+    background: var(--accent-hover);
 }
 
 /* ===================== Viewers Panel ===================== */

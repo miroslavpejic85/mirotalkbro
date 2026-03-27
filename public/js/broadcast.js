@@ -45,6 +45,8 @@ const messagesOpenViewersForm = document.getElementById('messagesOpenViewersForm
 const messagesSave = document.getElementById('messagesSave');
 const messagesClean = document.getElementById('messagesClean');
 const messagesArea = document.getElementById('messagesArea');
+const messageInput = document.getElementById('messageInput');
+const messageSend = document.getElementById('messageSend');
 
 const viewersOpenForm = document.getElementById('viewersOpenForm');
 const viewersCloseForm = document.getElementById('viewersCloseForm');
@@ -170,14 +172,63 @@ const peerConnections = {};
 const dataChannels = {};
 
 let dataChannel;
+let broadcastingMode = 'p2p'; // Will be set by server
+
+// SFU mode state
+let sfuDevice = null;
+let sfuSendTransport = null;
+let sfuRecvTransport = null;
+let sfuRecvTransportPromise = null; // serializes recv transport creation
+let sfuProducers = new Map(); // kind -> producer
+let sfuConsumers = new Map(); // producerId -> consumer
+let sfuViewerCount = 0;
 
 const socket = io.connect(window.location.origin);
+const reconnectingOverlay = document.getElementById('reconnectingOverlay');
+
+socket.on('disconnect', () => {
+    console.log('Socket disconnected, waiting for reconnect...');
+    if (reconnectingOverlay) reconnectingOverlay.classList.add('active');
+});
+
+// Server tells us which mode to use
+socket.on('broadcastingMode', (mode) => {
+    if (reconnectingOverlay) reconnectingOverlay.classList.remove('active');
+    broadcastingMode = mode;
+    console.log('Broadcasting mode:', broadcastingMode);
+
+    // SFU reconnect: if we already had SFU state, the server restarted and all
+    // mediasoup state is gone. Reset and re-broadcast with a fresh stream.
+    if (broadcastingMode === 'sfu' && sfuSendTransport && broadcastStream) {
+        sfuResetState();
+        // Re-acquire stream since old tracks may have ended
+        getStream();
+    }
+});
+
+// =====================================================
+// P2P Mode handlers (original mesh logic)
+// =====================================================
 
 socket.on('answer', (id, description) => {
+    if (broadcastingMode !== 'p2p') return;
     peerConnections[id].setRemoteDescription(description);
 });
 
 socket.on('viewer', (id, iceServers, username) => {
+    if (broadcastingMode === 'sfu') {
+        // SFU mode: skip if already tracked (e.g. from sfuExistingViewers)
+        if (connectedViewers[id]) return;
+        sfuViewerCount++;
+        addViewer(id, username);
+        connectedPeers.innerText = sfuViewerCount;
+        // Send current broadcaster video status to the new viewer
+        sendToViewersDataChannel('video', { visibility: videoOff.style.visibility }, id);
+        playSound('viewer');
+        return;
+    }
+
+    // P2P mode: original logic
     const peerConnection = new RTCPeerConnection({ iceServers: iceServers });
     peerConnections[id] = peerConnection;
 
@@ -218,10 +269,17 @@ socket.on('viewer', (id, iceServers, username) => {
 });
 
 socket.on('candidate', (id, candidate) => {
+    if (broadcastingMode !== 'p2p') return;
     peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate)).catch((e) => console.error(e));
 });
 
 socket.on('disconnectPeer', (id, username) => {
+    if (broadcastingMode === 'sfu') {
+        sfuViewerCount = Math.max(0, sfuViewerCount - 1);
+        delViewer(id, username);
+        connectedPeers.innerText = sfuViewerCount;
+        return;
+    }
     peerConnections[id].close();
     delete peerConnections[id];
     delete dataChannels[id];
@@ -229,8 +287,340 @@ socket.on('disconnectPeer', (id, username) => {
     connectedPeers.innerText = Object.keys(peerConnections).length;
 });
 
+// SFU mode: restore existing viewers when broadcaster reconnects
+socket.on('sfuExistingViewers', async (existingViewers) => {
+    if (broadcastingMode !== 'sfu') return;
+    for (const { id, username } of existingViewers) {
+        if (!connectedViewers[id]) {
+            sfuViewerCount++;
+            addViewer(id, username);
+        }
+    }
+    connectedPeers.innerText = sfuViewerCount;
+
+    // Consume existing viewer producers (they exist in the room from before the refresh)
+    if (existingViewers.length > 0 && sfuDevice && sfuDevice.loaded) {
+        await sfuConsumeExistingViewerProducers();
+    }
+
+    // Send current broadcaster video status to all existing viewers
+    for (const { id } of existingViewers) {
+        sendToViewersDataChannel('video', { visibility: videoOff.style.visibility }, id);
+    }
+});
+
 function thereIsPeerConnections() {
+    if (broadcastingMode === 'sfu') return sfuViewerCount > 0;
     return Object.keys(peerConnections).length > 0;
+}
+
+// =====================================================
+// SFU Mode: mediasoup client logic
+// =====================================================
+
+async function sfuInitDevice(broadcastID) {
+    if (typeof mediasoupClient === 'undefined') {
+        console.error('mediasoup-client library not loaded');
+        return;
+    }
+
+    sfuDevice = new mediasoupClient.Device();
+
+    const { rtpCapabilities } = await socketRequest('sfu-getRtpCapabilities', broadcastID);
+    await sfuDevice.load({ routerRtpCapabilities: rtpCapabilities });
+
+    console.log('SFU Device loaded', { loaded: sfuDevice.loaded });
+}
+
+async function sfuCreateSendTransport(broadcastID) {
+    const transportParams = await socketRequest('sfu-createBroadcasterTransport', broadcastID);
+
+    sfuSendTransport = sfuDevice.createSendTransport(transportParams);
+
+    sfuSendTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
+        try {
+            await socketRequest('sfu-connectBroadcasterTransport', {
+                broadcastID,
+                dtlsParameters,
+            });
+            callback();
+        } catch (error) {
+            errback(error);
+        }
+    });
+
+    sfuSendTransport.on('produce', async ({ kind, rtpParameters, appData }, callback, errback) => {
+        try {
+            const { producerId } = await socketRequest('sfu-produce', {
+                broadcastID,
+                kind,
+                rtpParameters,
+                appData,
+            });
+            callback({ id: producerId });
+        } catch (error) {
+            errback(error);
+        }
+    });
+
+    sfuSendTransport.on('connectionstatechange', (state) => {
+        console.log('SFU Send Transport state:', state);
+        if (state === 'failed') {
+            sfuSendTransport.close();
+        }
+    });
+
+    console.log('SFU Send Transport created', { id: sfuSendTransport.id });
+}
+
+async function sfuProduceStream(stream) {
+    if (!sfuSendTransport) return;
+
+    const audioTrack = stream.getAudioTracks()[0];
+    const videoTrack = stream.getVideoTracks()[0];
+
+    if (audioTrack) {
+        const existingAudio = sfuProducers.get('audio');
+        if (existingAudio && !existingAudio.closed) {
+            // Replace track on existing producer instead of closing/recreating
+            await existingAudio.replaceTrack({ track: audioTrack });
+        } else {
+            if (existingAudio) {
+                existingAudio.close();
+                sfuProducers.delete('audio');
+            }
+            const audioProducer = await sfuSendTransport.produce({ track: audioTrack });
+            sfuProducers.set('audio', audioProducer);
+            audioProducer.on('transportclose', () => {
+                sfuProducers.delete('audio');
+            });
+            audioProducer.on('trackended', () => {
+                console.log('Audio track ended');
+            });
+        }
+    }
+
+    if (videoTrack) {
+        const existingVideo = sfuProducers.get('video');
+        if (existingVideo && !existingVideo.closed) {
+            // Replace track on existing producer (e.g. camera -> screen share)
+            await existingVideo.replaceTrack({ track: videoTrack });
+        } else {
+            if (existingVideo) {
+                existingVideo.close();
+                sfuProducers.delete('video');
+            }
+            const videoProducer = await sfuSendTransport.produce({
+                track: videoTrack,
+                codecOptions: {
+                    videoGoogleStartBitrate: 1000,
+                },
+            });
+            sfuProducers.set('video', videoProducer);
+            videoProducer.on('transportclose', () => {
+                sfuProducers.delete('video');
+            });
+            videoProducer.on('trackended', () => {
+                console.log('Video track ended');
+            });
+        }
+    }
+}
+
+// Handle viewer producer streams (SFU mode - viewer sends audio/video)
+socket.on('sfu-viewerProducer', async ({ viewerSocketId, producerId, kind, username }) => {
+    if (broadcastingMode !== 'sfu') return;
+
+    // Skip if already consumed (e.g. from sfuConsumeExistingViewerProducers)
+    if (sfuConsumers.has(producerId)) return;
+
+    try {
+        // Need a recv transport for broadcaster (serialized)
+        await ensureSfuRecvTransport();
+
+        const { consumerId, rtpParameters, producerPaused } = await socketRequest('sfu-broadcasterConsume', {
+            broadcastID,
+            producerId,
+            rtpCapabilities: sfuDevice.rtpCapabilities,
+        });
+
+        const consumer = await sfuRecvTransport.consume({
+            id: consumerId,
+            producerId,
+            kind,
+            rtpParameters,
+        });
+
+        sfuConsumers.set(producerId, consumer);
+
+        await socketRequest('sfu-resumeConsumer', { broadcastID, consumerId });
+
+        // Update existing viewer card or create a new one
+        const existingViewer = document.getElementById(viewerSocketId);
+        const existingVideoEl = existingViewer ? existingViewer.querySelector('video') : null;
+
+        if (existingVideoEl) {
+            // Viewer card already exists - rebuild MediaStream with all tracks
+            const existingTracks = existingVideoEl.srcObject ? [...existingVideoEl.srcObject.getTracks()] : [];
+            existingTracks.push(consumer.track);
+            existingVideoEl.srcObject = new MediaStream(existingTracks);
+            existingVideoEl.poster = '';
+            existingVideoEl.play().catch(() => {});
+
+            // If this is a video track that arrives paused, show the "off" image
+            if (kind === 'video' && producerPaused) {
+                const videoOffEl = existingViewer.querySelector('img');
+                if (videoOffEl) {
+                    existingVideoEl.classList.add('hidden');
+                    videoOffEl.classList.remove('hidden');
+                }
+            }
+        } else {
+            const stream = new MediaStream([consumer.track]);
+            addViewer(viewerSocketId, username, stream);
+        }
+    } catch (error) {
+        console.error('Error consuming viewer producer', error);
+    }
+});
+
+// Ensures only one recv transport is created, even under concurrent calls
+async function ensureSfuRecvTransport() {
+    if (sfuRecvTransport) return;
+    if (sfuRecvTransportPromise) {
+        await sfuRecvTransportPromise;
+        return;
+    }
+    sfuRecvTransportPromise = sfuCreateRecvTransport(broadcastID);
+    await sfuRecvTransportPromise;
+    sfuRecvTransportPromise = null;
+}
+
+async function sfuCreateRecvTransport(broadcastID) {
+    const transportParams = await socketRequest('sfu-createViewerTransport', {
+        broadcastID,
+        username: 'broadcaster',
+    });
+
+    sfuRecvTransport = sfuDevice.createRecvTransport(transportParams);
+
+    sfuRecvTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
+        try {
+            await socketRequest('sfu-connectViewerTransport', {
+                broadcastID,
+                dtlsParameters,
+            });
+            callback();
+        } catch (error) {
+            errback(error);
+        }
+    });
+
+    sfuRecvTransport.on('connectionstatechange', (state) => {
+        console.log('SFU Broadcaster Recv Transport state:', state);
+    });
+}
+
+// Consume existing viewer producers after broadcaster reconnect
+async function sfuConsumeExistingViewerProducers() {
+    try {
+        const { viewerProducers } = await socketRequest('sfu-getViewerProducers', broadcastID);
+        if (!viewerProducers || viewerProducers.length === 0) return;
+
+        // Ensure recv transport exists (serialized)
+        await ensureSfuRecvTransport();
+
+        for (const { viewerSocketId, producerId, kind, username, paused } of viewerProducers) {
+            // Skip if already consumed (e.g. from sfu-viewerProducer event)
+            if (sfuConsumers.has(producerId)) continue;
+            try {
+                const { consumerId, rtpParameters, producerPaused } = await socketRequest('sfu-broadcasterConsume', {
+                    broadcastID,
+                    producerId,
+                    rtpCapabilities: sfuDevice.rtpCapabilities,
+                });
+
+                const consumer = await sfuRecvTransport.consume({
+                    id: consumerId,
+                    producerId,
+                    kind,
+                    rtpParameters,
+                });
+
+                sfuConsumers.set(producerId, consumer);
+                await socketRequest('sfu-resumeConsumer', { broadcastID, consumerId });
+
+                // Update the viewer card
+                const existingViewer = document.getElementById(viewerSocketId);
+                const existingVideoEl = existingViewer ? existingViewer.querySelector('video') : null;
+                const isActive = !producerPaused && !paused;
+
+                if (existingVideoEl) {
+                    const existingTracks = existingVideoEl.srcObject ? [...existingVideoEl.srcObject.getTracks()] : [];
+                    existingTracks.push(consumer.track);
+                    existingVideoEl.srcObject = new MediaStream(existingTracks);
+                    existingVideoEl.poster = '';
+                    existingVideoEl.play().catch(() => {});
+
+                    if (kind === 'video') {
+                        const videoOffEl = existingViewer.querySelector('img');
+                        if (isActive) {
+                            // Video is ON: show video, hide off image
+                            existingVideoEl.classList.remove('hidden');
+                            if (videoOffEl) videoOffEl.classList.add('hidden');
+                        } else {
+                            // Video is OFF: hide video, show off image
+                            existingVideoEl.classList.add('hidden');
+                            if (videoOffEl) videoOffEl.classList.remove('hidden');
+                        }
+                    }
+                } else {
+                    const stream = new MediaStream([consumer.track]);
+                    addViewer(viewerSocketId, username, stream);
+                }
+
+                // Update audio/video button state to match producer paused state
+                if (existingViewer) {
+                    const baseId = `${viewerSocketId}___${username}`;
+                    if (kind === 'audio') {
+                        const audioBtn = document.getElementById(`${baseId}___viewerAudioStatus`);
+                        if (audioBtn) {
+                            isActive ? audioBtn.classList.remove('color-red') : audioBtn.classList.add('color-red');
+                        }
+                    }
+                    if (kind === 'video') {
+                        const videoBtn = document.getElementById(`${baseId}___viewerVideoStatus`);
+                        if (videoBtn) {
+                            isActive ? videoBtn.classList.remove('color-red') : videoBtn.classList.add('color-red');
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Error consuming existing viewer producer', { viewerSocketId, producerId, err });
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching existing viewer producers', error);
+    }
+}
+
+// SFU data messages through socket.io
+socket.on('sfu-dataMessage', (data) => {
+    if (broadcastingMode !== 'sfu') return;
+    handleDataChannelMessage(data);
+});
+
+// Helper: promisify socket.emit with callback
+function socketRequest(event, data) {
+    return new Promise((resolve, reject) => {
+        socket.emit(event, data, (response) => {
+            if (response && response.error) {
+                reject(new Error(response.error));
+            } else {
+                resolve(response);
+            }
+        });
+    });
 }
 
 // =====================================================
@@ -271,17 +661,34 @@ function handleDataChannelMessage(data) {
             if (isSpeechSynthesisSupported && broadcastSettings.options.speech_msg) {
                 speechMessage(data.action.username, data.action.message);
             }
+            // Relay viewer message to all other viewers (P2P public chat)
+            if (broadcastingMode === 'p2p') {
+                for (let id in dataChannels) {
+                    if (id === socket.id || id === data.action.id) continue;
+                    sendToViewersDataChannel('message', data.action, id);
+                }
+            }
             break;
         case 'audio':
+            if (!data.action || !data.action.id) break;
             console.log('audio', { id: data.action.id, username: data.action.username, enabled: data.action.enabled });
             const viewerAudioStatus = document.getElementById(
                 `${data.action.id}___${data.action.username}___viewerAudioStatus`
             );
-            data.action.enabled
-                ? viewerAudioStatus.classList.remove('color-red')
-                : viewerAudioStatus.classList.add('color-red');
+            if (viewerAudioStatus) {
+                data.action.enabled
+                    ? viewerAudioStatus.classList.remove('color-red')
+                    : viewerAudioStatus.classList.add('color-red');
+            } else {
+                console.warn(`Audio status element not found for viewer: ${data.action.id}, ${data.action.username}`);
+            }
             break;
         case 'video':
+            if (!data.action || !data.action.id) {
+                // Broadcaster video status (visibility) messages don't have id
+                if (data.action && 'visibility' in data.action) break;
+                break;
+            }
             const { id, username, enabled } = data.action;
             console.log('video', { id, username, enabled });
 
@@ -294,6 +701,9 @@ function handleDataChannelMessage(data) {
                 viewerVideoStatus.classList.toggle('color-red', !enabled);
                 viewerVideoElement.classList.toggle('hidden', !enabled);
                 viewerVideoElementOff.classList.toggle('hidden', enabled);
+                if (enabled) {
+                    viewerVideoElement.play().catch(() => {});
+                }
             } else {
                 console.warn(`Elements not found for viewer with id: ${id}, username: ${username}`);
             }
@@ -306,6 +716,18 @@ function handleDataChannelMessage(data) {
 }
 
 function sendToViewersDataChannel(method, action = {}, peerId = '*') {
+    if (broadcastingMode === 'sfu') {
+        // SFU mode: send through socket.io
+        socket.emit('sfu-dataMessage', {
+            broadcastID,
+            method,
+            action,
+            targetId: peerId,
+        });
+        return;
+    }
+
+    // P2P mode: send through WebRTC data channels
     for (let id in dataChannels) {
         if (id == socket.id) continue; // bypass myself
 
@@ -563,11 +985,25 @@ messagesCloseForm.addEventListener('click', toggleMessagesForm);
 messagesSave.addEventListener('click', saveMessages);
 messagesOpenViewersForm.addEventListener('click', toggleViewersForm);
 messagesClean.addEventListener('click', cleanMessages);
+messageSend.addEventListener('click', sendBroadcasterMessage);
+messageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendBroadcasterMessage();
+});
+
+function sendBroadcasterMessage() {
+    if (messageInput.value.trim() === '') return;
+    const message = messageInput.value;
+    appendMessage(username, message, true);
+    sendToViewersDataChannel('message', {
+        id: socket.id,
+        username: username,
+        message: message,
+        isBroadcaster: true,
+    });
+    messageInput.value = '';
+}
 
 function toggleMessagesForm() {
-    if (!messagesFormOpen && !messagesArea.hasChildNodes()) {
-        return popupMessage('toast', 'Messages', "There isn't messages to read", 'top');
-    }
     messagesFormOpen = !messagesFormOpen;
     messagesForm.classList.toggle('panel-open', messagesFormOpen);
     if (viewersFormOpen) {
@@ -611,13 +1047,13 @@ function cleanMessages() {
     popupMessage('toast', 'Messages', "There isn't messages to delete", 'top');
 }
 
-function appendMessage(username, message) {
+function appendMessage(username, message, isSelf = false) {
     playSound('message');
     const timeNow = getTime();
     const messageDiv = document.createElement('div');
     const messageTitle = document.createElement('span');
+    messageTitle.innerHTML = `${timeNow} - ${isSelf ? `<span class="message-name-self">${username}</span>` : username}`;
     const messageText = document.createElement('p');
-    messageTitle.innerText = `${timeNow} - ${username}`;
     messageText.innerText = message;
     messageDiv.appendChild(messageTitle);
     messageDiv.appendChild(messageText);
@@ -723,6 +1159,10 @@ function addViewer(id, username, stream = null) {
     cardHeader.appendChild(cardName);
 
     const { hasVideo, hasAudio } = hasVideoOrAudioTracks(stream);
+    // In SFU mode, always create audio/video buttons (stream arrives later via sfu-viewerProducer)
+    const sfuMode = broadcastingMode === 'sfu';
+    const showAudio = hasAudio || sfuMode;
+    const showVideo = hasVideo || sfuMode;
 
     Object.assign(videoElement, {
         id: `${id}___${username}___viewerVideo`,
@@ -741,12 +1181,19 @@ function addViewer(id, username, stream = null) {
     videoElement.style.height = '100%';
     videoElement.style.cursor = 'pointer';
     videoElement.style.objectFit = 'cover';
-    videoElementOff.classList.add('hidden');
+
+    // In SFU mode with no stream yet, show "video off" image instead of loading poster
+    if (sfuMode && !stream) {
+        videoElement.classList.add('hidden');
+        videoElementOff.classList.remove('hidden');
+    } else {
+        videoElementOff.classList.add('hidden');
+    }
 
     cardBody.appendChild(videoElement);
     cardBody.appendChild(videoElementOff);
 
-    if (hasAudio) {
+    if (showAudio) {
         Object.assign(buttonAudio, {
             id: `${id}___${username}___viewerAudioStatus`,
             className: 'viewer-card-btn color-red',
@@ -756,7 +1203,7 @@ function addViewer(id, username, stream = null) {
         cardFooter.appendChild(buttonAudio);
     }
 
-    if (hasVideo) {
+    if (showVideo) {
         Object.assign(buttonVideo, {
             id: `${id}___${username}___viewerVideoStatus`,
             className: 'viewer-card-btn color-red',
@@ -765,7 +1212,7 @@ function addViewer(id, username, stream = null) {
         });
         cardFooter.appendChild(buttonVideo);
 
-        if (stream.getVideoTracks()[0].enabled) {
+        if (hasVideo && stream.getVideoTracks()[0].enabled) {
             videoElement.classList.add('hidden');
             videoElementOff.classList.remove('hidden');
         }
@@ -1081,7 +1528,12 @@ function gotStream(stream) {
         );
     }
     attachStream(stream);
-    socket.emit('broadcaster', broadcastID);
+
+    if (broadcastingMode === 'sfu') {
+        sfuStartBroadcast(stream);
+    } else {
+        socket.emit('broadcaster', broadcastID);
+    }
 }
 
 function gotScreenStream(stream) {
@@ -1094,7 +1546,51 @@ function gotScreenStream(stream) {
     if (audioTrack) tracksToInclude.push(audioTrack);
     const newStream = new MediaStream(tracksToInclude);
     attachStream(newStream);
-    socket.emit('broadcaster', broadcastID);
+
+    if (broadcastingMode === 'sfu') {
+        sfuStartBroadcast(newStream);
+    } else {
+        socket.emit('broadcaster', broadcastID);
+    }
+}
+
+async function sfuStartBroadcast(stream) {
+    try {
+        if (!sfuDevice) {
+            await sfuInitDevice(broadcastID);
+        }
+        if (!sfuSendTransport) {
+            await sfuCreateSendTransport(broadcastID);
+        }
+        await sfuProduceStream(stream);
+        socket.emit('broadcaster', broadcastID);
+    } catch (error) {
+        console.error('SFU broadcast error', error);
+        popupMessage('warning', 'SFU Error', 'Failed to start SFU broadcast: ' + error.message);
+    }
+}
+
+function sfuResetState() {
+    // Close old transports to stop stale WebRTC traffic.
+    // Track ending is fine since getStream() acquires fresh tracks.
+    try {
+        if (sfuSendTransport) sfuSendTransport.close();
+    } catch (e) {}
+    try {
+        if (sfuRecvTransport) sfuRecvTransport.close();
+    } catch (e) {}
+    sfuDevice = null;
+    sfuSendTransport = null;
+    sfuRecvTransport = null;
+    sfuRecvTransportPromise = null;
+    sfuProducers = new Map();
+    sfuConsumers = new Map();
+    sfuViewerCount = 0;
+    connectedPeers.innerText = 0;
+    // Clear viewer cards — they'll be re-added via sfuExistingViewers
+    for (const id in connectedViewers) {
+        delViewer(id, connectedViewers[id]);
+    }
 }
 
 function attachStream(stream) {
@@ -1143,12 +1639,22 @@ function gotDevices(deviceInfos) {
 
 window.onbeforeunload = () => {
     socket.close();
-    if (thereIsPeerConnections()) {
+    if (broadcastingMode === 'sfu') {
+        // Close SFU resources
+        for (const [, producer] of sfuProducers) {
+            producer.close();
+        }
+        sfuProducers.clear();
+        for (const [, consumer] of sfuConsumers) {
+            consumer.close();
+        }
+        sfuConsumers.clear();
+        if (sfuSendTransport) sfuSendTransport.close();
+        if (sfuRecvTransport) sfuRecvTransport.close();
+    } else if (thereIsPeerConnections()) {
         for (let id in peerConnections) {
             peerConnections[id].close();
         }
-        peerConnections = {};
-        dataChannels = {};
     }
     stopSessionTime();
     saveRecording();

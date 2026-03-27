@@ -37,6 +37,8 @@ const messagesCloseBtn = document.getElementById('messagesCloseBtn');
 const viewerMessagesArea = document.getElementById('viewerMessagesArea');
 const messageInput = document.getElementById('messageInput');
 const messageSend = document.getElementById('messageSend');
+const messagesClean = document.getElementById('messagesClean');
+const messagesSave = document.getElementById('messagesSave');
 
 const userAgent = navigator.userAgent;
 const parser = new UAParser(userAgent);
@@ -92,6 +94,7 @@ function loadViewerToolTip() {
 
 let zoom = 1;
 let messagesFormOpen = false;
+let allViewerMessages = [];
 let recording = null;
 let recordingTimer = null;
 let sessionTimer = null;
@@ -105,10 +108,79 @@ myName.innerText = username;
 let peerConnection;
 let dataChannel;
 let viewerStream;
+let broadcastingMode = 'p2p'; // Will be set by server
+
+// SFU mode state
+let sfuDevice = null;
+let sfuRecvTransport = null;
+let sfuSendTransport = null;
+let sfuConsumers = new Map(); // producerId -> consumer
+let sfuProducers = new Map(); // kind -> producer
+let sfuJoined = false; // guard to prevent double SFU join
+let isFirstConnect = true; // track first vs reconnect
 
 const socket = io.connect(window.location.origin);
 
+socket.on('disconnect', () => {
+    console.log('Socket disconnected, waiting for reconnect...');
+    const reconnectingOverlay = document.getElementById('reconnectingOverlay');
+    if (reconnectingOverlay) reconnectingOverlay.classList.add('active');
+});
+
+// Server tells us which mode to use
+socket.on('broadcastingMode', async (mode) => {
+    const reconnectingOverlay = document.getElementById('reconnectingOverlay');
+    if (reconnectingOverlay) reconnectingOverlay.classList.remove('active');
+    broadcastingMode = mode;
+    console.log('Broadcasting mode:', broadcastingMode);
+
+    // SFU reconnect: if we already joined once, server restarted and all
+    // mediasoup state is gone. Reset and re-join.
+    if (broadcastingMode === 'sfu' && sfuJoined) {
+        // Save current audio/video UI state before reset
+        // (sfuResetState closes transports which stops tracks, so track.enabled is lost)
+        const savedAudioEnabled = disableAudio.style.display !== 'none';
+        const savedVideoEnabled = videoBtn.style.color !== 'red';
+
+        sfuResetState();
+        // Re-acquire viewer stream if tracks ended
+        if (viewerStream) {
+            const tracks = viewerStream.getTracks();
+            const allEnded = tracks.length === 0 || tracks.every((t) => t.readyState === 'ended');
+            if (allEnded) {
+                viewerStream = await getStream();
+            }
+        }
+
+        // Restore track enabled state on the fresh stream to match UI
+        if (viewerStream) {
+            const audioTrack = viewerStream.getAudioTracks()[0];
+            if (audioTrack) audioTrack.enabled = savedAudioEnabled;
+            const videoTrack = viewerStream.getVideoTracks()[0];
+            if (videoTrack) videoTrack.enabled = savedVideoEnabled;
+            // Update the video element srcObject if video was on
+            if (savedVideoEnabled && viewerVideoContainer.style.display !== 'none') {
+                viewerVideo.srcObject = viewerStream;
+            }
+        }
+
+        await sfuJoinBroadcast();
+        return;
+    }
+
+    // Trigger SFU join here because 'connect' fires before this event arrives
+    if (broadcastingMode === 'sfu' && !sfuJoined) {
+        await sfuJoinBroadcast();
+    }
+});
+
+// =====================================================
+// P2P Mode handlers (original mesh logic)
+// =====================================================
+
 socket.on('offer', async (id, description, iceServers) => {
+    if (broadcastingMode !== 'p2p') return;
+
     peerConnection = new RTCPeerConnection({ iceServers: iceServers });
 
     handleDataChannel();
@@ -145,17 +217,31 @@ socket.on('offer', async (id, description, iceServers) => {
 });
 
 socket.on('candidate', (id, candidate) => {
+    if (broadcastingMode !== 'p2p') return;
     peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(handleError);
 });
 
 socket.on('connect', async () => {
-    await checkViewerAudioVideo();
-
-    socket.emit('viewer', broadcastID, username);
+    const reconnectingOverlay = document.getElementById('reconnectingOverlay');
+    if (reconnectingOverlay) reconnectingOverlay.classList.remove('active');
+    if (isFirstConnect) {
+        isFirstConnect = false;
+        await checkViewerAudioVideo();
+    }
+    // Note: broadcastingMode event arrives AFTER connect, so in SFU mode
+    // the join is initiated from the broadcastingMode handler instead.
+    // On reconnect, broadcastingMode handler handles SFU reset + rejoin.
+    if (broadcastingMode !== 'sfu') {
+        socket.emit('viewer', broadcastID, username);
+    }
 });
 
 socket.on('broadcaster', () => {
-    socket.emit('viewer', broadcastID, username);
+    if (broadcastingMode === 'sfu') {
+        if (!sfuJoined) sfuJoinBroadcast();
+    } else {
+        socket.emit('viewer', broadcastID, username);
+    }
 });
 
 socket.on('broadcasterDisconnect', () => {
@@ -167,6 +253,281 @@ function handleError(error) {
 }
 
 // =====================================================
+// SFU Mode: mediasoup client logic
+// =====================================================
+
+async function sfuJoinBroadcast() {
+    if (sfuJoined) return;
+    sfuJoined = true;
+
+    try {
+        // Initialize device
+        if (!sfuDevice) {
+            if (typeof mediasoupClient === 'undefined') {
+                console.error('mediasoup-client library not loaded');
+                return;
+            }
+            sfuDevice = new mediasoupClient.Device();
+            const { rtpCapabilities } = await sfuSocketRequest('sfu-getRtpCapabilities', broadcastID);
+            await sfuDevice.load({ routerRtpCapabilities: rtpCapabilities });
+            console.log('SFU Device loaded', { loaded: sfuDevice.loaded });
+        }
+
+        // Create recv transport
+        if (!sfuRecvTransport) {
+            const transportParams = await sfuSocketRequest('sfu-createViewerTransport', {
+                broadcastID,
+                username,
+            });
+
+            sfuRecvTransport = sfuDevice.createRecvTransport(transportParams);
+
+            sfuRecvTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
+                try {
+                    await sfuSocketRequest('sfu-connectViewerTransport', {
+                        broadcastID,
+                        dtlsParameters,
+                    });
+                    callback();
+                } catch (error) {
+                    errback(error);
+                }
+            });
+
+            sfuRecvTransport.on('connectionstatechange', (state) => {
+                console.log('SFU Recv Transport state:', state);
+            });
+        }
+
+        // Register as viewer
+        socket.emit('viewer', broadcastID, username);
+
+        // Get existing producers and consume them
+        const { producers } = await sfuSocketRequest('sfu-getProducers', broadcastID);
+        for (const { producerId, kind } of producers) {
+            await sfuConsumeProducer(producerId, kind);
+        }
+
+        // If viewer has a send stream, produce it
+        if (viewerStream) {
+            await sfuProduceViewerStream();
+            // Re-send current audio/video status to broadcaster (important after reconnect)
+            sfuResendMediaStatus();
+        }
+    } catch (error) {
+        console.error('SFU join error', error);
+        sfuJoined = false; // allow retry on failure
+    }
+}
+
+async function sfuConsumeProducer(producerId, kind) {
+    try {
+        const response = await sfuSocketRequest('sfu-consume', {
+            broadcastID,
+            producerId,
+            rtpCapabilities: sfuDevice.rtpCapabilities,
+        });
+
+        const { consumerId, rtpParameters, producerPaused } = response;
+
+        const consumer = await sfuRecvTransport.consume({
+            id: consumerId,
+            producerId,
+            kind,
+            rtpParameters,
+        });
+
+        sfuConsumers.set(producerId, consumer);
+
+        // Resume the consumer on the server
+        await sfuSocketRequest('sfu-resumeConsumer', { broadcastID, consumerId });
+
+        // Build a new MediaStream with all active consumer tracks
+        const tracks = [];
+        for (const [, c] of sfuConsumers) {
+            if (c.track && !c.closed) {
+                tracks.push(c.track);
+            }
+        }
+        const stream = new MediaStream(tracks);
+        attachStream(stream);
+        video.play().catch(() => {});
+
+        hideElement(awaitingBroadcaster);
+        console.log('SFU consuming', { producerId, kind, consumerId });
+
+        consumer.on('trackended', () => {
+            console.log('Consumer track ended', { producerId });
+        });
+
+        consumer.on('transportclose', () => {
+            sfuConsumers.delete(producerId);
+        });
+    } catch (error) {
+        console.error('SFU consume error', error);
+    }
+}
+
+// Handle new producer from broadcaster (when broadcast starts or track changes)
+socket.on('sfu-newProducer', async ({ producerId, kind }) => {
+    if (broadcastingMode !== 'sfu') return;
+    await sfuConsumeProducer(producerId, kind);
+});
+
+// Handle producer closed
+socket.on('sfu-producerClosed', ({ producerId }) => {
+    if (broadcastingMode !== 'sfu') return;
+    const consumer = sfuConsumers.get(producerId);
+    if (consumer) {
+        consumer.close();
+        sfuConsumers.delete(producerId);
+    }
+});
+
+// Handle producer replaced (e.g., screen share toggle)
+socket.on('sfu-producerReplaced', async ({ oldProducerId, newProducerId, kind }) => {
+    if (broadcastingMode !== 'sfu') return;
+
+    // Close old consumer
+    const oldConsumer = sfuConsumers.get(oldProducerId);
+    if (oldConsumer) {
+        oldConsumer.close();
+        sfuConsumers.delete(oldProducerId);
+    }
+
+    // Remove old tracks from video
+    if (video.srcObject) {
+        const tracks = video.srcObject.getTracks().filter((t) => t.readyState === 'ended');
+        tracks.forEach((t) => video.srcObject.removeTrack(t));
+    }
+
+    // Consume new producer
+    await sfuConsumeProducer(newProducerId, kind);
+});
+
+async function sfuProduceViewerStream() {
+    try {
+        if (!sfuSendTransport) {
+            const transportParams = await sfuSocketRequest('sfu-createViewerSendTransport', {
+                broadcastID,
+            });
+
+            sfuSendTransport = sfuDevice.createSendTransport(transportParams);
+
+            sfuSendTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
+                try {
+                    await sfuSocketRequest('sfu-connectViewerSendTransport', {
+                        broadcastID,
+                        dtlsParameters,
+                    });
+                    callback();
+                } catch (error) {
+                    errback(error);
+                }
+            });
+
+            sfuSendTransport.on('produce', async ({ kind, rtpParameters, appData }, callback, errback) => {
+                try {
+                    const { producerId } = await sfuSocketRequest('sfu-viewerProduce', {
+                        broadcastID,
+                        kind,
+                        rtpParameters,
+                        appData,
+                    });
+                    callback({ id: producerId });
+                } catch (error) {
+                    errback(error);
+                }
+            });
+        }
+
+        const audioTrack = viewerStream.getAudioTracks()[0];
+        const videoTrack = viewerStream.getVideoTracks()[0];
+
+        if (audioTrack) {
+            const producer = await sfuSendTransport.produce({ track: audioTrack });
+            sfuProducers.set('audio', producer);
+        }
+        if (videoTrack) {
+            const producer = await sfuSendTransport.produce({ track: videoTrack });
+            sfuProducers.set('video', producer);
+        }
+    } catch (error) {
+        console.error('SFU viewer produce error', error);
+    }
+}
+
+// SFU data messages through socket.io
+socket.on('sfu-dataMessage', (data) => {
+    if (broadcastingMode !== 'sfu') return;
+    handleDataChannelMessage(data);
+});
+
+// Helper: promisify socket.emit with callback
+function sfuSocketRequest(event, data) {
+    return new Promise((resolve, reject) => {
+        socket.emit(event, data, (response) => {
+            if (response && response.error) {
+                reject(new Error(response.error));
+            } else {
+                resolve(response);
+            }
+        });
+    });
+}
+
+function sfuResetState() {
+    // Close old transports to stop stale WebRTC traffic.
+    // Track ending is fine since fresh tracks are acquired on reconnect.
+    try {
+        if (sfuRecvTransport) sfuRecvTransport.close();
+    } catch (e) {}
+    try {
+        if (sfuSendTransport) sfuSendTransport.close();
+    } catch (e) {}
+    sfuDevice = null;
+    sfuRecvTransport = null;
+    sfuSendTransport = null;
+    sfuConsumers = new Map();
+    sfuProducers = new Map();
+    sfuJoined = false;
+}
+
+function sfuResendMediaStatus() {
+    if (!viewerStream) return;
+
+    // Check current audio state
+    const audioTrack = viewerStream.getAudioTracks()[0];
+    const audioEnabled = audioTrack ? audioTrack.enabled : false;
+    // Pause new audio producer if audio is off (client + server)
+    const audioProducer = sfuProducers.get('audio');
+    if (audioProducer && !audioEnabled) {
+        audioProducer.pause();
+        sfuSocketRequest('sfu-pauseProducer', { broadcastID, producerId: audioProducer.id }).catch(() => {});
+    }
+    sendToBroadcasterDataChannel('audio', {
+        id: socket.id,
+        username: username,
+        enabled: audioEnabled,
+    });
+
+    // Check current video state
+    const videoTrack = viewerStream.getVideoTracks()[0];
+    const videoEnabled = videoTrack ? videoTrack.enabled : false;
+    // Pause new video producer if video is off (client + server)
+    const videoProducer = sfuProducers.get('video');
+    if (videoProducer && !videoEnabled) {
+        videoProducer.pause();
+        sfuSocketRequest('sfu-pauseProducer', { broadcastID, producerId: videoProducer.id }).catch(() => {});
+    }
+    sendToBroadcasterDataChannel('video', {
+        id: socket.id,
+        username: username,
+        enabled: videoEnabled,
+    });
+}
+
+// =====================================================
 // Check Viewer Audio/Video
 // =====================================================
 
@@ -175,6 +536,11 @@ async function checkViewerAudioVideo() {
         viewerStream = await getStream();
         if (viewerSettings.buttons.audio) disableAudio.click();
         if (viewerSettings.buttons.video) videoBtn.click();
+        // If SFU already joined but viewerStream wasn't ready, produce it now
+        if (broadcastingMode === 'sfu' && sfuJoined && viewerStream) {
+            await sfuProduceViewerStream();
+            sfuResendMediaStatus();
+        }
     }
 }
 
@@ -210,6 +576,10 @@ function handleDataChannel() {
 
 function handleDataChannelMessage(data) {
     switch (data.method) {
+        case 'message':
+            appendViewerMessage(data.action.message, data.action.username, data.action.isBroadcaster);
+            playSound('message');
+            break;
         case 'mute':
             if (disableAudio.style.display !== 'none') {
                 disableAudio.click();
@@ -244,6 +614,17 @@ function handleDataChannelMessage(data) {
 }
 
 function sendToBroadcasterDataChannel(method, action = {}) {
+    if (broadcastingMode === 'sfu') {
+        // SFU mode: send through socket.io
+        socket.emit('sfu-dataMessage', {
+            broadcastID,
+            method,
+            action,
+        });
+        return;
+    }
+
+    // P2P mode: send through WebRTC data channel
     if (!peerConnection || !dataChannel) return;
 
     if (dataChannel.readyState !== 'open') {
@@ -316,10 +697,40 @@ function stopSessionTime() {
 
 messagesBtn.addEventListener('click', toggleMessages);
 messagesCloseBtn.addEventListener('click', toggleMessages);
+messagesClean.addEventListener('click', cleanViewerMessages);
+messagesSave.addEventListener('click', saveViewerMessages);
 
 function toggleMessages() {
     messagesFormOpen = !messagesFormOpen;
     messagesForm.classList.toggle('panel-open', messagesFormOpen);
+}
+
+function saveViewerMessages() {
+    if (allViewerMessages.length !== 0) {
+        return saveAllMessages(allViewerMessages);
+    }
+    popupMessage('toast', 'Messages', "There isn't messages to save", 'top');
+}
+
+function cleanViewerMessages() {
+    if (allViewerMessages.length !== 0) {
+        return Swal.fire({
+            position: 'top',
+            title: 'Clean up',
+            text: 'Do you want to clean up all the messages?',
+            showDenyButton: true,
+            confirmButtonText: 'Yes',
+            denyButtonText: 'No',
+            showClass: { popup: 'animate__animated animate__fadeInDown' },
+            hideClass: { popup: 'animate__animated animate__fadeOutUp' },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                viewerMessagesArea.innerHTML = '';
+                allViewerMessages = [];
+            }
+        });
+    }
+    popupMessage('toast', 'Messages', "There isn't messages to delete", 'top');
 }
 
 // =====================================================
@@ -336,6 +747,23 @@ function toggleAudio(enabled) {
 
     elementDisplay(enableAudio, !enabled);
     elementDisplay(disableAudio, enabled && viewerSettings.buttons.audio);
+
+    // In SFU mode, pause/resume the audio producer (client + server)
+    if (broadcastingMode === 'sfu') {
+        const audioProducer = sfuProducers.get('audio');
+        if (audioProducer) {
+            if (enabled) {
+                audioProducer.resume();
+                sfuSocketRequest('sfu-resumeProducer', { broadcastID, producerId: audioProducer.id }).catch(() => {});
+            } else {
+                audioProducer.pause();
+                sfuSocketRequest('sfu-pauseProducer', { broadcastID, producerId: audioProducer.id }).catch(() => {});
+            }
+        }
+    }
+
+    // Only send status to broadcaster after we've joined
+    if (broadcastingMode === 'sfu' && !sfuJoined) return;
 
     sendToBroadcasterDataChannel('audio', {
         id: socket.id,
@@ -369,6 +797,23 @@ function toggleVideo() {
         viewerVideoContainer.style.display = 'none';
         viewerVideo.srcObject = null;
     }
+
+    // In SFU mode, pause/resume the video producer (client + server)
+    if (broadcastingMode === 'sfu') {
+        const videoProducer = sfuProducers.get('video');
+        if (videoProducer) {
+            if (!enabled) {
+                videoProducer.resume();
+                sfuSocketRequest('sfu-resumeProducer', { broadcastID, producerId: videoProducer.id }).catch(() => {});
+            } else {
+                videoProducer.pause();
+                sfuSocketRequest('sfu-pauseProducer', { broadcastID, producerId: videoProducer.id }).catch(() => {});
+            }
+        }
+    }
+
+    // Only send status to broadcaster after we've joined
+    if (broadcastingMode === 'sfu' && !sfuJoined) return;
 
     sendToBroadcasterDataChannel('video', {
         id: socket.id,
@@ -612,7 +1057,8 @@ messageInput.oninput = function () {
 };
 
 function sendMessage() {
-    if (peerConnection && messageInput.value != '') {
+    const canSend = broadcastingMode === 'sfu' ? true : !!peerConnection;
+    if (canSend && messageInput.value != '') {
         appendViewerMessage(messageInput.value);
         sendToBroadcasterDataChannel('message', {
             id: socket.id,
@@ -625,12 +1071,21 @@ function sendMessage() {
     messageInput.value = '';
 }
 
-function appendViewerMessage(text) {
+function appendViewerMessage(text, from = null, isBroadcaster = false) {
+    const timeNow = getTime();
     const msg = document.createElement('div');
     msg.className = 'viewer-msg';
     const time = document.createElement('div');
     time.className = 'viewer-msg-time';
-    time.innerText = getTime();
+    if (from && isBroadcaster) {
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'viewer-msg-broadcaster';
+        nameSpan.innerText = from;
+        time.innerText = `${timeNow} - `;
+        time.appendChild(nameSpan);
+    } else {
+        time.innerText = from ? `${timeNow} - ${from}` : timeNow;
+    }
     const body = document.createElement('div');
     body.className = 'viewer-msg-text';
     body.innerText = text;
@@ -638,6 +1093,11 @@ function appendViewerMessage(text) {
     msg.appendChild(body);
     viewerMessagesArea.appendChild(msg);
     viewerMessagesArea.scrollTop = viewerMessagesArea.scrollHeight;
+    allViewerMessages.push({
+        time: timeNow,
+        from: from || username,
+        message: text,
+    });
 }
 
 // =====================================================
@@ -646,7 +1106,18 @@ function appendViewerMessage(text) {
 
 window.onbeforeunload = () => {
     socket.close();
-    if (peerConnection) {
+    if (broadcastingMode === 'sfu') {
+        for (const [, consumer] of sfuConsumers) {
+            consumer.close();
+        }
+        sfuConsumers.clear();
+        for (const [, producer] of sfuProducers) {
+            producer.close();
+        }
+        sfuProducers.clear();
+        if (sfuRecvTransport) sfuRecvTransport.close();
+        if (sfuSendTransport) sfuSendTransport.close();
+    } else if (peerConnection) {
         peerConnection.close();
     }
     stopSessionTime();

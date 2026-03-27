@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.2.00
+ * @version 1.3.00
  */
 
 require('dotenv').config();
@@ -35,6 +35,13 @@ const log = new logs('server');
 
 const broadcasters = {}; // collect broadcasters grouped by socket.id
 const viewers = {}; // collect viewers grouped by socket.id
+
+// Broadcasting mode: 'p2p' (mesh) or 'sfu' (mediasoup)
+const broadcastingMode = (process.env.BROADCASTING || 'p2p').toLowerCase();
+const isSFU = broadcastingMode === 'sfu';
+
+// mediasoup SFU handler (loaded only when needed)
+const sfuHandler = isSFU ? require('./mediasoup-handler') : null;
 
 // Query params example
 const broadcast = 'broadcast?id=123&name=Broadcaster';
@@ -319,10 +326,6 @@ app.get('/disconnect', (req, res) => {
     return res.sendFile(html.disconnect);
 });
 
-app.use((req, res) => {
-    return notFound(res);
-});
-
 // API request join room endpoint
 app.post(`${apiBasePath}/join`, (req, res) => {
     const { host, authorization } = req.headers;
@@ -343,6 +346,15 @@ app.post(`${apiBasePath}/join`, (req, res) => {
     });
 });
 
+// Expose broadcasting mode to clients
+app.get('/api/v1/config', (req, res) => {
+    res.json({ broadcastingMode });
+});
+
+app.use((req, res) => {
+    return notFound(res);
+});
+
 function notFound(res) {
     res.json({ data: '404 not found' });
 }
@@ -350,21 +362,39 @@ function notFound(res) {
 // Socket.io
 io.sockets.on('error', (e) => log.error(e));
 io.sockets.on('connection', (socket) => {
-    socket.on('broadcaster', (broadcastID) => {
-        handleBroadcaster(socket, broadcastID);
-    });
-    socket.on('viewer', (broadcastID, username) => {
-        handleViewer(socket, broadcastID, username);
-    });
-    socket.on('offer', (id, message) => {
-        socket.to(id).emit('offer', socket.id, message, iceServers);
-    });
-    socket.on('answer', (id, message) => {
-        socket.to(id).emit('answer', socket.id, message);
-    });
-    socket.on('candidate', (id, message) => {
-        socket.to(id).emit('candidate', socket.id, message);
-    });
+    // Inform client of the broadcasting mode on connect
+    socket.emit('broadcastingMode', broadcastingMode);
+
+    if (isSFU) {
+        // SFU mode: mediasoup handles media routing
+        sfuHandler.handleSfuConnection(socket, io, broadcasters, viewers);
+
+        // SFU still needs broadcaster/viewer registration for room management
+        socket.on('broadcaster', (broadcastID) => {
+            handleBroadcaster(socket, broadcastID);
+        });
+        socket.on('viewer', (broadcastID, username) => {
+            handleViewerSfu(socket, broadcastID, username);
+        });
+    } else {
+        // P2P mode: original mesh signaling
+        socket.on('broadcaster', (broadcastID) => {
+            handleBroadcaster(socket, broadcastID);
+        });
+        socket.on('viewer', (broadcastID, username) => {
+            handleViewer(socket, broadcastID, username);
+        });
+        socket.on('offer', (id, message) => {
+            socket.to(id).emit('offer', socket.id, message, iceServers);
+        });
+        socket.on('answer', (id, message) => {
+            socket.to(id).emit('answer', socket.id, message);
+        });
+        socket.on('candidate', (id, message) => {
+            socket.to(id).emit('candidate', socket.id, message);
+        });
+    }
+
     socket.on('disconnect', (reason) => {
         handleDisconnect(socket, reason);
     });
@@ -375,6 +405,26 @@ function handleBroadcaster(socket, broadcastID) {
     if (!(broadcastID in broadcasters)) broadcasters[broadcastID] = {};
     broadcasters[broadcastID] = socket.id;
     log.debug('Broadcasters', broadcasters);
+
+    // In SFU mode, send the broadcaster the list of existing viewers
+    if (isSFU) {
+        // Clean up any stale broadcaster entries from the viewers map
+        for (let id in viewers) {
+            if (viewers[id]['broadcastID'] == broadcastID && viewers[id]['username'] === 'broadcaster') {
+                delete viewers[id];
+            }
+        }
+        const existingViewers = [];
+        for (let id in viewers) {
+            if (viewers[id]['broadcastID'] == broadcastID) {
+                existingViewers.push({ id, username: viewers[id]['username'] });
+            }
+        }
+        if (existingViewers.length > 0) {
+            socket.emit('sfuExistingViewers', existingViewers);
+        }
+    }
+
     sendToBroadcasterViewers(socket, broadcastID, 'broadcaster');
 }
 
@@ -388,14 +438,35 @@ function handleViewer(socket, broadcastID, username) {
     socket.to(broadcasters[broadcastID]).emit('viewer', socket.id, iceServers, username);
 }
 
+function handleViewerSfu(socket, broadcastID, username) {
+    // SFU mode: track viewer but don't establish P2P
+    if (!(socket.id in viewers)) viewers[socket.id] = {};
+    viewers[socket.id]['broadcastID'] = broadcastID;
+    viewers[socket.id]['username'] = username;
+    log.debug('SFU Viewers', viewers);
+    // Notify broadcaster about new viewer (for UI peer count)
+    if (broadcasters[broadcastID]) {
+        //localhost:3000/join/test
+        http: socket.to(broadcasters[broadcastID]).emit('viewer', socket.id, null, username);
+    }
+}
+
 function handleDisconnect(socket, reason) {
     let isViewer = false;
     let isBroadcaster = false;
+
+    // In SFU mode, let mediasoup handler clean up transports/consumers
+    if (isSFU) {
+        sfuHandler.handleSfuDisconnect(socket, broadcasters, viewers, io);
+    }
+
     // Check if socket disconnected is a viewer, if so, delete it from the viewers list and update the broadcaster
     if (socket.id in viewers) {
-        socket
-            .to(broadcasters[viewers[socket.id]['broadcastID']])
-            .emit('disconnectPeer', socket.id, viewers[socket.id]['username']);
+        if (viewers[socket.id]['broadcastID'] in broadcasters) {
+            socket
+                .to(broadcasters[viewers[socket.id]['broadcastID']])
+                .emit('disconnectPeer', socket.id, viewers[socket.id]['username']);
+        }
         delete viewers[socket.id];
         isViewer = true;
     }
@@ -404,10 +475,13 @@ function handleDisconnect(socket, reason) {
         if (broadcasters[broadcastID] == socket.id) {
             delete broadcasters[broadcastID];
             isBroadcaster = true;
-            sendToBroadcasterViewers(socket, broadcastID, 'broadcasterDisconnect');
+            if (!isSFU) {
+                sendToBroadcasterViewers(socket, broadcastID, 'broadcasterDisconnect');
+            }
         }
     }
     log.debug('Disconnected', {
+        mode: broadcastingMode,
         reason: reason,
         id: socket.id,
         isViewer: isViewer,
@@ -456,26 +530,42 @@ async function ngrokStart() {
     }
 }
 
-server.listen(port, () => {
-    if (ngrokEnabled && ngrokAuthToken) {
-        ngrokStart();
+async function startServer() {
+    // Initialize mediasoup workers if SFU mode
+    if (isSFU) {
+        await sfuHandler.createWorkers();
+        log.info('mediasoup SFU mode enabled');
     } else {
-        log.info('Server is running', {
-            trustProxy: trustProxy,
-            oidc: OIDC.enabled ? OIDC : false,
-            iceServers: iceServers,
-            cors: corsOptions,
-            home: host,
-            broadcast: `${host}/${broadcast}`,
-            viewer: `${host}/${viewer}`,
-            viewerHome: `${host}/${viewerHome}`,
-            apiDocs: apiDocs,
-            apiKeySecret: apiKeySecret,
-            environment: process.env.NODE_ENV || 'development',
-            nodeVersion: process.versions.node,
-            app_version: packageJson.version,
-        });
+        log.info('P2P mesh mode enabled');
     }
+
+    server.listen(port, () => {
+        if (ngrokEnabled && ngrokAuthToken) {
+            ngrokStart();
+        } else {
+            log.info('Server is running', {
+                broadcastingMode: broadcastingMode,
+                trustProxy: trustProxy,
+                oidc: OIDC.enabled ? OIDC : false,
+                iceServers: iceServers,
+                cors: corsOptions,
+                home: host,
+                broadcast: `${host}/${broadcast}`,
+                viewer: `${host}/${viewer}`,
+                viewerHome: `${host}/${viewerHome}`,
+                apiDocs: apiDocs,
+                apiKeySecret: apiKeySecret,
+                environment: process.env.NODE_ENV || 'development',
+                nodeVersion: process.versions.node,
+                app_version: packageJson.version,
+            });
+        }
+    });
+}
+
+startServer().catch((err) => {
+    log.error('Failed to start server', err);
+    process.exit(1);
 });
 
 // Handle client errors (malformed/incomplete HTTP requests) gracefully
