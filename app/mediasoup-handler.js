@@ -492,8 +492,18 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             if (!room) throw new Error(`Room ${broadcastID} does not exist`);
 
             const { transport, params } = await createWebRtcTransport(broadcastID);
+
+            // Lazily register viewer if not yet present (race with sfu-createViewerTransport)
+            if (!room.viewers.has(socket.id)) {
+                room.viewers.set(socket.id, {
+                    recvTransport: null,
+                    sendTransport: null,
+                    consumers: new Map(),
+                    producers: new Map(),
+                    username: '',
+                });
+            }
             const viewer = room.viewers.get(socket.id);
-            if (!viewer) throw new Error('Viewer not found');
             viewer.sendTransport = transport;
 
             log.debug('sfu-createViewerSendTransport', { broadcastID, socketId: socket.id, transportId: transport.id });
