@@ -450,11 +450,11 @@ async function sfuProduceViewerStream() {
         const audioTrack = viewerStream.getAudioTracks()[0];
         const videoTrack = viewerStream.getVideoTracks()[0];
 
-        if (audioTrack) {
+        if (audioTrack && !sfuProducers.has('audio')) {
             const producer = await sfuSendTransport.produce({ track: audioTrack });
             sfuProducers.set('audio', producer);
         }
-        if (videoTrack) {
+        if (videoTrack && !sfuProducers.has('video')) {
             const producer = await sfuSendTransport.produce({ track: videoTrack });
             sfuProducers.set('video', producer);
         }
