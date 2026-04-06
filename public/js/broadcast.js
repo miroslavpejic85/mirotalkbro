@@ -82,7 +82,6 @@ const isDesktopDevice = deviceType === 'desktop';
 const isSpeechSynthesisSupported = 'speechSynthesis' in window;
 
 const images = {
-    poster: '../assets/images/loader.gif',
     mute: '../assets/images/mute.png',
     hide: '../assets/images/hide.png',
     viewer: '../assets/images/viewer.png',
@@ -474,7 +473,7 @@ socket.on('sfu-viewerProducer', async ({ viewerSocketId, producerId, kind, usern
             const existingTracks = existingVideoEl.srcObject ? [...existingVideoEl.srcObject.getTracks()] : [];
             existingTracks.push(consumer.track);
             existingVideoEl.srcObject = new MediaStream(existingTracks);
-            existingVideoEl.poster = '';
+            existingVideoEl.closest('.viewer-card-body')?.classList.remove('video-loading');
             existingVideoEl.play().catch(() => {});
 
             // If this is a video track that arrives paused, show the "off" image
@@ -569,7 +568,7 @@ async function sfuConsumeExistingViewerProducers() {
                     const existingTracks = existingVideoEl.srcObject ? [...existingVideoEl.srcObject.getTracks()] : [];
                     existingTracks.push(consumer.track);
                     existingVideoEl.srcObject = new MediaStream(existingTracks);
-                    existingVideoEl.poster = '';
+                    existingVideoEl.closest('.viewer-card-body')?.classList.remove('video-loading');
                     existingVideoEl.play().catch(() => {});
 
                     if (kind === 'video') {
@@ -1182,7 +1181,6 @@ function addViewer(id, username, stream = null) {
         autoplay: true,
         controls: false,
         srcObject: stream,
-        poster: images.poster,
     });
 
     Object.assign(videoElementOff, {
@@ -1199,6 +1197,7 @@ function addViewer(id, username, stream = null) {
     if (sfuMode && !stream) {
         videoElement.classList.add('hidden');
         videoElementOff.classList.remove('hidden');
+        cardBody.classList.add('video-loading');
     } else {
         videoElementOff.classList.add('hidden');
     }
@@ -1485,6 +1484,7 @@ getStream().then(getDevices).then(gotDevices);
 function getStream() {
     try {
         videoOff.style.visibility = 'hidden';
+        video.closest('.container')?.classList.add('video-loading');
 
         videoQualitySelect.selectedIndex = localStorage.videoQualitySelectedIndex
             ? localStorage.videoQualitySelectedIndex
@@ -1614,6 +1614,7 @@ function attachStream(stream) {
     video.muted = true;
     video.volume = 0;
     video.controls = false;
+    video.closest('.container')?.classList.remove('video-loading');
 }
 
 function handleMediaDeviceError(error) {

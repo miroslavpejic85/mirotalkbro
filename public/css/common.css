@@ -175,6 +175,27 @@ button:active {
     object-fit: contain;
 }
 
+/* CSS loading spinner – replaces poster GIF */
+.video-loading {
+    background: var(--surface-color);
+}
+
+.video-loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    margin: -24px 0 0 -24px;
+    border: 3px solid rgba(128, 128, 128, 0.25);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    z-index: 5;
+    animation: spin 0.8s linear infinite;
+    pointer-events: none;
+}
+
 .container video:hover {
     filter: brightness(1.03);
 }
