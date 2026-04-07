@@ -31,12 +31,18 @@
             <div id="supportDiv" class="support">
                 <button id="support"><i class="fas fa-heart"></i></button>
             </div>
-            <label class="not-selectable"><i id="userNameRandom" class="fas fa-arrows-rotate"></i>Username</label>
-            <input id="userName" maxlength="15" name="id" value="mirotalk" required />
+            <label class="not-selectable"><i class="fas fa-user"></i>Username</label>
+            <div class="input-wrapper">
+                <input id="userName" maxlength="15" name="id" value="mirotalk" required />
+                <i id="userNameRandom" class="fas fa-arrows-rotate input-icon"></i>
+            </div>
             <label id="broadcasterIdLabel" class="not-selectable"
-                ><i id="broadcasterIdRandom" class="fas fa-arrows-rotate"></i>Room Id</label
+                ><i class="fas fa-door-open"></i>Room Id</label
             >
-            <input id="broadcasterId" maxlength="36" name="id" value="123" required />
+            <div id="broadcasterIdWrapper" class="input-wrapper">
+                <input id="broadcasterId" maxlength="36" name="id" value="123" required />
+                <i id="broadcasterIdRandom" class="fas fa-arrows-rotate input-icon"></i>
+            </div>
             <label id="broadcasterLabel" class="not-selectable"
                 ><i class="fas fa-podcast"></i>Join as broadcaster</label
             >

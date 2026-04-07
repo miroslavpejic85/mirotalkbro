@@ -13,6 +13,7 @@ const userName = document.getElementById('userName');
 const userNameRandom = document.getElementById('userNameRandom');
 const broadcasterIdLabel = document.getElementById('broadcasterIdLabel');
 const broadcasterId = document.getElementById('broadcasterId');
+const broadcasterIdWrapper = document.getElementById('broadcasterIdWrapper');
 const broadcasterIdRandom = document.getElementById('broadcasterIdRandom');
 const broadcasterLabel = document.getElementById('broadcasterLabel');
 const broadcaster = document.getElementById('broadcaster');
@@ -25,8 +26,7 @@ const mode = document.getElementById('mode');
 
 if (broadcastID) {
     elementDisplay(broadcasterIdLabel, false);
-    elementDisplay(broadcasterIdRandom, false);
-    elementDisplay(broadcasterId, false);
+    elementDisplay(broadcasterIdWrapper, false);
     elementDisplay(broadcasterLabel, false);
     elementDisplay(broadcaster, false);
 }

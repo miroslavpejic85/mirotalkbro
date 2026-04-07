@@ -15,15 +15,7 @@
     font-size: var(--font-base);
 }
 
-.fa-arrows-rotate {
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
 
-.fa-arrows-rotate:hover {
-    color: var(--accent-color);
-    transform: rotate(180deg);
-}
 
 .home {
     padding: var(--space-xl);
@@ -79,6 +71,30 @@
     height: auto;
     border-radius: 0;
     color: inherit;
+}
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.input-wrapper input {
+    padding-right: 42px;
+}
+
+.input-wrapper .input-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    background: transparent;
+    transition: all var(--transition-fast);
+}
+
+.input-wrapper .input-icon:hover {
+    color: var(--accent-color);
+    transform: translateY(-50%) rotate(180deg);
 }
 
 .home input {
