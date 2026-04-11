@@ -1,45 +1,44 @@
-<h1 align="center">MiroTalk WebRTC Live Broadcast</h1>
+<h1 align="center">MiroTalk BRO</h1>
+
+<h3 align="center">WebRTC Live Broadcast enables real time video, audio, and screen streaming to all connected viewers</h3>
 
 <br />
 
 <div align="center">
 
+[![GitHub Stars](https://img.shields.io/github/stars/miroslavpejic85/mirotalkbro?style=social)](https://github.com/miroslavpejic85/mirotalkbro/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/miroslavpejic85/mirotalkbro?style=social)](https://github.com/miroslavpejic85/mirotalkbro/network/members)
+
+<a href="https://choosealicense.com/licenses/agpl-3.0/">![License: AGPLv3](https://img.shields.io/badge/License-AGPLv3_Open_Source-blue.svg)</a>
+<a href="https://hub.docker.com/r/mirotalk/bro">![Docker Pulls](https://img.shields.io/docker/pulls/mirotalk/bro)</a>
+<a href="https://github.com/miroslavpejic85/mirotalkbro/commits/main">![Last Commit](https://img.shields.io/github/last-commit/miroslavpejic85/mirotalkbro)</a>
+<a href="https://discord.gg/rgGYfeYW3N">![Discord](https://img.shields.io/badge/Discord-Community-5865F2?logo=discord&logoColor=white)</a>
 <a href="https://www.linkedin.com/in/miroslav-pejic-976a07101/">![Author](https://img.shields.io/badge/Author-Miroslav_Pejic-brightgreen.svg)</a>
-<a href="https://choosealicense.com/licenses/agpl-3.0/">![License: AGPLv3](https://img.shields.io/badge/License-AGPLv3_Open_Surce-blue.svg)</a>
-<a href="https://codecanyon.net/item/mirotalk-bro-webrtc-p2p-live-broadcast/45887113">![License: Regular](https://img.shields.io/badge/License-Regular_Private_Use-lightblue.svg)</a>
-<a href="https://codecanyon.net/item/mirotalk-bro-webrtc-p2p-live-broadcast/45887113">![License: Extended](https://img.shields.io/badge/License-Extended_Commercial_Use-darkgreen.svg)</a>
-<a href="https://discord.gg/rgGYfeYW3N">![Community](https://img.shields.io/badge/Community-forum-pink.svg)</a>
 
 </div>
 
-<p align="center">MiroTalk BRO Live Broadcast allows to broadcast live video, audio and screen stream to all connected users (viewers) and receive messages from them. Can handle unlimited rooms, without time limitations, each having a broadcast and many viewers.</a></p>
+<br />
 
----
-
-<p align="center">
-    <a href="https://bro.mirotalk.com">Explore MiroTalk BRO</a>
-</p>
-
----
+<p align="center"><strong>MiroTalk BRO</strong> is a <strong>self-hosted, open-source</strong> platform for <strong>real-time live video, audio, and screen broadcasting</strong> to all connected viewers using <strong>WebRTC</strong>. Handles unlimited rooms with no time limits, each with one broadcaster and many viewers.</p>
 
 <p align="center">
-    <a href="https://bro.mirotalk.com"><img src="./public/assets/images/ui.png"></a>
+    <a href="https://bro.mirotalk.com">Try Live Demo</a> · <a href="https://docs.mirotalk.com/mirotalk-bro/self-hosting/">Documentation</a> · <a href="https://discord.gg/rgGYfeYW3N">Discord</a> · <a href="https://github.com/sponsors/miroslavpejic85">Sponsor</a>
 </p>
 
----
+<br />
 
-<strong>
-    <p align="center">
-        Join our Community for questions, help, support, ideas, and discussions on <a href='https://discord.gg/rgGYfeYW3N'>Discord</a>
-    </p>
-</strong>
+<p align="center">
+    <a href="https://bro.mirotalk.com">
+        <img src="public/assets/images/ui.png" alt="MiroTalk BRO - WebRTC Live Broadcast">
+    </a>
+</p>
 
----
+<hr />
 
-</details>
+<br />
 
 <details open>
-<summary>Quick Start</summary>
+<summary>⚡ Quick start</summary>
 
 <br/>
 
@@ -50,215 +49,101 @@ If `BROADCASTING=sfu`, ensure you have all the [requirements](https://mediasoup.
 Requirements install example for `Ubuntu 24.04 LTS`
 
 ```bash
-# Gcc g++ make
-$ apt-get update
-$ apt-get install -y build-essential
-# Python 3 and pip
-$ apt-get install -y python3 python3-pip
+apt-get update
+apt-get install -y build-essential
+apt-get install -y python3 python3-pip
 ```
 
----
-
-![nodejs](public/assets/images/nodejs.png)
-
-Start the app using [nodejs](https://nodejs.org/en/download):
+**Start in 5 commands:**
 
 ```bash
-# Clone the project repo
-$ git clone https://github.com/miroslavpejic85/mirotalkbro.git
-# Go to project dir
-$ cd mirotalkbro
-# Copy .env.template in .env and edit it if needed
-$ cp .env.template .env
-# Install dependencies
-$ npm install
-# Run the app
-$ npm start
+git clone https://github.com/miroslavpejic85/mirotalkbro.git
+cd mirotalkbro
+cp .env.template .env
+npm install
+npm start
 ```
 
-Start the app using [docker](https://docs.docker.com/engine/install/) - [docker-compose](https://docs.docker.com/compose/) and optional [official image](https://hub.docker.com/r/mirotalk/bro):
+Open [http://localhost:3016](http://localhost:3016) - done!
+
+</details>
+
+<details>
+<summary>🐳 Docker</summary>
+
+<br/>
 
 ![docker](public/assets/images/docker.png)
 
-```bash
-# Clone the project repo
-$ git clone https://github.com/miroslavpejic85/mirotalkbro.git
-# Go to project dir
-$ cd mirotalkbro
-# Copy .env.template in .env and edit it if needed
-$ cp .env.template .env
-# Copy docker-compose.template.yml in docker-compose.yml and edit it if needed
-$ cp docker-compose.template.yml docker-compose.yml
-# Get official image from Docker Hub
-$ docker pull mirotalk/bro:latest
-# Run the image in a container
-$ docker-compose up #-d
-```
-
-Server up and running
-
-```js
-Server is running {
-  home: 'http://localhost:3016',
-  broadcast: 'http://localhost:3016/broadcast?id=123&name=Broadcaster',
-  viewer: 'http://localhost:3016/viewer?id=123&name=Viewer',
-  viewerHome: 'http://localhost:3016/home?id=123'
-}
-```
-
-The app should now be running on your http://localhost:3016, you can choose if join room as a `Broadcaster` or `Viewer`.
-
-The `Broadcaster` stream the audio, video or screen to all connected viewers and can receive messages from them.
-
-The `Viewer` get the audio, video or screen that is streamed from the broadcaster and can send messages to it.
-
-<details open>
-<summary>Self-Hosting</summary>
-
-</br>
-
-![setup](/public/assets/images/self-hosting.png)
-
-## **Requirements**
-
-- A clean server running **Ubuntu 22.04 or 24.04 LTS**
-- **Root access** to the Server
-- A **domain or subdomain** pointing to your server’s public IPv4
-
----
-
-## Note
-
-When **prompted**, simply **enter your domain or subdomain**. Then wait for the installation to complete.
+**Prerequisites:** Install [Docker Engine](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/) - Image available on [Docker Hub](https://hub.docker.com/r/mirotalk/bro)
 
 ```bash
-# Install MiroTalk BRO
-wget -qO bro-install.sh https://docs.mirotalk.com/scripts/bro/bro-install.sh \
-  && chmod +x bro-install.sh \
-  && ./bro-install.sh
+git clone https://github.com/miroslavpejic85/mirotalkbro.git
+cd mirotalkbro
+cp .env.template .env
+cp docker-compose.template.yml docker-compose.yml
+docker-compose pull    # optional: pull official image
+docker-compose up      # add -d to run in background
 ```
 
-```bash
-# Uninstall MiroTalk BRO
-wget -qO bro-uninstall.sh https://docs.mirotalk.com/scripts/bro/bro-uninstall.sh \
-  && chmod +x bro-uninstall.sh \
-  && ./bro-uninstall.sh
-```
+Open [http://localhost:3016](http://localhost:3016) - done!
 
-```bash
-# Update MiroTalk BRO
-wget -qO bro-update.sh https://docs.mirotalk.com/scripts/bro/bro-update.sh \
-  && chmod +x bro-update.sh \
-  && ./bro-update.sh
-```
+> **Note:**
+> Edit `.env` and `docker-compose.yml` to customize your setup.
+
+</details>
+
+<details>
+<summary>📚 Documentation</summary>
+
+<br/>
+
+For detailed guides and references, visit the **[official documentation](https://docs.mirotalk.com)**:
+
+- [About](https://docs.mirotalk.com/mirotalk-bro/)
+- [Self-Hosting Guide](https://docs.mirotalk.com/mirotalk-bro/self-hosting/)
+- [Automation-scripts](https://docs.mirotalk.com/scripts/about/)
+- [Configurations](https://docs.mirotalk.com/mirotalk-bro/configurations/)
+- [Integration](https://docs.mirotalk.com/mirotalk-bro/integration/)
+- [Direct Room Join](https://docs.mirotalk.com/mirotalk-bro/join-room/)
+- [REST API Documentation](https://docs.mirotalk.com/mirotalk-bro/api/)
+- [Ngrok](https://docs.mirotalk.com/mirotalk-bro/ngrok/)
 
 </details>
 
 <details open>
-<summary>Hetzner, Netcup, Hostinger & Contabo</summary>
+<summary>☁️ Recommended Hosting Providers</summary>
 
 <br/>
 
-[![Hetzner](public/assets/images/hetzner.png)](https://hetzner.cloud/?ref=XdRifCzCK3bn)
+| Provider                                                                                         | Description                                                                                                | Link                                                                |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [![Hetzner](public/assets/images/hetzner.png)](https://www.hetzner.com)                          | High-performance cloud servers and dedicated root servers with top-tier reliability. Powers our live demo. | [Get €20 Free Credits](https://hetzner.cloud/?ref=XdRifCzCK3bn)     |
+| [![Netcup](public/assets/images/netcup.png)](https://www.netcup.com/en/?ref=309627)              | Enterprise-grade performance at unbeatable prices. Scalable and reliable.                                  | [Explore Netcup](https://www.netcup.com/en/?ref=309627)             |
+| [![Hostinger](public/assets/images/hostinger.png)](https://hostinger.com/?REFERRALCODE=MIROTALK) | Fast, reliable hosting with 24/7 support and great performance.                                            | [Check out Hostinger](https://hostinger.com/?REFERRALCODE=MIROTALK) |
+| [![Contabo](public/assets/images/contabo.png)](https://www.dpbolvw.net/click-101027391-14462707) | Top-tier German hosting, dedicated servers, VPS, and web hosting at unbeatable prices.                     | [Explore Contabo](https://www.dpbolvw.net/click-101027391-14462707) |
 
-This application is running for `demonstration purposes` on [Hetzner](https://www.hetzner.com/), one of `the best` [cloud providers](https://www.hetzner.com/cloud) and [dedicated root servers](https://www.hetzner.com/dedicated-rootserver).
-
----
-
-👉 Use [my personal link](https://hetzner.cloud/?ref=XdRifCzCK3bn) to receive `€⁠20 IN CLOUD CREDITS`.
-
----
-
-[![Netcup](public/assets/images/netcup.png)](https://www.netcup.com/en/?ref=309627)
-
-Unlock `enterprise-grade performance` at a price you won’t believe.
-Scalable, reliable, and built for businesses that demand more.
-
-👉 [Power Meets Value with Netcup Root Server](https://www.netcup.com/en/?ref=309627)
-
----
-
-[![Hostinger](public/assets/images/hostinger.png)](https://hostinger.com/?REFERRALCODE=MIROTALK)
-
-Fast, reliable hosting with 24/7 support and great performance. Start today!
-
-👉 [Check out Hostinger now](https://hostinger.com/?REFERRALCODE=MIROTALK)
-
----
-
-[![Contabo](public/assets/images/contabo.png)](https://www.dpbolvw.net/click-101027391-14462707)
-
-Experience also top-tier German web hosting – dedicated servers, VPS, and web hosting at `unbeatable prices`.
-
-👉 [Explore now here](https://www.dpbolvw.net/click-101027391-14462707)
-
----
-
-To set up your own instance of `MiroTalk BRO` on a dedicated cloud server, please refer to our comprehensive [self-hosting documentation](https://docs.mirotalk.com/mirotalk-bro/self-hosting/). This guide will walk you through the process step by step, ensuring a smooth and successful deployment.
-
-</details>
+To set up your own instance of `MiroTalk BRO` on a dedicated cloud server, please refer to our comprehensive [self-hosting documentation](https://docs.mirotalk.com/mirotalk-bro/self-hosting/).
 
 </details>
 
 <details>
-<summary>Direct Join</summary>
-
-<br>
-
-You can direct join room as `broadcaster` or `viewer` specifying the room id and your name.
-
-| As            | URL                                                     |
-| ------------- | ------------------------------------------------------- |
-| `Broadcaster` | http://localhost:3016/broadcast?id=123&name=Broadcaster |
-| `Viewer`      | http://localhost:3016/viewer?id=123&name=Viewer         |
-
-| Params | Type   | Description |
-| ------ | ------ | ----------- |
-| id     | string | Room Id     |
-| name   | string | User name   |
-
-</details>
-
-<details>
-<summary>Embedding</summary>
+<summary>🤝 Contributing</summary>
 
 <br/>
 
-Embedding MiroTalk Live Broadcast into a service or app using an iframe.
+Contributions are welcome and greatly appreciated! Whether it's bug fixes, features, or documentation - every contribution helps.
 
-```html
-<iframe
-    allow="camera; microphone; display-capture; fullscreen; clipboard-read; clipboard-write; web-share; autoplay; picture-in-picture"
-    src="https://bro.mirotalk.com"
-    style="height: 100vh; width: 100vw; border: 0px;"
-></iframe>
-```
+1. Fork the repository
+2. Create your feature branch
+3. Submit a pull request
+
+Have questions? Join our [Discord community](https://discord.gg/rgGYfeYW3N)!
 
 </details>
 
 <details>
-<summary>Documentations</summary>
-
-<br>
-
-- [Install your own Stun/Turn](./docs/coturn.md)
-- [Ngrok](./docs/ngrok.md)
-- [How to Self-hosting](./docs/self-hosting.md)
-- [Rest API](./app/api/README.md)
-
-</details>
-
-<details>
-<summary>Credits</summary>
-
-<br>
-
-- Gabriel Tanner [webrtc-broadcast-logic](https://gabrieltanner.org/blog/webrtc-video-broadcast/)
-
-</details>
-
-<details>
-<summary>License</summary>
+<summary>📄 License</summary>
 
 <br/>
 
@@ -271,58 +156,24 @@ To obtain a [MiroTalk BRO license](https://docs.mirotalk.com/license/licensing-o
 </details>
 
 <details open>
-<summary>Support</summary>
+<summary>❤️ Support the project</summary>
 
 <br/>
 
-If MiroTalk BRO has been useful for you and want to contribute to its continued success, consider becoming a backer or sponsor by visiting [this link](https://github.com/sponsors/miroslavpejic85).
-
-Your support means the world to us, and together, we can make MiroTalk Live Broadcast even better! Thank you for being part of this amazing journey. 🌟
+Do you find MiroTalk BRO indispensable for your needs? Join us in supporting this transformative project by [becoming a backer or sponsor](https://github.com/sponsors/miroslavpejic85). By doing so, not only will your logo prominently feature here, but you'll also drive the growth and sustainability of MiroTalk BRO. Your support is vital in ensuring that this valuable platform continues to thrive and remain accessible for all. Make an impact – back MiroTalk BRO today and be part of this exciting journey!
 
 </details>
+
+<br />
 
 ---
 
-## Diving into Additional MiroTalk Projects:
+🌐 **Explore all MiroTalk projects:**
 
-<details>
-<summary>MiroTalk SFU</summary>
-
-<br>
-
-Try also [MiroTalk SFU](https://github.com/miroslavpejic85/mirotalksfu) `selective forwarding unit` real-time video conferences, optimized for large groups. `Unlimited time, unlimited concurrent rooms` each having 8+ participants, up to ~ 100 per single CPU.
-
-</details>
-
-<details>
-<summary>MiroTalk P2P</summary>
-
-<br/>
-
-Try also [MiroTalk P2P](https://github.com/miroslavpejic85/mirotalk) `peer to peer` real-time video conferences, optimized for small groups. `Unlimited time, unlimited concurrent rooms` each having 5-8 participants.
-
-</details>
-
-<details>
-<summary>MiroTalk C2C</summary>
-
-<br>
-
-Try also [MiroTalk C2C](https://github.com/miroslavpejic85/mirotalkc2c) `peer to peer` real-time video conferences, optimized for cam 2 cam. `Unlimited time, unlimited concurrent rooms` each having 2 participants.
-
-</details>
-
-<details>
-<summary>MiroTalk WEB</summary>
-
-<br>
-
-Try also [MiroTalk WEB](https://github.com/miroslavpejic85/mirotalkwebrtc) a platform that allows for the management of an `unlimited number of users`. Each user must register with their email, username, and password, after which they gain access to their `personal dashboard`. Within the dashboard, users can `manage their rooms and schedule meetings` using the desired version of MiroTalk on a specified date and time. Invitations to these meetings can be sent via email, shared through the web browser, or sent via SMS.
-
-</details>
-
----
-
----
+**[ → MiroTalk Overview](https://docs.mirotalk.com/overview/)**
 
 ![Star History Chart](https://app.repohistory.com/api/svg?repo=miroslavpejic85/mirotalkbro&type=Date&background=0D1117&color=62C3F8)
+
+<p align="center">
+  Built with ❤️ by <a href="https://www.linkedin.com/in/miroslav-pejic-976a07101/">Miroslav</a> and the open-source community
+</p>
