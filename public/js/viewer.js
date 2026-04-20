@@ -118,6 +118,7 @@ let sfuRecvTransport = null;
 let sfuSendTransport = null;
 let sfuConsumers = new Map(); // producerId -> consumer
 let sfuProducers = new Map(); // kind -> producer
+let sfuProducing = false; // guard to prevent concurrent viewer produce
 let sfuJoined = false; // guard to prevent double SFU join
 let isFirstConnect = true; // track first vs reconnect
 let isBroadcasterConnected = false; // track if broadcaster is present
@@ -412,6 +413,8 @@ socket.on('sfu-producerReplaced', async ({ oldProducerId, newProducerId, kind })
 });
 
 async function sfuProduceViewerStream() {
+    if (sfuProducing) return;
+    sfuProducing = true;
     try {
         if (!sfuSendTransport) {
             const transportParams = await sfuSocketRequest('sfu-createViewerSendTransport', {
@@ -460,6 +463,8 @@ async function sfuProduceViewerStream() {
         }
     } catch (error) {
         console.error('SFU viewer produce error', error);
+    } finally {
+        sfuProducing = false;
     }
 }
 
