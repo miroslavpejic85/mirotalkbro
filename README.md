@@ -1,3 +1,9 @@
+<div align="center">
+    <a href="https://bro.mirotalk.com" target="_blank">
+        <img src="public/assets/images/mirotalk-icon.png">
+    </a>
+</div>
+
 <h1 align="center">MiroTalk BRO</h1>
 
 <h3 align="center">WebRTC Live Broadcast enables real time video, audio, and screen streaming to all connected viewers</h3>
