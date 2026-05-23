@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.3.21
+ * @version 1.3.22
  */
 
 require('dotenv').config();
@@ -27,6 +27,8 @@ const ServerApi = require('./api');
 const yaml = require('js-yaml');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = yaml.load(fs.readFileSync(path.join(__dirname, '/api/swagger.yaml'), 'utf8'));
+
+const { applyEmbedHeaders, embedAllowedOrigins, embedCsp } = require('./middleware/embedHeaders');
 
 const packageJson = require('../package.json');
 
@@ -226,6 +228,7 @@ const html = {
 
 app.set('trust proxy', trustProxy); // Enables trust for proxy headers (e.g., X-Forwarded-For) based on the trustProxy setting
 app.use(helmet.noSniff()); // Enable content type sniffing prevention
+app.use(applyEmbedHeaders); // Apply iframe embedding restrictions (CSP frame-ancestors / X-Frame-Options)
 app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json()); // Api parse body data as json
@@ -559,6 +562,10 @@ async function ngrokStart() {
             oidc: OIDC.enabled ? OIDC : false,
             iceServers: iceServers,
             cors: corsOptions,
+            embed: {
+                allowedOrigins: embedAllowedOrigins.length ? embedAllowedOrigins : 'any',
+                csp: embedCsp ? embedCsp.csp : 'not set (embedding allowed from any origin)',
+            },
             ngrokHome: tunnelHttps,
             ngrokBroadcast: `${tunnelHttps}/${broadcast}`,
             ngrokViewer: `${tunnelHttps}/${viewer}`,
@@ -595,6 +602,10 @@ async function startServer() {
                 oidc: OIDC.enabled ? OIDC : false,
                 iceServers: iceServers,
                 cors: corsOptions,
+                embed: {
+                    allowedOrigins: embedAllowedOrigins.length ? embedAllowedOrigins : 'any',
+                    csp: embedCsp ? embedCsp.csp : 'not set (embedding allowed from any origin)',
+                },
                 home: host,
                 broadcast: `${host}/${broadcast}`,
                 viewer: `${host}/${viewer}`,
