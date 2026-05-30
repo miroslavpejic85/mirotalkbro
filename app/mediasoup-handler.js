@@ -196,7 +196,6 @@ const config = {
         ],
         initialAvailableOutgoingBitrate: 1000000,
         minimumAvailableOutgoingBitrate: 600000,
-        maxSctpMessageSize: 262144,
         maxIncomingBitrate: 1500000,
     },
 };
@@ -290,7 +289,6 @@ async function createWebRtcTransport(broadcastID) {
         enableTcp: true,
         preferUdp: true,
         initialAvailableOutgoingBitrate: config.webRtcTransport.initialAvailableOutgoingBitrate,
-        maxSctpMessageSize: config.webRtcTransport.maxSctpMessageSize,
     });
 
     if (config.webRtcTransport.maxIncomingBitrate) {
