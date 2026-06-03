@@ -1492,7 +1492,7 @@ audioOutputSelect.onchange = () => {
 
 audioOutputTestBtn.onclick = () => {
     applyAudioOutput(audioOutputSelect.value);
-    playSound('switch');
+    playSound('speaker');
 };
 
 getStream().then(getDevices).then(gotDevices);
