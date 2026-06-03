@@ -34,6 +34,7 @@ const viewerSettings = {
         message: true,
         pictureInPicture: true,
         qualitySelect: false,
+        settings: true,
         close: true,
     },
     options: {

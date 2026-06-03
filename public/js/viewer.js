@@ -41,6 +41,13 @@ const messageSend = document.getElementById('messageSend');
 const messagesClean = document.getElementById('messagesClean');
 const messagesSave = document.getElementById('messagesSave');
 
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsForm = document.getElementById('settingsForm');
+const settingsCloseBtn = document.getElementById('settingsCloseBtn');
+const audioOutputSection = document.getElementById('audioOutputSection');
+const audioOutputSelect = document.getElementById('audioOutputSelect');
+const audioOutputTestBtn = document.getElementById('audioOutputTestBtn');
+
 const userAgent = navigator.userAgent;
 const parser = new UAParser(userAgent);
 const result = parser.getResult();
@@ -86,6 +93,7 @@ function loadViewerToolTip() {
         { element: messagesBtn, text: 'Toggle messages', position: 'top' },
         { element: fullScreenOn, text: 'Enable full screen', position: 'top' },
         { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
+        { element: settingsBtn, text: 'Toggle settings', position: 'top' },
         { element: leave, text: 'Disconnect', position: 'top' },
     ];
 
@@ -96,6 +104,7 @@ function loadViewerToolTip() {
 
 let zoom = 1;
 let messagesFormOpen = false;
+let settingsFormOpen = false;
 let allViewerMessages = [];
 let recording = null;
 let recordingTimer = null;
@@ -670,6 +679,7 @@ elementDisplay(recordingStart, viewerSettings.buttons.recordingStart);
 elementDisplay(fullScreenOn, viewerSettings.buttons.fullScreenOn && isFullScreenSupported());
 elementDisplay(togglePIP, viewerSettings.buttons.pictureInPicture && isPIPSupported());
 elementDisplay(qualitySelect, viewerSettings.buttons.qualitySelect);
+elementDisplay(settingsBtn, viewerSettings.buttons.settings);
 elementDisplay(leave, viewerSettings.buttons.close);
 
 messageDisplay(viewerSettings.buttons.message);
@@ -685,6 +695,8 @@ if (viewerSettings.options.start_full_screen) {
     elementDisplay(viewerButtons, false);
     messagesForm.classList.remove('panel-open');
     messagesFormOpen = false;
+    settingsForm.classList.remove('panel-open');
+    settingsFormOpen = false;
 }
 
 // =====================================================
@@ -748,6 +760,99 @@ function cleanViewerMessages() {
     }
     popupMessage('toast', 'Messages', "There isn't messages to delete", 'top');
 }
+
+// =====================================================
+// Handle settings (audio output / speaker selection)
+// =====================================================
+
+settingsBtn.addEventListener('click', toggleSettings);
+settingsCloseBtn.addEventListener('click', toggleSettings);
+
+function toggleSettings() {
+    settingsFormOpen = !settingsFormOpen;
+    settingsForm.classList.toggle('panel-open', settingsFormOpen);
+}
+
+function supportsAudioOutputSelection() {
+    return typeof HTMLMediaElement !== 'undefined' && 'setSinkId' in HTMLMediaElement.prototype;
+}
+
+function setMediaSink(mediaElement, sinkId) {
+    if (!mediaElement || typeof mediaElement.setSinkId !== 'function') return;
+    mediaElement.setSinkId(sinkId).catch((error) => {
+        console.warn('Unable to set audio output device', error);
+    });
+}
+
+function applyAudioOutput(sinkId) {
+    if (!supportsAudioOutputSelection() || !sinkId) return;
+    window.selectedAudioOutputId = sinkId;
+    localStorage.audioOutputDeviceId = sinkId;
+    // Route the broadcaster's stream audio (main video) to the selected speaker.
+    // The viewer's own preview is muted, so it's intentionally skipped.
+    setMediaSink(video, sinkId);
+}
+
+function gotAudioOutputDevices(deviceInfos) {
+    if (!supportsAudioOutputSelection()) {
+        elementDisplay(audioOutputSection, false);
+        return;
+    }
+
+    audioOutputSelect.innerHTML = '';
+    for (const deviceInfo of deviceInfos) {
+        if (deviceInfo.kind !== 'audiooutput') continue;
+        const option = document.createElement('option');
+        option.value = deviceInfo.deviceId;
+        option.text = deviceInfo.label || `Speaker ${audioOutputSelect.length + 1}`;
+        audioOutputSelect.appendChild(option);
+    }
+
+    if (audioOutputSelect.options.length === 0) {
+        elementDisplay(audioOutputSection, false);
+        return;
+    }
+
+    if (localStorage.audioOutputDeviceId) {
+        const savedId = localStorage.audioOutputDeviceId;
+        const hasSaved = [...audioOutputSelect.options].some((option) => option.value === savedId);
+        if (hasSaved) {
+            audioOutputSelect.value = savedId;
+            applyAudioOutput(savedId);
+        }
+    }
+}
+
+function initAudioOutputSelection() {
+    if (!supportsAudioOutputSelection()) {
+        elementDisplay(settingsBtn, false);
+        elementDisplay(audioOutputSection, false);
+        return;
+    }
+
+    audioOutputSelect.onchange = () => applyAudioOutput(audioOutputSelect.value);
+
+    audioOutputTestBtn.onclick = () => {
+        applyAudioOutput(audioOutputSelect.value);
+        playSound('speaker');
+    };
+
+    navigator.mediaDevices
+        .enumerateDevices()
+        .then(gotAudioOutputDevices)
+        .catch((error) => console.warn('Unable to enumerate audio output devices', error));
+
+    if (navigator.mediaDevices && 'ondevicechange' in navigator.mediaDevices) {
+        navigator.mediaDevices.addEventListener('devicechange', () => {
+            navigator.mediaDevices
+                .enumerateDevices()
+                .then(gotAudioOutputDevices)
+                .catch((error) => console.warn('Unable to enumerate audio output devices', error));
+        });
+    }
+}
+
+initAudioOutputSelection();
 
 // =====================================================
 // Handle audio stream
@@ -878,6 +983,9 @@ function attachStream(stream) {
     video.playsInline = true;
     video.autoplay = true;
     video.controls = false;
+    if (window.selectedAudioOutputId) {
+        setMediaSink(video, window.selectedAudioOutputId);
+    }
 }
 
 async function getStream() {

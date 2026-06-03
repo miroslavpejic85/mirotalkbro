@@ -332,7 +332,7 @@
 .broadcast-audio-output {
     display: flex;
     align-items: center;
-    gap: var(--space-xs);
+    gap: var(--space-sm);
 }
 
 .broadcast-audio-output select {
@@ -340,7 +340,25 @@
 }
 
 .broadcast-audio-output button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
     flex-shrink: 0;
+}
+
+.broadcast-audio-output button:hover {
+    background: var(--accent-hover);
+    box-shadow: var(--shadow-md);
 }
 
 /* QR Container */

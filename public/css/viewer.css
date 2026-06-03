@@ -283,7 +283,109 @@
     transform: none;
 }
 
-.viewer select {
+/* ===================== Viewer Settings Panel ===================== */
+.viewer-settings {
+    width: 380px;
+    max-width: 100vw;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    background: var(--secondary-color);
+    border-left: var(--border);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+}
+
+.viewer-settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: var(--border);
+    background: var(--surface-color);
+}
+
+.viewer-settings-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.viewer-settings-info label {
+    font-size: var(--font-base);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--text-color);
+}
+
+.viewer-settings-info label i {
+    color: var(--accent-color);
+    font-size: var(--font-sm);
+}
+
+.viewer-settings-body {
+    padding: var(--space-md) var(--space-lg);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.viewer-settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.viewer-settings-label {
+    font-size: var(--font-sm);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--text-color);
+}
+
+.viewer-settings-label i {
+    color: var(--accent-color);
+}
+
+.viewer-audio-output {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.viewer-audio-output select {
+    flex: 1;
+}
+
+.viewer-audio-output button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.viewer-audio-output button:hover {
+    background: var(--accent-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.viewer select,
+.viewer-settings select {
     padding: var(--space-md);
     height: auto;
     min-height: 44px;
@@ -304,7 +406,9 @@
 }
 
 .viewer select:hover,
-.viewer select:focus {
+.viewer select:focus,
+.viewer-settings select:hover,
+.viewer-settings select:focus {
     border-color: var(--accent-color);
     outline: none;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);

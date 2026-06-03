@@ -62,6 +62,30 @@
                 <button id="fullScreenOn"><i class="fas fa-expand-alt"></i></button>
                 <button id="fullScreenOff"><i class="fas fa-compress-alt"></i></button>
                 <button id="qualitySelect"><i class="fas fa-sliders-h"></i></button>
+                <button id="settingsBtn"><i class="fa-solid fa-sliders"></i></button>
+            </div>
+        </div>
+        <div id="settingsForm" class="viewer-settings panel-drawer fadeIn">
+            <div class="viewer-settings-header">
+                <div class="viewer-settings-info">
+                    <label class="not-selectable"><i class="fa-solid fa-sliders"></i> Settings</label>
+                </div>
+                <div class="viewer-settings-buttons">
+                    <button id="settingsCloseBtn" class="panel-close-btn" title="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="viewer-settings-body">
+                <div id="audioOutputSection" class="viewer-settings-section">
+                    <label class="viewer-settings-label not-selectable">
+                        <i class="fas fa-volume-high"></i> Audio output
+                    </label>
+                    <div class="viewer-audio-output">
+                        <select id="audioOutputSelect"></select>
+                        <button id="audioOutputTestBtn" title="Test speaker"><i class="fas fa-play"></i></button>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="messagesForm" class="viewer-messages panel-drawer">
