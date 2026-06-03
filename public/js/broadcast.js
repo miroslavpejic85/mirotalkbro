@@ -471,16 +471,32 @@ socket.on('sfu-viewerProducer', async ({ viewerSocketId, producerId, kind, usern
         const existingViewer = document.getElementById(viewerSocketId);
         const existingVideoEl = existingViewer ? existingViewer.querySelector('video') : null;
 
-        if (existingVideoEl) {
-            // Viewer card already exists - rebuild MediaStream with all tracks
-            const existingTracks = existingVideoEl.srcObject ? [...existingVideoEl.srcObject.getTracks()] : [];
-            existingTracks.push(consumer.track);
-            existingVideoEl.srcObject = new MediaStream(existingTracks);
+        if (kind === 'audio') {
+            // Audio goes to the dedicated <audio> element (never display:none),
+            // so it keeps playing regardless of the viewer's camera state.
+            if (existingViewer) {
+                const audioEl = existingViewer.querySelector('audio');
+                if (audioEl) {
+                    audioEl.srcObject = new MediaStream([consumer.track]);
+                    audioEl.play().catch(() => {});
+                }
+                existingVideoEl?.closest('.viewer-card-body')?.classList.remove('video-loading');
+            } else {
+                addViewer(viewerSocketId, username);
+                const audioEl = document.getElementById(`${viewerSocketId}___${username}___viewerAudio`);
+                if (audioEl) {
+                    audioEl.srcObject = new MediaStream([consumer.track]);
+                    audioEl.play().catch(() => {});
+                }
+            }
+        } else if (existingVideoEl) {
+            // Viewer card already exists - attach the video track
+            existingVideoEl.srcObject = new MediaStream([consumer.track]);
             existingVideoEl.closest('.viewer-card-body')?.classList.remove('video-loading');
             existingVideoEl.play().catch(() => {});
 
             // If this is a video track that arrives paused, show the "off" image
-            if (kind === 'video' && producerPaused) {
+            if (producerPaused) {
                 const videoOffEl = existingViewer.querySelector('img');
                 if (videoOffEl) {
                     existingVideoEl.classList.add('hidden');
@@ -493,6 +509,19 @@ socket.on('sfu-viewerProducer', async ({ viewerSocketId, producerId, kind, usern
         }
     } catch (error) {
         console.error('Error consuming viewer producer', error);
+    }
+});
+
+// Handle a viewer producer being closed (viewer left or stopped a track).
+// Server emits this so the broadcaster can release the matching consumer.
+socket.on('sfu-producerClosed', ({ producerId }) => {
+    if (broadcastingMode !== 'sfu') return;
+    const consumer = sfuConsumers.get(producerId);
+    if (consumer) {
+        try {
+            consumer.close();
+        } catch (e) {}
+        sfuConsumers.delete(producerId);
     }
 });
 
@@ -567,24 +596,37 @@ async function sfuConsumeExistingViewerProducers() {
                 const existingVideoEl = existingViewer ? existingViewer.querySelector('video') : null;
                 const isActive = !producerPaused && !paused;
 
-                if (existingVideoEl) {
-                    const existingTracks = existingVideoEl.srcObject ? [...existingVideoEl.srcObject.getTracks()] : [];
-                    existingTracks.push(consumer.track);
-                    existingVideoEl.srcObject = new MediaStream(existingTracks);
+                if (kind === 'audio') {
+                    // Audio goes to the dedicated <audio> element (never display:none).
+                    if (existingViewer) {
+                        const audioEl = existingViewer.querySelector('audio');
+                        if (audioEl) {
+                            audioEl.srcObject = new MediaStream([consumer.track]);
+                            audioEl.play().catch(() => {});
+                        }
+                        existingVideoEl?.closest('.viewer-card-body')?.classList.remove('video-loading');
+                    } else {
+                        addViewer(viewerSocketId, username);
+                        const audioEl = document.getElementById(`${viewerSocketId}___${username}___viewerAudio`);
+                        if (audioEl) {
+                            audioEl.srcObject = new MediaStream([consumer.track]);
+                            audioEl.play().catch(() => {});
+                        }
+                    }
+                } else if (existingVideoEl) {
+                    existingVideoEl.srcObject = new MediaStream([consumer.track]);
                     existingVideoEl.closest('.viewer-card-body')?.classList.remove('video-loading');
                     existingVideoEl.play().catch(() => {});
 
-                    if (kind === 'video') {
-                        const videoOffEl = existingViewer.querySelector('img');
-                        if (isActive) {
-                            // Video is ON: show video, hide off image
-                            existingVideoEl.classList.remove('hidden');
-                            if (videoOffEl) videoOffEl.classList.add('hidden');
-                        } else {
-                            // Video is OFF: hide video, show off image
-                            existingVideoEl.classList.add('hidden');
-                            if (videoOffEl) videoOffEl.classList.remove('hidden');
-                        }
+                    const videoOffEl = existingViewer.querySelector('img');
+                    if (isActive) {
+                        // Video is ON: show video, hide off image
+                        existingVideoEl.classList.remove('hidden');
+                        if (videoOffEl) videoOffEl.classList.add('hidden');
+                    } else {
+                        // Video is OFF: hide video, show off image
+                        existingVideoEl.classList.add('hidden');
+                        if (videoOffEl) videoOffEl.classList.remove('hidden');
                     }
                 } else {
                     const stream = new MediaStream([consumer.track]);
@@ -1162,6 +1204,7 @@ function addViewer(id, username, stream = null) {
     const buttonDisconnect = document.createElement('button');
     const videoElement = document.createElement('video');
     const videoElementOff = document.createElement('img');
+    const audioElement = document.createElement('audio');
 
     card.id = id;
     card.className = 'viewer-card';
@@ -1196,9 +1239,18 @@ function addViewer(id, username, stream = null) {
     videoElement.style.cursor = 'pointer';
     videoElement.style.objectFit = 'cover';
 
+    // Dedicated audio element so audio playback is decoupled from video visibility.
+    Object.assign(audioElement, {
+        id: `${id}___${username}___viewerAudio`,
+        autoplay: true,
+        controls: false,
+    });
+    audioElement.style.display = 'none';
+
     // Route this viewer's audio to the selected speaker (if any)
     if (window.selectedAudioOutputId) {
         setMediaSink(videoElement, window.selectedAudioOutputId);
+        setMediaSink(audioElement, window.selectedAudioOutputId);
     }
 
     // In SFU mode with no stream yet, show "video off" image instead of loading poster
@@ -1212,6 +1264,7 @@ function addViewer(id, username, stream = null) {
 
     cardBody.appendChild(videoElement);
     cardBody.appendChild(videoElementOff);
+    cardBody.appendChild(audioElement);
 
     if (showAudio) {
         Object.assign(buttonAudio, {
@@ -1655,8 +1708,8 @@ function applyAudioOutput(sinkId) {
     localStorage.audioOutputDeviceId = sinkId;
     // Route every connected viewer's audio to the selected speaker.
     // The broadcaster's own preview is muted, so it's intentionally skipped.
-    viewersTable.querySelectorAll('video').forEach((viewerVideo) => {
-        setMediaSink(viewerVideo, sinkId);
+    viewersTable.querySelectorAll('video, audio').forEach((viewerMedia) => {
+        setMediaSink(viewerMedia, sinkId);
     });
 }
 
