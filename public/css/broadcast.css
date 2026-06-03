@@ -357,14 +357,9 @@
 }
 
 .broadcast-audio-output button:hover {
-    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
     background: var(--accent-color);
     color: #fff;
-}
-
-.broadcast-audio-output button:active {
-    transform: translateY(0);
 }
 
 /* QR Container */
