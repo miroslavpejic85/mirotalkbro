@@ -369,8 +369,8 @@
     width: 44px;
     height: 44px;
     padding: 0;
-    background: var(--accent-color);
-    color: white;
+    background: var(--surface-color);
+    color: var(--text-color);
     border: none;
     border-radius: var(--border-radius);
     font-size: var(--font-sm);
@@ -380,8 +380,14 @@
 }
 
 .viewer-audio-output button:hover {
-    background: var(--accent-hover);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    background: var(--accent-color);
+    color: #fff;
+}
+
+.viewer-audio-output button:active {
+    transform: translateY(0);
 }
 
 .viewer select,
