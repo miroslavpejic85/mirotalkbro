@@ -329,6 +329,20 @@
     width: 50%;
 }
 
+.broadcast-audio-output {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.broadcast-audio-output select {
+    flex: 1;
+}
+
+.broadcast-audio-output button {
+    flex-shrink: 0;
+}
+
 /* QR Container */
 .qrRoomContainer {
     display: flex;

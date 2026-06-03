@@ -425,6 +425,13 @@ async function playSound(name) {
     const audioToPlay = new Audio(sound);
     try {
         audioToPlay.volume = 0.5;
+        if (window.selectedAudioOutputId && typeof audioToPlay.setSinkId === 'function') {
+            try {
+                await audioToPlay.setSinkId(window.selectedAudioOutputId);
+            } catch (e) {
+                console.warn('Unable to set audio output device for sound', e);
+            }
+        }
         await audioToPlay.play();
     } catch (e) {
         return false;

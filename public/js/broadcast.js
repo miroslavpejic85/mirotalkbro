@@ -69,6 +69,9 @@ const videoSelect = document.getElementById('videoSelect');
 const videoQualitySelect = document.getElementById('videoQualitySelect');
 const videoFpsSelect = document.getElementById('videoFpsSelect');
 const audioSelect = document.getElementById('audioSelect');
+const audioOutputSelect = document.getElementById('audioOutputSelect');
+const audioOutputSection = document.getElementById('audioOutputSection');
+const audioOutputTestBtn = document.getElementById('audioOutputTestBtn');
 
 const userAgent = navigator.userAgent;
 const parser = new UAParser(userAgent);
@@ -1193,6 +1196,11 @@ function addViewer(id, username, stream = null) {
     videoElement.style.cursor = 'pointer';
     videoElement.style.objectFit = 'cover';
 
+    // Route this viewer's audio to the selected speaker (if any)
+    if (window.selectedAudioOutputId) {
+        setMediaSink(videoElement, window.selectedAudioOutputId);
+    }
+
     // In SFU mode with no stream yet, show "video off" image instead of loading poster
     if (sfuMode && !stream) {
         videoElement.classList.add('hidden');
@@ -1258,7 +1266,6 @@ function addViewer(id, username, stream = null) {
     card.appendChild(cardFooter);
 
     viewersTable.appendChild(card);
-
     handleAudioPeer(buttonAudio.id);
     handleDisconnectPeer(buttonDisconnect.id);
     handleVideoPeer(buttonVideo.id);
@@ -1479,6 +1486,15 @@ function getVideoConstraints() {
 audioSelect.onchange = getStream;
 videoSelect.onchange = getStream;
 
+audioOutputSelect.onchange = () => {
+    applyAudioOutput(audioOutputSelect.value);
+};
+
+audioOutputTestBtn.onclick = () => {
+    applyAudioOutput(audioOutputSelect.value);
+    playSound('switch');
+};
+
 getStream().then(getDevices).then(gotDevices);
 
 function getStream() {
@@ -1615,6 +1631,33 @@ function attachStream(stream) {
     video.volume = 0;
     video.controls = false;
     video.closest('.container')?.classList.remove('video-loading');
+    applyAudioOutput(audioOutputSelect.value);
+}
+
+// =====================================================
+// Handle audio output (speaker) selection
+// =====================================================
+
+function supportsAudioOutputSelection() {
+    return typeof HTMLMediaElement !== 'undefined' && 'setSinkId' in HTMLMediaElement.prototype;
+}
+
+function setMediaSink(mediaElement, sinkId) {
+    if (!mediaElement || typeof mediaElement.setSinkId !== 'function') return;
+    mediaElement.setSinkId(sinkId).catch((error) => {
+        console.warn('Unable to set audio output device', error);
+    });
+}
+
+function applyAudioOutput(sinkId) {
+    if (!supportsAudioOutputSelection() || !sinkId) return;
+    window.selectedAudioOutputId = sinkId;
+    localStorage.audioOutputDeviceId = sinkId;
+    // Route every connected viewer's audio to the selected speaker.
+    // The broadcaster's own preview is muted, so it's intentionally skipped.
+    viewersTable.querySelectorAll('video').forEach((viewerVideo) => {
+        setMediaSink(viewerVideo, sinkId);
+    });
 }
 
 function handleMediaDeviceError(error) {
@@ -1632,7 +1675,19 @@ function getDevices() {
 
 function gotDevices(deviceInfos) {
     window.deviceInfos = deviceInfos;
+
+    if (!supportsAudioOutputSelection() && audioOutputSection) {
+        audioOutputSection.style.display = 'none';
+    }
+
     for (const deviceInfo of deviceInfos) {
+        if (deviceInfo.kind === 'audiooutput') {
+            const option = document.createElement('option');
+            option.value = deviceInfo.deviceId;
+            option.text = deviceInfo.label || `Speaker ${audioOutputSelect.length + 1}`;
+            audioOutputSelect.appendChild(option);
+            continue;
+        }
         if (deviceInfo.deviceId !== 'default') {
             const option = document.createElement('option');
             option.value = deviceInfo.deviceId;
@@ -1643,6 +1698,15 @@ function gotDevices(deviceInfos) {
                 option.text = deviceInfo.label || `Camera ${videoSelect.length + 1}`;
                 videoSelect.appendChild(option);
             }
+        }
+    }
+
+    if (supportsAudioOutputSelection() && localStorage.audioOutputDeviceId) {
+        const savedId = localStorage.audioOutputDeviceId;
+        const hasSaved = [...audioOutputSelect.options].some((option) => option.value === savedId);
+        if (hasSaved) {
+            audioOutputSelect.value = savedId;
+            applyAudioOutput(savedId);
         }
     }
 }
