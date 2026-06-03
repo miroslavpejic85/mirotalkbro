@@ -110,6 +110,7 @@ myName.innerText = username;
 let peerConnection;
 let dataChannel;
 let viewerStream;
+let videoSender = null; // P2P: RTCRtpSender for the viewer's video track
 let broadcastingMode = 'p2p'; // Will be set by server
 
 // SFU mode state
@@ -197,7 +198,10 @@ socket.on('offer', async (id, description, iceServers) => {
     };
 
     if (viewerStream) {
-        viewerStream.getTracks().forEach((track) => peerConnection.addTrack(track, viewerStream));
+        viewerStream.getTracks().forEach((track) => {
+            const sender = peerConnection.addTrack(track, viewerStream);
+            if (track.kind === 'video') videoSender = sender;
+        });
     }
 
     peerConnection.ontrack = (event) => {
@@ -822,6 +826,14 @@ function toggleVideo() {
                 sfuSocketRequest('sfu-pauseProducer', { broadcastID, producerId: videoProducer.id }).catch(() => {});
             }
         }
+    }
+
+    // In P2P mode, replace the outgoing video track with null when the camera is off
+    if (broadcastingMode === 'p2p' && videoSender) {
+        const videoTrack = viewerStream.getVideoTracks()[0];
+        !enabled
+            ? videoSender.replaceTrack(videoTrack).catch(handleError)
+            : videoSender.replaceTrack(null).catch(handleError);
     }
 
     // Only send status to broadcaster after we've joined
