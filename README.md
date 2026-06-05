@@ -35,7 +35,7 @@
 
 <p align="center">
     <a href="https://bro.mirotalk.com">
-        <img src="public/assets/images/ui.png" alt="MiroTalk BRO - WebRTC Live Broadcast">
+        <img src="public/assets/images/mirotalk-bro.gif" alt="MiroTalk BRO - WebRTC Live Broadcast">
     </a>
 </p>
 
