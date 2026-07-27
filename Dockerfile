@@ -1,5 +1,5 @@
 # Build stage - compile mediasoup worker and bundle mediasoup-client
-FROM node:22-slim AS build
+FROM node:24-slim AS build
 
 WORKDIR /src
 
@@ -25,7 +25,7 @@ RUN npm ci --silent \
     && npm cache clean --force
 
 # Production stage - minimal runtime image
-FROM node:22-slim
+FROM node:24-slim
 
 WORKDIR /src
 
