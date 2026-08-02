@@ -67,9 +67,12 @@
     border-radius: var(--border-radius-sm);
 }
 
+.broadcast-header-buttons button#goHome {
+    color: var(--danger-color);
+}
+
 .broadcast-header-buttons button:hover {
     background: var(--surface-hover);
-    color: var(--danger-color);
     box-shadow: none;
     transform: none;
 }
@@ -179,7 +182,7 @@
     border: none;
     border-radius: var(--border-radius-sm);
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--danger-color);
     cursor: pointer;
     transition: all var(--transition-fast);
 }

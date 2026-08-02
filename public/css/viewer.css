@@ -50,9 +50,12 @@
     border-radius: var(--border-radius-sm);
 }
 
+.viewer-header-buttons button#leave {
+    color: var(--danger-color);
+}
+
 .viewer-header-buttons button:hover {
     background: var(--surface-hover);
-    color: var(--danger-color);
     box-shadow: none;
     transform: none;
 }
