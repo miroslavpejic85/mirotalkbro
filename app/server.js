@@ -8,11 +8,12 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.3.51
+ * @version 1.3.52
  */
 
 require('dotenv').config();
 
+const crypto = require('crypto');
 const httpolyglot = require('httpolyglot');
 const { auth, requiresAuth } = require('express-openid-connect');
 const compression = require('compression');
@@ -95,6 +96,10 @@ if (sentryEnabled && typeof sentryDSN === 'string' && sentryDSN.trim()) {
 // Server
 const port = process.env.PORT || 3016;
 const host = process.env.HOST || `http://localhost:${port}`;
+
+// Admin-only broadcasting restriction
+const adminOnlyBroadcast = getEnvBoolean(process.env.ADMIN_ONLY_BROADCAST);
+const adminToken = process.env.ADMIN_TOKEN || 'mirotalkbro_default_admin_token';
 
 // API
 const apiKeySecret = process.env.API_KEY_SECRET || 'mirotalkbro_default_secret';
@@ -361,8 +366,12 @@ app.get('/home', (req, res) => {
 
 app.get('/broadcast', OIDCAuth, (req, res) => {
     //http://localhost:3016/broadcast?id=123&name=broadcaster
-    const { id, name } = req.query;
-    return Object.keys(req.query).length > 0 && id && name ? res.sendFile(html.broadcast) : notFound(res);
+    const { id, name, token } = req.query;
+    if (!id || !name) return notFound(res);
+    if (adminOnlyBroadcast && !isValidAdminToken(token)) {
+        return res.redirect(`/viewer?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`);
+    }
+    return res.sendFile(html.broadcast);
 });
 
 app.get('/viewer', (req, res) => {
@@ -395,9 +404,9 @@ app.post(`${apiBasePath}/join`, (req, res) => {
     });
 });
 
-// Expose broadcasting mode to clients
+// Expose broadcasting mode and admin flag to clients
 app.get('/api/v1/config', (req, res) => {
-    res.json({ broadcastingMode });
+    res.json({ broadcastingMode, adminOnlyBroadcast });
 });
 
 app.use((req, res) => {
@@ -419,7 +428,11 @@ io.sockets.on('connection', (socket) => {
         sfuHandler.handleSfuConnection(socket, io, broadcasters, viewers);
 
         // SFU still needs broadcaster/viewer registration for room management
-        socket.on('broadcaster', (broadcastID) => {
+        socket.on('broadcaster', (broadcastID, token) => {
+            if (adminOnlyBroadcast && !isValidAdminToken(token)) {
+                socket.emit('broadcasterRejected', 'Unauthorized: invalid admin token');
+                return;
+            }
             handleBroadcaster(socket, broadcastID);
         });
         socket.on('viewer', (broadcastID, username) => {
@@ -427,7 +440,11 @@ io.sockets.on('connection', (socket) => {
         });
     } else {
         // P2P mode: original mesh signaling
-        socket.on('broadcaster', (broadcastID) => {
+        socket.on('broadcaster', (broadcastID, token) => {
+            if (adminOnlyBroadcast && !isValidAdminToken(token)) {
+                socket.emit('broadcasterRejected', 'Unauthorized: invalid admin token');
+                return;
+            }
             handleBroadcaster(socket, broadcastID);
         });
         socket.on('viewer', (broadcastID, username) => {
@@ -545,6 +562,13 @@ function sendToBroadcasterViewers(socket, broadcastID, message) {
     for (let id in viewers) {
         if (viewers[id]['broadcastID'] == broadcastID) socket.to(id).emit(message);
     }
+}
+
+// HMAC-based constant-time token comparison (avoids length and timing leaks)
+function isValidAdminToken(provided) {
+    if (typeof provided !== 'string') return false;
+    const hmac = (val) => crypto.createHmac('sha256', 'token-cmp').update(val).digest();
+    return crypto.timingSafeEqual(hmac(provided), hmac(adminToken));
 }
 
 function getEnvBoolean(key, force_true_if_undefined = false) {

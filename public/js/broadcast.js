@@ -2,6 +2,7 @@
 
 const broadcastID = new URLSearchParams(window.location.search).get('id');
 const username = new URLSearchParams(window.location.search).get('name');
+const adminToken = new URLSearchParams(window.location.search).get('token') || '';
 const roomURL = window.location.origin + '/home?id=' + broadcastID;
 
 console.log('Broadcaster', {
@@ -191,6 +192,13 @@ const reconnectingOverlay = document.getElementById('reconnectingOverlay');
 socket.on('disconnect', () => {
     console.log('Socket disconnected, waiting for reconnect...');
     if (reconnectingOverlay) reconnectingOverlay.classList.add('active');
+});
+
+socket.on('broadcasterRejected', (reason) => {
+    popupMessage('error', 'Unauthorized', reason);
+    setTimeout(() => {
+        window.location.href = `/viewer?id=${broadcastID}&name=${username}`;
+    }, 3000);
 });
 
 // Server tells us which mode to use
@@ -1614,7 +1622,7 @@ function gotStream(stream) {
     if (broadcastingMode === 'sfu') {
         sfuStartBroadcast(stream);
     } else {
-        socket.emit('broadcaster', broadcastID);
+        socket.emit('broadcaster', broadcastID, adminToken);
     }
 }
 
@@ -1632,7 +1640,7 @@ function gotScreenStream(stream) {
     if (broadcastingMode === 'sfu') {
         sfuStartBroadcast(newStream);
     } else {
-        socket.emit('broadcaster', broadcastID);
+        socket.emit('broadcaster', broadcastID, adminToken);
     }
 }
 
@@ -1645,7 +1653,7 @@ async function sfuStartBroadcast(stream) {
             await sfuCreateSendTransport(broadcastID);
         }
         await sfuProduceStream(stream);
-        socket.emit('broadcaster', broadcastID);
+        socket.emit('broadcaster', broadcastID, adminToken);
     } catch (error) {
         console.error('SFU broadcast error', error);
         popupMessage('warning', 'SFU Error', 'Failed to start SFU broadcast: ' + error.message);

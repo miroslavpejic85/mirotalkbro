@@ -4,6 +4,18 @@ console.log('Home', window.location);
 
 const broadcastID = new URLSearchParams(window.location.search).get('id');
 
+let adminOnlyBroadcast = false;
+
+(async () => {
+    try {
+        const res = await fetch('/api/v1/config');
+        const cfg = await res.json();
+        adminOnlyBroadcast = !!cfg.adminOnlyBroadcast;
+    } catch (e) {
+        console.error('Failed to load server config', e);
+    }
+})();
+
 const body = document.querySelector('body');
 
 const supportDiv = document.getElementById('supportDiv');
@@ -87,8 +99,24 @@ function setRandomName() {
 
 broadcaster.addEventListener('click', startBroadcaster);
 
-function startBroadcaster() {
-    if (isFieldsOk()) window.location.href = `/broadcast?id=${broadcasterId.value}&name=${userName.value}`;
+async function startBroadcaster() {
+    if (!isFieldsOk()) return;
+    if (adminOnlyBroadcast) {
+        const { value: token, isConfirmed } = await Swal.fire({
+            title: 'Admin token required',
+            input: 'password',
+            inputPlaceholder: 'Enter admin token',
+            inputAttributes: { autocomplete: 'current-password' },
+            showCancelButton: true,
+            confirmButtonText: 'Join',
+            showClass: { popup: 'animate__animated animate__fadeInDown' },
+            hideClass: { popup: 'animate__animated animate__fadeOutUp' },
+        });
+        if (!isConfirmed || !token) return;
+        window.location.href = `/broadcast?id=${broadcasterId.value}&name=${userName.value}&token=${encodeURIComponent(token)}`;
+    } else {
+        window.location.href = `/broadcast?id=${broadcasterId.value}&name=${userName.value}`;
+    }
 }
 
 // =====================================================
