@@ -1,5 +1,13 @@
 'use strict';
 
+const homePage = {
+    buttons: {
+        broadcast: true,
+        viewer: true,
+    },
+    support: { enabled: true, url: 'https://docs.mirotalk.com/about' },
+};
+
 const broadcastSettings = {
     buttons: {
         copyRoom: true,
@@ -59,8 +67,4 @@ const simulcast = {
     codecOptions: {
         videoGoogleStartBitrate: 1000,
     },
-};
-
-const html = {
-    support: { enabled: true, url: 'https://docs.mirotalk.com/about' },
 };

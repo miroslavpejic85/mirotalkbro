@@ -29,6 +29,7 @@ const broadcasterIdWrapper = document.getElementById('broadcasterIdWrapper');
 const broadcasterIdRandom = document.getElementById('broadcasterIdRandom');
 const broadcasterLabel = document.getElementById('broadcasterLabel');
 const broadcaster = document.getElementById('broadcaster');
+const viewerLabel = document.getElementById('viewerLabel');
 const viewer = document.getElementById('viewer');
 const mode = document.getElementById('mode');
 
@@ -50,7 +51,7 @@ if (broadcastID) {
 support.addEventListener('click', getSupport);
 
 function getSupport() {
-    openURL(html.support.url, true);
+    openURL(homePage.support.url, true);
 }
 
 // =====================================================
@@ -169,5 +170,14 @@ function isFieldsOk() {
 // Hide Elements
 // =====================================================
 
-!html.support.enabled && elementDisplay(supportDiv, false);
+!homePage.support.enabled && elementDisplay(supportDiv, false);
+
+if (!homePage.buttons.broadcast) {
+    elementDisplay(broadcasterLabel, false);
+    elementDisplay(broadcaster, false);
+}
+if (!homePage.buttons.viewer) {
+    elementDisplay(viewerLabel, false);
+    elementDisplay(viewer, false);
+}
 //...
