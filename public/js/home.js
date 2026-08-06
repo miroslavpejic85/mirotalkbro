@@ -105,6 +105,8 @@ async function startBroadcaster() {
     if (adminOnlyBroadcast) {
         const { value: token, isConfirmed } = await Swal.fire({
             title: 'Admin token required',
+            icon: 'warning',
+            iconHtml: '<i class="fas fa-shield-halved"></i>',
             input: 'password',
             inputPlaceholder: 'Enter admin token',
             inputAttributes: { autocomplete: 'current-password' },
