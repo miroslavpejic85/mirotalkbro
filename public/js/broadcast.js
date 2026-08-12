@@ -422,19 +422,19 @@ async function sfuProduceStream(stream) {
 
     if (videoTrack) {
         const isScreenShare = screenShareEnabled;
+        // Applied on every track so it survives replaceTrack (camera <-> screen).
+        applySfuContentHint(videoTrack, isScreenShare);
+
         const existingVideo = sfuProducers.get('video');
         if (existingVideo && !existingVideo.closed) {
             // Replace track on existing producer (e.g. camera -> screen share)
             await existingVideo.replaceTrack({ track: videoTrack });
+            await applySfuDegradationPreference(existingVideo);
         } else {
             if (existingVideo) {
                 existingVideo.close();
                 sfuProducers.delete('video');
             }
-            // Hint the encoder about the feed type (presentation vs. camera).
-            try {
-                videoTrack.contentHint = isScreenShare ? sfuTuning.contentHint.screen : sfuTuning.contentHint.camera;
-            } catch (e) {}
             const produceOptions = {
                 track: videoTrack,
             };
@@ -444,17 +444,7 @@ async function sfuProduceStream(stream) {
             }
             const videoProducer = await sfuSendTransport.produce(produceOptions);
             sfuProducers.set('video', videoProducer);
-            // Under bandwidth pressure, prefer dropping frame rate over resolution
-            // so presentation text stays readable.
-            if (sfuTuning.degradationPreference && videoProducer.rtpSender) {
-                try {
-                    const params = videoProducer.rtpSender.getParameters();
-                    params.degradationPreference = sfuTuning.degradationPreference;
-                    await videoProducer.rtpSender.setParameters(params);
-                } catch (error) {
-                    console.warn('Unable to set SFU degradationPreference', error);
-                }
-            }
+            await applySfuDegradationPreference(videoProducer);
             videoProducer.on('transportclose', () => {
                 sfuProducers.delete('video');
             });

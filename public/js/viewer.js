@@ -364,17 +364,7 @@ async function sfuConsumeProducer(producerId, kind) {
         });
 
         // Enlarge the receiver playout buffer for smoother playback under loss.
-        if (
-            sfuTuning.viewerJitterBufferTarget &&
-            consumer.rtpReceiver &&
-            'jitterBufferTarget' in consumer.rtpReceiver
-        ) {
-            try {
-                consumer.rtpReceiver.jitterBufferTarget = sfuTuning.viewerJitterBufferTarget;
-            } catch (error) {
-                console.warn('Unable to set SFU jitter buffer target', error);
-            }
-        }
+        applySfuJitterBuffer(consumer);
 
         sfuConsumers.set(producerId, consumer);
 
@@ -486,12 +476,18 @@ async function sfuProduceViewerStream() {
         const videoTrack = viewerStream.getVideoTracks()[0];
 
         if (audioTrack && !sfuProducers.has('audio')) {
-            const producer = await sfuSendTransport.produce({ track: audioTrack });
+            const producer = await sfuSendTransport.produce({
+                track: audioTrack,
+                codecOptions: sfuTuning.audioCodecOptions,
+            });
             sfuProducers.set('audio', producer);
         }
         if (videoTrack && !sfuProducers.has('video')) {
+            // Viewer upstream is a webcam feed.
+            applySfuContentHint(videoTrack, false);
             const producer = await sfuSendTransport.produce({ track: videoTrack });
             sfuProducers.set('video', producer);
+            await applySfuDegradationPreference(producer);
         }
     } catch (error) {
         console.error('SFU viewer produce error', error);

@@ -437,3 +437,32 @@ async function playSound(name) {
         return false;
     }
 }
+
+function applySfuContentHint(track, isScreenShare = false) {
+    try {
+        track.contentHint = isScreenShare ? sfuTuning.contentHint.screen : sfuTuning.contentHint.camera;
+    } catch (e) {}
+}
+
+async function applySfuDegradationPreference(producer) {
+    if (!sfuTuning.degradationPreference || !producer || !producer.rtpSender) return;
+    try {
+        const params = producer.rtpSender.getParameters();
+        params.degradationPreference = sfuTuning.degradationPreference;
+        await producer.rtpSender.setParameters(params);
+    } catch (error) {
+        console.warn('Unable to set SFU degradationPreference', error);
+    }
+}
+
+function applySfuJitterBuffer(consumer) {
+    if (!sfuTuning.viewerJitterBufferTarget) return;
+    const receiver = consumer && consumer.rtpReceiver;
+    if (receiver && 'jitterBufferTarget' in receiver) {
+        try {
+            receiver.jitterBufferTarget = sfuTuning.viewerJitterBufferTarget;
+        } catch (error) {
+            console.warn('Unable to set SFU jitter buffer target', error);
+        }
+    }
+}
