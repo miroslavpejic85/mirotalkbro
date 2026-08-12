@@ -466,3 +466,47 @@ function applySfuJitterBuffer(consumer) {
         }
     }
 }
+
+/**
+ * Diagnostic: reads the tuning actually applied to live producers/consumers.
+ * Run from the browser DevTools console: logSfuTuning()
+ */
+function logSfuTuning() {
+    console.group('%cSFU Tuning', 'color:#2196f3;font-weight:bold');
+    console.log('configured sfuTuning:', sfuTuning);
+
+    if (typeof sfuProducers !== 'undefined') {
+        for (const [key, producer] of sfuProducers) {
+            if (!producer || producer.closed) continue;
+            const codec = producer.rtpParameters?.codecs?.[0];
+            const info = {
+                key,
+                id: producer.id,
+                kind: producer.kind,
+                contentHint: producer.track?.contentHint || '(default)',
+                degradationPreference: producer.rtpSender?.getParameters?.().degradationPreference || '(default)',
+                codec: codec?.mimeType,
+            };
+            if (producer.kind === 'audio' && codec) {
+                info.opusFec = codec.parameters?.useinbandfec === 1;
+                info.opusDtx = codec.parameters?.usedtx === 1;
+                info.opusNack = (codec.rtcpFeedback || []).some((fb) => fb.type === 'nack');
+            }
+            console.log('producer:', info);
+        }
+    }
+
+    if (typeof sfuConsumers !== 'undefined') {
+        for (const [producerId, consumer] of sfuConsumers) {
+            if (!consumer || consumer.closed) continue;
+            const receiver = consumer.rtpReceiver;
+            console.log('consumer:', {
+                producerId,
+                kind: consumer.kind,
+                jitterBufferTarget:
+                    receiver && 'jitterBufferTarget' in receiver ? receiver.jitterBufferTarget : '(unsupported)',
+            });
+        }
+    }
+    console.groupEnd();
+}
