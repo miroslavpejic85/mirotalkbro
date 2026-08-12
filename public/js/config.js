@@ -54,9 +54,11 @@ const viewerSettings = {
     },
 };
 
-// Simulcast encodings for video producers (broadcaster & viewer)
-// Each layer defines a spatial layer with rid, max bitrate, and scale-down factor.
-// The SFU can forward different layers to different consumers based on bandwidth.
+/**
+ * Simulcast encodings for video producers (broadcaster & viewer)
+ * Each layer defines a spatial layer with rid, max bitrate, and scale-down factor.
+ * The SFU can forward different layers to different consumers based on bandwidth.
+ */
 const simulcast = {
     enabled: true,
     encodings: [
@@ -67,4 +69,46 @@ const simulcast = {
     codecOptions: {
         videoGoogleStartBitrate: 1000,
     },
+};
+
+/**
+ * SFU broadcast tuning (mediasoup-client, applied browser-side).
+ * Tuned for one-way BRO broadcasting over variable uplinks where continuous
+ * playback and readable presentation content matter more than low latency
+ */
+const sfuTuning = {
+    /**
+     * Receiver-side playout buffer (ms) for viewers consuming the broadcaster.
+     * 0 disables the override (interactive default). Larger = smoother under loss.
+     * - 500–1000 ms  — good uplinks, keeps latency low, absorbs minor jitter. Best if any near-real-time interaction (Q&A, chat reactions) matters.
+     * - 1500–2000 ms — solid default for a variable uplink with observable packet loss. Best all-round choice for one-way webinars/presentations.
+     * - 3000–4000 ms — very lossy/unstable uplinks where continuity is everything and latency is irrelevant (e.g. pure playback).
+     */
+    viewerJitterBufferTarget: 800,
+    // Opus resilience on the broadcaster audio producer.
+    audioCodecOptions: {
+        opusFec: true, // in-band forward error correction
+        opusNack: true, // retransmission of lost packets
+        opusPtime: 20,
+        opusMaxAverageBitrate: 48000,
+        opusDtx: false, // keep audio continuous (no discontinuous transmission)
+    },
+    /**
+     * Video track content hint for the broadcaster.
+     * - 'motion' — best for live camera / moving footage: keeps frame rate smooth, sacrifices per-frame detail under bandwidth pressure.
+     * - 'detail' — best for mixed slides + camera / graphics: keeps resolution sharp, drops frame rate first so images stay clear.
+     * - 'text'   — best for pure slides / code / documents: maximum sharpness, lowest frame rate, prioritizes readable static content.
+     */
+    contentHint: {
+        camera: 'motion',
+        screen: 'detail',
+    },
+    /**
+     * Optional explicit sender degradation override (mostly subsumed by contentHint).
+     * - 'maintain-resolution' — best for slides / text / graphics: under bandwidth pressure drops frame rate, keeps content readable.
+     * - 'maintain-framerate'  — best for live camera / motion: keeps playback smooth, lowers resolution when bandwidth is tight.
+     * - 'balanced'            — best for mixed content: trades off resolution and frame rate together.
+     * - null                  — leave the browser/contentHint default (no override).
+     */
+    degradationPreference: 'balanced',
 };

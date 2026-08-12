@@ -355,7 +355,26 @@ async function sfuConsumeProducer(producerId, kind) {
             producerId,
             kind,
             rtpParameters,
+            /**
+             * Shared streamId groups broadcaster audio+video into one remote
+             * MediaStream so the browser can lip-sync them (needed with a large
+             * jitter buffer).
+             */
+            streamId: `broadcaster-${broadcastID}`,
         });
+
+        // Enlarge the receiver playout buffer for smoother playback under loss.
+        if (
+            sfuTuning.viewerJitterBufferTarget &&
+            consumer.rtpReceiver &&
+            'jitterBufferTarget' in consumer.rtpReceiver
+        ) {
+            try {
+                consumer.rtpReceiver.jitterBufferTarget = sfuTuning.viewerJitterBufferTarget;
+            } catch (error) {
+                console.warn('Unable to set SFU jitter buffer target', error);
+            }
+        }
 
         sfuConsumers.set(producerId, consumer);
 
