@@ -4,7 +4,7 @@
     --home-accent: var(--accent-color);
     --home-accent-hover: var(--accent-hover);
     min-height: 100vh;
-    padding: clamp(20px, 4vw, 56px);
+    padding: 16px;
     display: grid;
     place-items: center;
     background:
@@ -21,8 +21,8 @@
 }
 
 .home-shell {
-    width: min(1120px, 100%);
-    min-height: min(720px, calc(100vh - 80px));
+    width: min(1280px, 100%);
+    min-height: min(760px, calc(100vh - 32px));
     display: grid;
     grid-template-columns: minmax(0, 1.08fr) minmax(390px, 0.92fr);
     overflow: hidden;
@@ -71,7 +71,7 @@
 }
 
 .intro-copy {
-    margin: auto 0 36px;
+    margin: 106px 0 0;
     max-width: 520px;
 }
 
@@ -100,14 +100,14 @@
 
 .home-intro h1 {
     margin-top: 18px;
-    font-size: clamp(2.65rem, 5.2vw, 4.7rem);
+    font-size: clamp(2.65rem, 5vw, 4rem);
     font-weight: 600;
     line-height: 0.98;
     letter-spacing: 0;
 }
 
 .intro-text {
-    margin-top: 24px;
+    margin-top: 20px;
     max-width: 470px;
     color: var(--text-secondary);
     font-size: 1rem;
@@ -115,7 +115,7 @@
 }
 
 .feature-list {
-    margin-top: 28px;
+    margin-top: 24px;
     display: flex;
     flex-wrap: wrap;
     gap: 14px 22px;
@@ -140,7 +140,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 22px;
+    gap: 18px;
     color: var(--text-color);
     background: var(--secondary-color);
 }
@@ -159,13 +159,13 @@
 }
 
 .home-panel h2 {
-    font-size: clamp(1.65rem, 3vw, 2.15rem);
+    font-size: clamp(1.65rem, 3vw, 2.3rem);
     font-weight: 600;
     line-height: 1.15;
     letter-spacing: 0;
 }
 
-.support button {
+.about button {
     width: 38px;
     height: 38px;
     padding: 0;
@@ -175,11 +175,17 @@
     box-shadow: none;
 }
 
-.support button:hover {
+.about button:hover {
     color: var(--home-accent);
     background: var(--surface-hover);
     box-shadow: none;
     transform: none;
+}
+
+.copyright {
+    margin-top: auto;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
 }
 
 .field-group {
@@ -213,7 +219,7 @@
 
 .input-wrapper input {
     width: 100%;
-    min-height: 50px;
+    min-height: 52px;
     padding: 12px 48px 12px 14px;
     color: var(--text-color);
     background: var(--primary-color);
@@ -239,8 +245,8 @@
     position: absolute;
     top: 6px;
     right: 6px;
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     color: var(--text-secondary);
     background: transparent;
@@ -268,7 +274,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px 16px;
-    padding-top: 22px;
+    padding-top: 18px;
     border-top: var(--border);
 }
 
@@ -309,7 +315,7 @@
 
 .role-actions button {
     min-width: 136px;
-    min-height: 42px;
+    min-height: 44px;
     padding: 10px 14px;
     border-radius: 6px;
     box-shadow: none;
@@ -346,7 +352,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding-top: 18px;
+    padding-top: 16px;
     border-top: var(--border);
 }
 

@@ -2,11 +2,15 @@
 
 const homePage = {
     appName: 'MiroTalk BRO',
+    showCopyright: true,
+    about: {
+        show: true,
+        url: 'https://docs.mirotalk.com/about',
+    },
     buttons: {
         broadcast: true,
         viewer: true,
     },
-    support: { enabled: true, url: 'https://docs.mirotalk.com/about' },
 };
 
 const broadcastSettings = {

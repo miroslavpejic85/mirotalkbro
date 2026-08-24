@@ -19,8 +19,9 @@ let adminOnlyBroadcast = false;
 const body = document.querySelector('body');
 
 const appName = document.getElementById('appName');
-const supportDiv = document.getElementById('supportDiv');
-const support = document.getElementById('support');
+const copyright = document.getElementById('copyright');
+const aboutDiv = document.getElementById('aboutDiv');
+const about = document.getElementById('about');
 
 const userName = document.getElementById('userName');
 const userNameRandom = document.getElementById('userNameRandom');
@@ -35,6 +36,7 @@ const viewer = document.getElementById('viewer');
 const mode = document.getElementById('mode');
 
 appName.textContent = homePage.appName;
+copyright.textContent = `© ${new Date().getFullYear()} ${homePage.appName}`;
 
 // =====================================================
 // handle element display
@@ -49,13 +51,13 @@ if (broadcastID) {
 }
 
 // =====================================================
-// Support the project - Thank you!
+// About
 // =====================================================
 
-support.addEventListener('click', getSupport);
+about.addEventListener('click', openAbout);
 
-function getSupport() {
-    openURL(homePage.support.url, true);
+function openAbout() {
+    openURL(homePage.about.url, true);
 }
 
 // =====================================================
@@ -176,7 +178,8 @@ function isFieldsOk() {
 // Hide Elements
 // =====================================================
 
-!homePage.support.enabled && elementDisplay(supportDiv, false);
+!homePage.showCopyright && elementDisplay(copyright, false);
+!homePage.about.show && elementDisplay(aboutDiv, false);
 
 if (!homePage.buttons.broadcast) {
     elementDisplay(broadcasterLabel, false);
