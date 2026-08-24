@@ -136,6 +136,7 @@
 }
 
 .home-panel {
+    position: relative;
     padding: clamp(28px, 4vw, 52px);
     display: flex;
     flex-direction: column;
@@ -168,6 +169,14 @@
 .panel-actions {
     display: flex;
     gap: 8px;
+}
+
+@media (min-width: 861px) {
+    .panel-actions {
+        position: absolute;
+        top: clamp(28px, 4vw, 52px);
+        right: clamp(28px, 4vw, 52px);
+    }
 }
 
 .panel-actions button {
