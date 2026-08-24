@@ -165,7 +165,12 @@
     letter-spacing: 0;
 }
 
-.about button {
+.panel-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.panel-actions button {
     width: 38px;
     height: 38px;
     padding: 0;
@@ -175,7 +180,7 @@
     box-shadow: none;
 }
 
-.about button:hover {
+.panel-actions button:hover {
     color: var(--home-accent);
     background: var(--surface-hover);
     box-shadow: none;
@@ -193,8 +198,7 @@
     gap: 8px;
 }
 
-.field-group > label,
-.mode-container > label:first-child {
+.field-group > label {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -205,8 +209,7 @@
     text-transform: uppercase;
 }
 
-.field-group > label i,
-.mode-container > label i {
+.field-group > label i {
     width: 16px;
     color: var(--home-accent);
     text-align: center;
@@ -345,23 +348,6 @@
 
 .role-actions .secondary-action:hover {
     background: var(--surface-hover);
-}
-
-.mode-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding-top: 24px;
-    border-top: var(--border);
-}
-
-.mode-container .switch {
-    flex: 0 0 auto;
-}
-
-.mode-container input:checked + .slider {
-    background: var(--home-accent);
 }
 
 @media (max-width: 860px) {

@@ -143,17 +143,23 @@ function startViewer() {
 // =====================================================
 
 const getMode = window.localStorage.mode || 'dark';
-mode.checked = false;
-if (getMode && getMode === 'dark') {
-    body.classList.toggle('dark');
-    mode.checked = true;
-}
-mode.onchange = setTheme;
+if (getMode === 'dark') body.classList.add('dark');
+updateThemeButton();
+mode.addEventListener('click', setTheme);
 
 function setTheme() {
     body.classList.toggle('dark');
     window.localStorage.mode = body.classList.contains('dark') ? 'dark' : 'light';
+    updateThemeButton();
     playSound('switch');
+}
+
+function updateThemeButton() {
+    const isDark = body.classList.contains('dark');
+    const label = `Switch to ${isDark ? 'light' : 'dark'} appearance`;
+    mode.setAttribute('aria-label', label);
+    mode.title = label;
+    mode.querySelector('i').className = `fas fa-${isDark ? 'sun' : 'moon'}`;
 }
 
 // =====================================================

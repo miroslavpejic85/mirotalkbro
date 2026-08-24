@@ -55,10 +55,20 @@
                         <p class="panel-kicker">Live studio</p>
                         <h2 id="setupTitle">Set up your session</h2>
                     </div>
-                    <div id="aboutDiv" class="about">
-                        <button id="about" type="button" aria-label="About MiroTalk" title="About MiroTalk">
-                            <i class="fas fa-circle-info"></i>
+                    <div class="panel-actions">
+                        <button
+                            id="mode"
+                            type="button"
+                            aria-label="Switch to light appearance"
+                            title="Switch to light appearance"
+                        >
+                            <i class="fas fa-sun"></i>
                         </button>
+                        <div id="aboutDiv" class="about">
+                            <button id="about" type="button" aria-label="About MiroTalk" title="About MiroTalk">
+                                <i class="fas fa-circle-info"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -114,14 +124,6 @@
                     <button id="viewer" class="secondary-action" type="button">
                         Join broadcast <i class="fas fa-arrow-right"></i>
                     </button>
-                </div>
-
-                <div class="mode-container">
-                    <label for="mode" class="not-selectable"><i class="fas fa-moon"></i>Dark appearance</label>
-                    <label class="switch" title="Toggle dark appearance">
-                        <input id="mode" type="checkbox" checked />
-                        <span class="slider round"></span>
-                    </label>
                 </div>
             </section>
         </main>
