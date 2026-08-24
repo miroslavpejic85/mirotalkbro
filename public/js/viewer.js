@@ -37,6 +37,7 @@ const messagesForm = document.getElementById('messagesForm');
 const messagesCloseBtn = document.getElementById('messagesCloseBtn');
 const viewerMessagesArea = document.getElementById('viewerMessagesArea');
 const messageInput = document.getElementById('messageInput');
+const messageEmoji = document.getElementById('messageEmoji');
 const messageSend = document.getElementById('messageSend');
 const messagesClean = document.getElementById('messagesClean');
 const messagesSave = document.getElementById('messagesSave');
@@ -66,6 +67,7 @@ body.onload = onBodyLoad;
 
 function onBodyLoad() {
     loadViewerToolTip();
+    setupEmojiPicker(messageEmoji, messageInput, dark ? 'dark' : 'light');
 }
 
 // =====================================================

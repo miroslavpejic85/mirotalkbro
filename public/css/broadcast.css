@@ -525,6 +525,7 @@
 
 .messages-compose input {
     flex: 1;
+    min-width: 0;
     padding: var(--space-sm) var(--space-md);
     font-size: var(--font-sm);
     color: var(--text-color);

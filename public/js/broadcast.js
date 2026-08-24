@@ -47,6 +47,7 @@ const messagesSave = document.getElementById('messagesSave');
 const messagesClean = document.getElementById('messagesClean');
 const messagesArea = document.getElementById('messagesArea');
 const messageInput = document.getElementById('messageInput');
+const messageEmoji = document.getElementById('messageEmoji');
 const messageSend = document.getElementById('messageSend');
 
 const viewersOpenForm = document.getElementById('viewersOpenForm');
@@ -102,6 +103,7 @@ body.onload = onBodyLoad;
 
 function onBodyLoad() {
     loadBroadcasterToolTip();
+    setupEmojiPicker(messageEmoji, messageInput, dark ? 'dark' : 'light');
 }
 
 // =====================================================

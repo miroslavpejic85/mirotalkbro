@@ -132,6 +132,9 @@
                 <div id="messagesArea" class="messages-incoming"></div>
                 <div class="messages-compose">
                     <input id="messageInput" maxlength="1024" name="message" placeholder="Type message..." />
+                    <button id="messageEmoji" class="emoji-picker-button" title="Emoji" aria-label="Choose an emoji">
+                        <i class="fa-regular fa-face-smile"></i>
+                    </button>
                     <button id="messageSend" title="Send"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
@@ -168,6 +171,7 @@
         <script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.8/umd/popper.min.js"></script>
         <script defer src="https://cdnjs.cloudflare.com/ajax/libs/tippy.js/6.3.7/tippy-bundle.umd.min.js"></script>
         <script defer src="https://cdnjs.cloudflare.com/ajax/libs/UAParser.js/1.0.37/ua-parser.min.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
         <script defer src="/socket.io/socket.io.js"></script>
         <script defer src="../js/mediasoup-client.js"></script>
         <script defer src="../js/swal.js"></script>

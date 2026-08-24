@@ -100,6 +100,68 @@ function setTippy(elem, content, placement) {
     }
 }
 
+function setupEmojiPicker(button, input, theme = 'light') {
+    if (!window.EmojiMart) {
+        button.disabled = true;
+        console.error('Emoji Mart failed to load');
+        return;
+    }
+
+    const popover = document.createElement('div');
+    popover.className = 'emoji-picker-popover';
+    popover.hidden = true;
+    document.body.appendChild(popover);
+
+    const createPicker = () => {
+        popover.appendChild(
+            new EmojiMart.Picker({
+                theme: theme,
+                width: Math.min(352, window.innerWidth - 16),
+                onEmojiSelect: (emoji) => {
+                    const start = input.selectionStart ?? input.value.length;
+                    const end = input.selectionEnd ?? input.value.length;
+                    input.setRangeText(emoji.native, start, end, 'end');
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.focus();
+                },
+            })
+        );
+    };
+
+    const closePicker = () => {
+        popover.hidden = true;
+        button.setAttribute('aria-expanded', 'false');
+    };
+
+    const positionPicker = () => {
+        const buttonRect = button.getBoundingClientRect();
+        popover.style.right = `${Math.max(8, window.innerWidth - buttonRect.right)}px`;
+        popover.style.bottom = `${Math.max(8, window.innerHeight - buttonRect.top + 8)}px`;
+    };
+
+    button.setAttribute('aria-haspopup', 'dialog');
+    button.setAttribute('aria-expanded', 'false');
+    button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const shouldOpen = popover.hidden;
+        closePicker();
+        if (shouldOpen) {
+            positionPicker();
+            popover.hidden = false;
+            if (!popover.firstChild) createPicker();
+            button.setAttribute('aria-expanded', 'true');
+        }
+    });
+    popover.addEventListener('click', (event) => event.stopPropagation());
+    document.addEventListener('click', closePicker);
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closePicker();
+    });
+    window.addEventListener('resize', () => {
+        if (!popover.hidden) positionPicker();
+    });
+}
+
 function getPeerId(id) {
     return id.split('___')[0];
 }

@@ -155,6 +155,31 @@ button:active {
     box-shadow: var(--box-shadow);
 }
 
+.messages-compose button.emoji-picker-button,
+.viewer-messages-compose button.emoji-picker-button {
+    color: var(--text-secondary);
+    background: var(--secondary-color);
+    border: var(--border);
+}
+
+.messages-compose button.emoji-picker-button:hover,
+.viewer-messages-compose button.emoji-picker-button:hover {
+    color: var(--text-color);
+    background: var(--surface-hover);
+}
+
+.emoji-picker-popover {
+    position: fixed;
+    z-index: 1100;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+}
+
+.emoji-picker-popover[hidden] {
+    display: none;
+}
+
 /* Video container */
 .container {
     position: relative;
