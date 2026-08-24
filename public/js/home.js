@@ -18,6 +18,7 @@ let adminOnlyBroadcast = false;
 
 const body = document.querySelector('body');
 
+const appName = document.getElementById('appName');
 const supportDiv = document.getElementById('supportDiv');
 const support = document.getElementById('support');
 
@@ -33,11 +34,14 @@ const viewerLabel = document.getElementById('viewerLabel');
 const viewer = document.getElementById('viewer');
 const mode = document.getElementById('mode');
 
+appName.textContent = homePage.appName;
+
 // =====================================================
 // handle element display
 // =====================================================
 
 if (broadcastID) {
+    document.getElementById('setupTitle').textContent = 'Join this broadcast';
     elementDisplay(broadcasterIdLabel, false);
     elementDisplay(broadcasterIdWrapper, false);
     elementDisplay(broadcasterLabel, false);

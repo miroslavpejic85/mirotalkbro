@@ -26,35 +26,104 @@
         <link rel="stylesheet" href="../css/common.css" />
         <link rel="stylesheet" href="../css/home.css" />
     </head>
-    <body>
-        <div class="home center fadeIn">
-            <div id="supportDiv" class="support">
-                <button id="support"><i class="fas fa-heart"></i></button>
-            </div>
-            <label class="not-selectable"><i class="fas fa-user"></i>Username</label>
-            <div class="input-wrapper">
-                <input id="userName" maxlength="15" name="id" value="mirotalk" required />
-                <i id="userNameRandom" class="fas fa-arrows-rotate input-icon"></i>
-            </div>
-            <label id="broadcasterIdLabel" class="not-selectable"><i class="fas fa-door-open"></i>Room Id</label>
-            <div id="broadcasterIdWrapper" class="input-wrapper">
-                <input id="broadcasterId" maxlength="36" name="id" value="123" required />
-                <i id="broadcasterIdRandom" class="fas fa-arrows-rotate input-icon"></i>
-            </div>
-            <label id="broadcasterLabel" class="not-selectable"
-                ><i class="fas fa-podcast"></i>Join as broadcaster</label
-            >
-            <button id="broadcaster">Broadcaster</button>
-            <label id="viewerLabel" class="not-selectable"><i class="fas fa-eye"></i>Join as viewer</label>
-            <button id="viewer">Viewer</button>
-            <div class="mode-container">
-                <label class="not-selectable"><i class="fas fa-moon"></i>Dark mode</label>
-                <label class="switch">
-                    <input id="mode" type="checkbox" checked />
-                    <span class="slider round"></span>
-                </label>
-            </div>
-        </div>
+    <body class="home-page">
+        <main class="home-shell fadeIn">
+            <section class="home-intro" aria-labelledby="homeTitle">
+                <div class="brand">
+                    <img src="../assets/images/mirotalk-icon.png" alt="" />
+                    <span id="appName">MiroTalk BRO</span>
+                </div>
+                <div class="intro-copy">
+                    <p class="eyebrow"><span></span> Browser-based live broadcasting</p>
+                    <h1 id="homeTitle">Your broadcast.<br />Ready when you are.</h1>
+                    <p class="intro-text">
+                        Go live with video, audio, and screen sharing. Your audience joins instantly from any modern
+                        browser.
+                    </p>
+                    <ul class="feature-list" aria-label="Broadcast features">
+                        <li><i class="fas fa-bolt"></i> No downloads</li>
+                        <li><i class="fas fa-shield-halved"></i> Private rooms</li>
+                        <li><i class="fas fa-users"></i> Built for audiences</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="home-panel" aria-labelledby="setupTitle">
+                <div class="panel-topbar">
+                    <div>
+                        <p class="panel-kicker">Live studio</p>
+                        <h2 id="setupTitle">Set up your session</h2>
+                    </div>
+                    <div id="supportDiv" class="support">
+                        <button id="support" type="button" aria-label="Support MiroTalk" title="Support MiroTalk">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="userName" class="not-selectable"><i class="fas fa-user"></i>Your name</label>
+                    <div class="input-wrapper">
+                        <input id="userName" maxlength="15" name="name" value="mirotalk" autocomplete="name" required />
+                        <button
+                            id="userNameRandom"
+                            class="input-action"
+                            type="button"
+                            aria-label="Generate a random name"
+                            title="Generate a random name"
+                        >
+                            <i class="fas fa-arrows-rotate"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label id="broadcasterIdLabel" for="broadcasterId" class="not-selectable"
+                        ><i class="fas fa-hashtag"></i>Room ID</label
+                    >
+                    <div id="broadcasterIdWrapper" class="input-wrapper">
+                        <input id="broadcasterId" maxlength="36" name="room" value="123" autocomplete="off" required />
+                        <button
+                            id="broadcasterIdRandom"
+                            class="input-action"
+                            type="button"
+                            aria-label="Generate a new room ID"
+                            title="Generate a new room ID"
+                        >
+                            <i class="fas fa-arrows-rotate"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="role-actions" aria-label="Choose how to join">
+                    <div id="broadcasterLabel" class="role-copy">
+                        <i class="fas fa-tower-broadcast"></i>
+                        <span
+                            ><strong>Start broadcasting</strong><small>Host with camera, audio, or screen</small></span
+                        >
+                    </div>
+                    <button id="broadcaster" class="primary-action" type="button">
+                        Enter studio <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                    <div id="viewerLabel" class="role-copy">
+                        <i class="fas fa-eye"></i>
+                        <span><strong>Join as a viewer</strong><small>Watch and interact with the host</small></span>
+                    </div>
+                    <button id="viewer" class="secondary-action" type="button">
+                        Join broadcast <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div class="mode-container">
+                    <label for="mode" class="not-selectable"><i class="fas fa-moon"></i>Dark appearance</label>
+                    <label class="switch" title="Toggle dark appearance">
+                        <input id="mode" type="checkbox" checked />
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </section>
+        </main>
 
         <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.8"></script>
         <script defer src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>

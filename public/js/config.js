@@ -1,6 +1,7 @@
 'use strict';
 
 const homePage = {
+    appName: 'MiroTalk BRO',
     buttons: {
         broadcast: true,
         viewer: true,
