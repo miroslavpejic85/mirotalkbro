@@ -169,11 +169,13 @@ button:active {
 }
 
 .emoji-picker-popover {
-    position: fixed;
+    position: absolute;
     z-index: 1100;
+    max-width: calc(100% - 16px);
+    max-height: calc(100% - 16px);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-xl);
-    overflow: hidden;
+    overflow: auto;
 }
 
 .emoji-picker-popover[hidden] {

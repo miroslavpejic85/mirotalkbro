@@ -107,16 +107,18 @@ function setupEmojiPicker(button, input, theme = 'light') {
         return;
     }
 
+    const container = button.closest('.panel-drawer') || button.parentElement;
+    const pickerWidth = Math.min(352, container.clientWidth - 16);
     const popover = document.createElement('div');
     popover.className = 'emoji-picker-popover';
     popover.hidden = true;
-    document.body.appendChild(popover);
+    container.appendChild(popover);
 
     const createPicker = () => {
         popover.appendChild(
             new EmojiMart.Picker({
                 theme: theme,
-                width: Math.min(352, window.innerWidth - 16),
+                width: pickerWidth,
                 onEmojiSelect: (emoji) => {
                     const start = input.selectionStart ?? input.value.length;
                     const end = input.selectionEnd ?? input.value.length;
@@ -135,8 +137,14 @@ function setupEmojiPicker(button, input, theme = 'light') {
 
     const positionPicker = () => {
         const buttonRect = button.getBoundingClientRect();
-        popover.style.right = `${Math.max(8, window.innerWidth - buttonRect.right)}px`;
-        popover.style.bottom = `${Math.max(8, window.innerHeight - buttonRect.top + 8)}px`;
+        const containerRect = container.getBoundingClientRect();
+        const left = Math.min(
+            Math.max(8, buttonRect.left - containerRect.left),
+            container.clientWidth - pickerWidth - 8
+        );
+        popover.style.left = `${left}px`;
+        popover.style.bottom = `${Math.max(8, containerRect.bottom - buttonRect.top + 8)}px`;
+        popover.style.maxHeight = `${Math.max(120, buttonRect.top - containerRect.top - 16)}px`;
     };
 
     button.setAttribute('aria-haspopup', 'dialog');
