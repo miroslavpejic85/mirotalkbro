@@ -957,7 +957,7 @@ function toggleAudio(enable) {
     elementDisplay(enableAudio, !enable);
     elementDisplay(disableAudio, enable && broadcastSettings.buttons.audio);
     sendToViewersDataChannel('audio', { enable });
-    checkTrackAndPopup(broadcastStream);
+    checkTrackAndPopup(broadcastStream, 'audio');
 }
 
 // =====================================================
@@ -972,7 +972,7 @@ function toggleVideo() {
     videoOff.style.visibility = videoBtn.style.color == 'red' ? 'visible' : 'hidden';
     broadcastStream.getVideoTracks()[0].enabled = !broadcastStream.getVideoTracks()[0].enabled;
     sendToViewersDataChannel('video', { visibility: videoOff.style.visibility });
-    checkTrackAndPopup(broadcastStream);
+    checkTrackAndPopup(broadcastStream, 'video');
 }
 
 // =====================================================

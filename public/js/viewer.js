@@ -909,7 +909,7 @@ function toggleAudio(enabled) {
         enabled: enabled,
     });
 
-    checkTrackAndPopup(viewerStream);
+    checkTrackAndPopup(viewerStream, 'audio');
 }
 
 // =====================================================
@@ -967,7 +967,7 @@ function toggleVideo() {
         enabled: !enabled,
     });
 
-    checkTrackAndPopup(viewerStream);
+    checkTrackAndPopup(viewerStream, 'video');
 }
 
 // =====================================================

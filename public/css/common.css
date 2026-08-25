@@ -489,6 +489,55 @@ td button:hover {
     color: var(--success-color);
 }
 
+/* Quiet feedback for local microphone and camera changes */
+.media-status {
+    position: fixed;
+    left: 50%;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 850;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: 36px;
+    padding: 7px 12px;
+    color: var(--success-color);
+    background: color-mix(in srgb, var(--surface-color) 94%, transparent);
+    border: var(--border);
+    border-radius: var(--border-radius-full);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.98);
+    transition:
+        opacity var(--transition-normal),
+        transform var(--transition-normal);
+    pointer-events: none;
+}
+
+.media-status.media-status-off {
+    color: var(--danger-color);
+}
+
+.media-status.media-status-visible {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+}
+
+@media (max-width: 768px) {
+    .media-status {
+        bottom: calc(62px + env(safe-area-inset-bottom));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .media-status {
+        transition: opacity var(--transition-fast);
+    }
+}
+
 .hidden {
     display: none !important;
 }

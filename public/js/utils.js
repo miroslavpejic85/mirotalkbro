@@ -214,26 +214,34 @@ function stopVideoTrack(mediaStream) {
     }
 }
 
-function checkTrackAndPopup(mediaStream) {
-    const audioTrack = mediaStream.getAudioTracks()[0];
-    const videoTrack = mediaStream.getVideoTracks()[0];
+let mediaStatusTimer;
 
-    const parts = [];
+function checkTrackAndPopup(mediaStream, kind) {
+    const track = kind === 'audio' ? mediaStream.getAudioTracks()[0] : mediaStream.getVideoTracks()[0];
+    if (!track) return;
 
-    if (audioTrack) {
-        const on = audioTrack.enabled;
-        parts.push(
-            `<i class="fas fa-microphone${on ? '' : '-slash'} ${on ? 'color-green' : 'color-red'}"></i> Mic ${on ? 'on' : 'off'}`
-        );
-    }
-    if (videoTrack) {
-        const on = videoTrack.enabled;
-        parts.push(
-            `<i class="fas fa-video${on ? '' : '-slash'} ${on ? 'color-green' : 'color-red'}"></i> Cam ${on ? 'on' : 'off'}`
-        );
+    let status = document.getElementById('mediaStatus');
+    if (!status) {
+        status = document.createElement('div');
+        status.id = 'mediaStatus';
+        status.className = 'media-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        status.innerHTML = '<i aria-hidden="true"></i><span></span>';
+        document.body.appendChild(status);
     }
 
-    if (parts.length) popupMessage('toast', 'Media', parts.join(' &nbsp;│&nbsp; '), 'top');
+    const enabled = track.enabled;
+    const label = kind === 'audio' ? 'Microphone' : 'Camera';
+    const icon = status.querySelector('i');
+    icon.className = `fas fa-${kind === 'audio' ? 'microphone' : 'video'}${enabled ? '' : '-slash'}`;
+    status.querySelector('span').textContent = `${label} ${enabled ? 'on' : 'off'}`;
+    status.classList.toggle('media-status-off', !enabled);
+    status.classList.remove('media-status-visible');
+    requestAnimationFrame(() => status.classList.add('media-status-visible'));
+
+    clearTimeout(mediaStatusTimer);
+    mediaStatusTimer = setTimeout(() => status.classList.remove('media-status-visible'), 1600);
 }
 
 function handleMediaStreamError(error) {
