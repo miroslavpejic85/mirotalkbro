@@ -396,27 +396,13 @@
 
     .home-shell {
         width: 100%;
+        min-height: 100svh;
         border: 0;
         border-radius: 0;
         box-shadow: none;
     }
 
     .home-intro {
-        min-height: 260px;
-        padding: 24px 20px;
-    }
-
-    .intro-copy {
-        margin-top: 36px;
-    }
-
-    .intro-text {
-        margin-top: 16px;
-        font-size: 0.9rem;
-        line-height: 1.55;
-    }
-
-    .feature-list {
         display: none;
     }
 
