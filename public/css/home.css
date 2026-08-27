@@ -253,6 +253,35 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
 }
 
+.input-wrapper input.is-scrambling {
+    color: var(--home-accent);
+    border-color: rgba(59, 130, 246, 0.45);
+    font-variant-numeric: tabular-nums;
+}
+
+.input-wrapper input.is-generated {
+    animation: generated-fade 0.45s ease-out;
+}
+
+@keyframes generated-fade {
+    0% {
+        border-color: var(--home-accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+    }
+    100% {
+        border-color: transparent;
+        box-shadow: var(--box-shadow);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .input-wrapper input.is-scrambling,
+    .input-wrapper input.is-generated,
+    .input-action.is-spinning i {
+        animation: none;
+    }
+}
+
 .input-action {
     position: absolute;
     top: 6px;
@@ -279,6 +308,20 @@
 
 .input-action i {
     transition: transform var(--transition-normal);
+}
+
+.input-action.is-spinning {
+    color: var(--home-accent);
+}
+
+.input-action.is-spinning i {
+    animation: input-action-spin 0.45s linear infinite;
+}
+
+@keyframes input-action-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .role-actions {

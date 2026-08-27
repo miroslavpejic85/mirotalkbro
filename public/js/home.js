@@ -91,14 +91,83 @@ broadcasterId.value = broadcastID || window.localStorage.room || getUUID4();
 broadcasterIdRandom.addEventListener('click', setRandomId);
 
 function setRandomId() {
-    broadcasterId.value = getUUID4();
+    scrambleReveal(broadcasterId, getUUID4(), broadcasterIdRandom);
 }
 
 userNameRandom.addEventListener('click', setRandomName);
 
 function setRandomName() {
-    userName.value = getRandomName();
+    scrambleReveal(userName, getRandomName(), userNameRandom);
 }
+
+// =====================================================
+// Scramble text effect on generated values
+// =====================================================
+
+const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const SCRAMBLE_TICK_MS = 30;
+const SCRAMBLE_MAX_TICKS = 14; // keeps the effect under ~450ms whatever the value length
+const scrambleFrames = new WeakMap();
+const scramblePending = new WeakMap();
+
+function scrambleReveal(input, finalValue, button) {
+    finishScramble(input);
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        input.value = finalValue;
+        return;
+    }
+
+    const chars = [...finalValue];
+    // spread the reveal over a fixed number of ticks so long UUIDs are not slower than short names
+    const revealAt = chars.map((_, i) => Math.round(((i + 1) / chars.length) * (SCRAMBLE_MAX_TICKS - 2)));
+
+    scramblePending.set(input, { finalValue, button });
+    input.classList.remove('is-generated');
+    input.classList.add('is-scrambling');
+    if (button) button.classList.add('is-spinning');
+
+    let tick = 0;
+    let last = performance.now();
+
+    const step = (now) => {
+        if (now - last >= SCRAMBLE_TICK_MS) {
+            last = now;
+            input.value = chars
+                .map((char, i) => {
+                    if (tick >= revealAt[i] || char === ' ' || char === '-') return char;
+                    return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+                })
+                .join('');
+            tick++;
+        }
+        if (tick > SCRAMBLE_MAX_TICKS) return finishScramble(input);
+        scrambleFrames.set(input, requestAnimationFrame(step));
+    };
+
+    scrambleFrames.set(input, requestAnimationFrame(step));
+}
+
+// commits the real value immediately, so the field is never left holding scrambled text
+function finishScramble(input) {
+    const frame = scrambleFrames.get(input);
+    if (frame) cancelAnimationFrame(frame);
+    scrambleFrames.delete(input);
+
+    const pending = scramblePending.get(input);
+    if (!pending) return;
+    scramblePending.delete(input);
+
+    input.value = pending.finalValue;
+    input.classList.remove('is-scrambling');
+    input.classList.add('is-generated');
+    if (pending.button) pending.button.classList.remove('is-spinning');
+    setTimeout(() => input.classList.remove('is-generated'), 450);
+}
+
+[userName, broadcasterId].forEach((input) => {
+    ['focus', 'keydown', 'paste'].forEach((event) => input.addEventListener(event, () => finishScramble(input)));
+});
 
 // =====================================================
 // Join as Broadcast
@@ -167,6 +236,8 @@ function updateThemeButton() {
 // =====================================================
 
 function isFieldsOk() {
+    finishScramble(userName);
+    finishScramble(broadcasterId);
     if (userName.value == '') {
         popupMessage('warning', 'Username', 'Username field empty!');
         return false;
