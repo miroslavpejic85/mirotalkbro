@@ -5,7 +5,7 @@ const homePage = {
     showCopyright: true,
     about: {
         show: true,
-        url: 'https://docs.mirotalk.com/mirotalk-bro',
+        url: 'https://docs.mirotalk.com/sites/bro.html',
     },
     buttons: {
         broadcast: true,
