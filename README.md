@@ -4,9 +4,11 @@
     </a>
 </div>
 
-<h1 align="center">MiroTalk BRO</h1>
+<h1 align="center">MiroTalk BRO - Open Source Self-Hosted WebRTC Live Broadcasting Platform</h1>
 
-<h3 align="center">WebRTC Live Broadcast enables real time video, audio, and screen streaming to all connected viewers</h3>
+<h3 align="center">
+WebRTC live broadcasting for real-time video, audio, and screen streaming to connected viewers.
+</h3>
 
 <br />
 
