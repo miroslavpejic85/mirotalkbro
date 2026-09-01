@@ -130,11 +130,17 @@
 
                     <div id="viewerLabel" class="role-copy">
                         <i class="fas fa-eye"></i>
-                        <span><strong>Join as a viewer</strong><small>Watch and interact with the host</small></span>
+                        <span
+                            ><strong>Join as a viewer</strong
+                            ><small id="viewerHint">Watch and interact with the host</small></span
+                        >
                     </div>
-                    <button id="viewer" class="secondary-action" type="button">
-                        Join broadcast <i class="fas fa-arrow-right"></i>
-                    </button>
+                    <div class="role-cta">
+                        <span id="rtmpBadge" class="source-badge"><i class="fas fa-satellite-dish"></i> RTMP</span>
+                        <button id="viewer" class="secondary-action" type="button">
+                            Join broadcast <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
             </section>
         </main>

@@ -378,6 +378,18 @@
     font-weight: 700;
 }
 
+.role-cta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Match the height of the adjacent button */
+.role-cta .source-badge {
+    min-height: 44px;
+    padding: 0 12px;
+}
+
 .role-actions button i {
     font-size: 0.7rem;
 }
@@ -463,6 +475,16 @@
     .role-actions button {
         width: 100%;
         margin-bottom: 8px;
+    }
+
+    .role-cta {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .role-cta button {
+        flex: 1;
+        margin-bottom: 0;
     }
 
     .mode-container {

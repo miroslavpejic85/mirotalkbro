@@ -1,0 +1,29 @@
+# RTMP ingest for hardware encoders (ATEM, OSEE, OBS). Viewers keep receiving WebRTC.
+#
+# Optional overlay: only needed when BROADCASTING=sfu and RTMP_ENABLED=true.
+# P2P deployments can ignore this file entirely.
+#
+# Start with:
+#   docker compose -f docker-compose.yml -f docker-compose-mediamtx.yml up -d
+#
+# Repo: https://github.com/bluenviron/mediamtx
+
+services:
+    mirotalkbro:
+        environment:
+            # Internal URL used by FFmpeg to read the accepted MediaMTX stream.
+            RTMP_SOURCE_URL: rtmp://mediamtx:1936
+
+    mediamtx:
+        image: bluenviron/mediamtx:1.20.1
+        container_name: mirotalkbro-mediamtx
+        hostname: mediamtx
+        depends_on:
+            - mirotalkbro
+        environment:
+            MTX_AUTHHTTPADDRESS: 'http://mirotalkbro:${PORT}/api/v1/rtmp/auth'
+        restart: unless-stopped
+        ports:
+            - '1936:1936'
+        volumes:
+            - ./mediamtx.yml:/mediamtx.yml:ro

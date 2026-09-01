@@ -631,6 +631,30 @@ td button:hover {
     animation: livePulse 1.5s ease-in-out infinite;
 }
 
+/* Marks a broadcast fed by an external RTMP publisher instead of a browser */
+.source-badge {
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 2px var(--space-sm);
+    background: var(--accent-color);
+    color: white;
+    font-size: var(--font-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: var(--border-radius-sm);
+    line-height: 1.6;
+}
+
+/* Two classes so page-level layout rules such as `.role-copy span` cannot win */
+.source-badge:not(.active) {
+    display: none;
+}
+
+.source-badge.active {
+    display: inline-flex;
+}
+
 @keyframes livePulse {
     0%,
     100% {

@@ -31,6 +31,11 @@ WORKDIR /src
 
 ENV NODE_ENV="production"
 
+# FFmpeg converts RTMP H.264/AAC sources into mediasoup-compatible VP8/Opus RTP.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy node_modules with compiled mediasoup worker (production deps only)
 COPY --from=build /src/node_modules /src/node_modules
 

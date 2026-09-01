@@ -102,6 +102,54 @@ Open [http://localhost:3016](http://localhost:3016) - done!
 </details>
 
 <details>
+<summary>📡 RTMP upstream source</summary>
+
+<br/>
+
+RTMP ingest lets a hardware encoder (Blackmagic ATEM, OSEE, OBS) act as the broadcaster. It requires SFU mode, [FFmpeg](https://ffmpeg.org/), and [MediaMTX](https://mediamtx.org/).
+
+Configure `.env`:
+
+```dotenv
+BROADCASTING=sfu
+RTMP_ENABLED=true
+RTMP_PUBLISH_TOKEN=my-secret-token
+RTMP_SOURCE_URL=rtmp://127.0.0.1:1936
+FFMPEG_PATH=ffmpeg
+MEDIASOUP_ANNOUNCED_IP=127.0.0.1
+```
+
+With Docker, add the optional MediaMTX overlay (P2P deployments can skip it):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose-mediamtx.yml up -d
+```
+
+Without Docker, install the external tools (`brew install ffmpeg mediamtx` on macOS) and start MediaMTX and MiroTalk in separate terminals:
+
+```bash
+mediamtx mediamtx.yml
+```
+
+```bash
+npm install
+npm start
+```
+
+In OBS, choose **Custom** streaming service and use:
+
+```text
+Server:     rtmp://localhost:1936/live
+Stream key: ROOM_ID?token=my-secret-token
+```
+
+Then open `http://localhost:3016/viewer?id=ROOM_ID&name=Viewer`.
+
+See the [RTMP upstream guide](https://docs.mirotalk.com/mirotalk-bro/rtmp/) for hardware encoder settings, remote deployments, security, and tuning.
+
+</details>
+
+<details>
 <summary>📚 Documentation</summary>
 
 <br/>
@@ -116,6 +164,7 @@ For detailed guides and references, visit the **[official documentation](https:/
 - [Direct Room Join](https://docs.mirotalk.com/mirotalk-bro/join-room/)
 - [REST API Documentation](https://docs.mirotalk.com/mirotalk-bro/api/)
 - [Ngrok](https://docs.mirotalk.com/mirotalk-bro/ngrok/)
+- [RTMP upstream source](https://docs.mirotalk.com/mirotalk-bro/rtmp/)
 
 </details>
 

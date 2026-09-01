@@ -48,6 +48,20 @@ if (broadcastID) {
     elementDisplay(broadcasterIdWrapper, false);
     elementDisplay(broadcasterLabel, false);
     elementDisplay(broadcaster, false);
+    showRoomSource(broadcastID);
+}
+
+// An RTMP-fed room has no browser host, so the viewer copy must not promise interaction
+async function showRoomSource(id) {
+    try {
+        const res = await fetch(`/api/v1/room/${encodeURIComponent(id)}/source`);
+        const { sourceType } = await res.json();
+        if (sourceType !== 'rtmp') return;
+        document.getElementById('rtmpBadge').classList.add('active');
+        document.getElementById('viewerHint').textContent = 'Watch the live RTMP feed';
+    } catch (e) {
+        console.error('Failed to load room source', e);
+    }
 }
 
 // =====================================================

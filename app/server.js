@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.3.77
+ * @version 1.4.10
  */
 
 require('dotenv').config();
@@ -42,6 +42,9 @@ const viewers = {}; // collect viewers grouped by socket.id
 // Broadcasting mode: 'p2p' (mesh) or 'sfu' (mediasoup)
 const broadcastingMode = (process.env.BROADCASTING || 'p2p').toLowerCase();
 const isSFU = broadcastingMode === 'sfu';
+const rtmpEnabled = getEnvBoolean(process.env.RTMP_ENABLED);
+const rtmpPublishToken = process.env.RTMP_PUBLISH_TOKEN || '';
+const rtmpInternalToken = crypto.randomBytes(32).toString('hex');
 
 // mediasoup SFU handler (loaded only when needed)
 const sfuHandler = isSFU ? require('./mediasoup-handler') : null;
@@ -104,6 +107,7 @@ const adminToken = process.env.ADMIN_TOKEN || 'mirotalkbro_default_admin_token';
 // API
 const apiKeySecret = process.env.API_KEY_SECRET || 'mirotalkbro_default_secret';
 const apiBasePath = '/api/v1'; // api endpoint path
+const rtmpAuthPath = `${apiBasePath}/rtmp/auth`; // MediaMTX authentication callback
 const apiDocs = host + apiBasePath + '/docs'; // api docs
 
 // Stun and Turn iceServers
@@ -242,8 +246,12 @@ app.use(apiBasePath + '/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument)
 
 // Logs requests
 app.use((req, res, next) => {
+    const body =
+        req.path === rtmpAuthPath
+            ? { ...req.body, token: '[REDACTED]', password: '[REDACTED]', query: '[REDACTED]' }
+            : req.body;
     log.debug('New request:', {
-        body: req.body,
+        body,
         method: req.method,
         path: req.originalUrl,
     });
@@ -404,9 +412,49 @@ app.post(`${apiBasePath}/join`, (req, res) => {
     });
 });
 
+// MediaMTX HTTP authentication callback. A successful RTMP publish starts the
+// FFmpeg-to-mediasoup bridge; RTMP reads are reserved for that bridge process.
+app.post(rtmpAuthPath, (req, res) => {
+    if (!isSFU || !rtmpEnabled || req.body.protocol !== 'rtmp') return res.sendStatus(403);
+
+    const { action, path: pathName, token } = req.body;
+    if (action === 'read') {
+        return isValidToken(token, rtmpInternalToken) ? res.sendStatus(204) : res.sendStatus(403);
+    }
+
+    if (action !== 'publish' || !isValidToken(token, rtmpPublishToken)) return res.sendStatus(403);
+
+    let broadcastID;
+    try {
+        broadcastID = sfuHandler.reserveRtmpIngest(pathName);
+    } catch (error) {
+        log.warn('RTMP publish rejected', { pathName, error: error.message });
+        return res.sendStatus(409);
+    }
+
+    res.sendStatus(204);
+    setImmediate(() => {
+        sfuHandler
+            .startRtmpIngest(pathName, rtmpInternalToken, io, broadcasters, viewers)
+            .catch((error) => log.error('Unable to start RTMP ingest', { broadcastID, error: error.message }));
+    });
+});
+
 // Expose broadcasting mode and admin flag to clients
 app.get('/api/v1/config', (req, res) => {
-    res.json({ broadcastingMode, adminOnlyBroadcast });
+    res.json({ broadcastingMode, adminOnlyBroadcast, rtmpEnabled: isSFU && rtmpEnabled });
+});
+
+// Lets the home page label a room before the client opens a socket
+app.get('/api/v1/room/:id/source', (req, res) => {
+    const broadcastID = req.params.id;
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(broadcastID)) return res.json({ sourceType: 'none' });
+    const sourceType = isSFU
+        ? sfuHandler.getRoomSourceType(broadcastID)
+        : broadcasters[broadcastID]
+          ? 'browser'
+          : 'none';
+    res.json({ sourceType });
 });
 
 app.use((req, res) => {
@@ -431,6 +479,10 @@ io.sockets.on('connection', (socket) => {
         socket.on('broadcaster', (broadcastID, token) => {
             if (adminOnlyBroadcast && !isValidAdminToken(token)) {
                 socket.emit('broadcasterRejected', 'Unauthorized: invalid admin token');
+                return;
+            }
+            if (sfuHandler.isRtmpSourceActive(broadcastID)) {
+                socket.emit('broadcasterRejected', 'This broadcast is using an RTMP source');
                 return;
             }
             handleBroadcaster(socket, broadcastID);
@@ -566,9 +618,14 @@ function sendToBroadcasterViewers(socket, broadcastID, message) {
 
 // HMAC-based constant-time token comparison (avoids length and timing leaks)
 function isValidAdminToken(provided) {
+    return isValidToken(provided, adminToken);
+}
+
+function isValidToken(provided, expected) {
     if (typeof provided !== 'string') return false;
+    if (typeof expected !== 'string' || !expected) return false;
     const hmac = (val) => crypto.createHmac('sha256', 'token-cmp').update(val).digest();
-    return crypto.timingSafeEqual(hmac(provided), hmac(adminToken));
+    return crypto.timingSafeEqual(hmac(provided), hmac(expected));
 }
 
 function getEnvBoolean(key, force_true_if_undefined = false) {
@@ -610,8 +667,11 @@ async function ngrokStart() {
 async function startServer() {
     // Initialize mediasoup workers if SFU mode
     if (isSFU) {
+        if (rtmpEnabled && !rtmpPublishToken) {
+            throw new Error('RTMP_PUBLISH_TOKEN is required when RTMP_ENABLED=true');
+        }
         await sfuHandler.createWorkers();
-        log.info('mediasoup SFU mode enabled');
+        log.info('mediasoup SFU mode enabled', { rtmpEnabled });
     } else {
         log.info('P2P mesh mode enabled');
     }

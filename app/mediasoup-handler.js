@@ -8,6 +8,8 @@
  */
 
 const mediasoup = require('mediasoup');
+const { spawn } = require('child_process');
+const dgram = require('dgram');
 const os = require('os');
 const fs = require('fs');
 
@@ -20,6 +22,7 @@ let nextWorkerIdx = 0;
 
 // Room state: broadcastID -> { router, broadcasterSocketId, broadcasterTransport, producers, viewers }
 const sfuRooms = {};
+const rtmpReservations = new Set();
 
 // =====================================================
 // Network helpers
@@ -115,6 +118,23 @@ function findValidAddress(addresses) {
 
 const RTC_MIN_PORT = parseInt(process.env.MEDIASOUP_RTC_MIN_PORT) || 20000;
 const RTC_MAX_PORT = parseInt(process.env.MEDIASOUP_RTC_MAX_PORT) || 20099;
+const RTMP_SOURCE_URL = process.env.RTMP_SOURCE_URL || 'rtmp://127.0.0.1:1935';
+const FFMPEG_PATH = process.env.FFMPEG_PATH || 'ffmpeg';
+const RTMP_VIDEO_BITRATE = process.env.RTMP_VIDEO_BITRATE || '1500k';
+const RTMP_VIDEO_WIDTH = parseInt(process.env.RTMP_VIDEO_WIDTH) || 1280;
+const RTMP_VIDEO_HEIGHT = parseInt(process.env.RTMP_VIDEO_HEIGHT) || 720;
+const RTMP_VIDEO_FPS = parseInt(process.env.RTMP_VIDEO_FPS) || 30;
+// libvpx VP8 encodes single-threaded unless told otherwise, which cannot sustain realtime at 720p.
+const RTMP_VIDEO_THREADS = parseInt(process.env.RTMP_VIDEO_THREADS) || Math.min(4, os.cpus().length);
+const RTMP_VIDEO_PAYLOAD_TYPE = 96;
+const RTMP_AUDIO_PAYLOAD_TYPE = 111;
+// MediaMTX accepts the publisher before the stream is ready, so the first FFmpeg
+// attempts fail with "no stream is available" and are retried quietly.
+const RTMP_BRIDGE_STARTUP_MS = 3000;
+const RTMP_BRIDGE_RETRY_DELAY_MS = 500;
+const RTMP_BRIDGE_MAX_ATTEMPTS = 20;
+// Once media flowed, a few failed respawns mean the publisher really went away.
+const RTMP_BRIDGE_MAX_RESTARTS = 5;
 
 const config = {
     // Worker settings
@@ -254,6 +274,7 @@ async function getOrCreateRoom(broadcastID) {
         router,
         broadcasterSocketId: null,
         broadcasterTransport: null,
+        rtmpIngest: null,
         producers: new Map(), // producerId -> producer
         viewers: new Map(), // socketId -> { transport, consumers: Map<producerId, consumer>, username }
     };
@@ -269,10 +290,314 @@ function getRoom(broadcastID) {
 function deleteRoom(broadcastID) {
     const room = sfuRooms[broadcastID];
     if (room) {
+        stopRtmpIngest(broadcastID);
         room.router.close();
         delete sfuRooms[broadcastID];
         log.debug('Room deleted', { broadcastID });
     }
+}
+
+// =====================================================
+// RTMP ingest through FFmpeg and mediasoup PlainTransport
+// =====================================================
+
+function getRtmpBroadcastID(pathName) {
+    if (typeof pathName !== 'string') return null;
+    const match = /^live\/([A-Za-z0-9_-]{1,128})$/.exec(pathName);
+    return match ? match[1] : null;
+}
+
+function canStartRtmpIngest(broadcastID) {
+    const room = getRoom(broadcastID);
+    return (
+        !rtmpReservations.has(broadcastID) &&
+        (!room || (!room.broadcasterTransport && !room.broadcasterSocketId && !room.rtmpIngest))
+    );
+}
+
+function reserveRtmpIngest(pathName) {
+    const broadcastID = getRtmpBroadcastID(pathName);
+    if (!broadcastID) throw new Error('RTMP path must use live/<broadcastID>');
+    if (!canStartRtmpIngest(broadcastID)) throw new Error(`Broadcast ${broadcastID} already has a source`);
+    rtmpReservations.add(broadcastID);
+    return broadcastID;
+}
+
+function isRtmpSourceActive(broadcastID) {
+    return rtmpReservations.has(broadcastID) || Boolean(getRoom(broadcastID)?.rtmpIngest);
+}
+
+// Tells viewers whether the room is fed by an RTMP publisher, a browser broadcaster, or nothing yet.
+function getRoomSourceType(broadcastID) {
+    const room = getRoom(broadcastID);
+    if (!room) return 'none';
+    if (room.rtmpIngest) return 'rtmp';
+    return room.broadcasterSocketId || room.broadcasterTransport ? 'browser' : 'none';
+}
+
+// Grabs a free ephemeral UDP port for FFmpeg to bind to.
+function reserveUdpPort() {
+    return new Promise((resolve, reject) => {
+        const socket = dgram.createSocket('udp4');
+        socket.once('error', reject);
+        socket.bind(0, '127.0.0.1', () => {
+            const { port } = socket.address();
+            socket.close(() => resolve(port));
+        });
+    });
+}
+
+async function createRtmpPlainProducer(room, kind, ssrc) {
+    // FFmpeg cannot mux RTCP onto the RTP port, so RTCP gets its own mediasoup port
+    // instead of leaking sender reports onto whatever listens on <rtpPort> + 1.
+    const transport = await room.router.createPlainTransport({
+        listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+        rtcpListenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+        rtcpMux: false,
+        comedia: true,
+    });
+
+    const isVideo = kind === 'video';
+    const codec = isVideo
+        ? {
+              mimeType: 'video/VP8',
+              payloadType: RTMP_VIDEO_PAYLOAD_TYPE,
+              clockRate: 90000,
+              parameters: {},
+              rtcpFeedback: [],
+          }
+        : {
+              mimeType: 'audio/opus',
+              payloadType: RTMP_AUDIO_PAYLOAD_TYPE,
+              clockRate: 48000,
+              channels: 2,
+              parameters: { useinbandfec: 1 },
+              rtcpFeedback: [],
+          };
+
+    const producer = await transport.produce({
+        kind,
+        rtpParameters: {
+            codecs: [codec],
+            headerExtensions: [],
+            encodings: [{ ssrc }],
+            rtcp: { cname: `rtmp-${kind}-${ssrc}`, reducedSize: true },
+        },
+        appData: { source: 'rtmp' },
+    });
+
+    room.producers.set(producer.id, producer);
+    producer.on('transportclose', () => room.producers.delete(producer.id));
+
+    // comedia locks onto the first source address it sees, so FFmpeg must keep the
+    // same local ports across respawns or its packets get discarded.
+    const localRtpPort = await reserveUdpPort();
+    const localRtcpPort = await reserveUdpPort();
+
+    return {
+        transport,
+        producer,
+        url:
+            `rtp://127.0.0.1:${transport.tuple.localPort}` +
+            `?rtcpport=${transport.rtcpTuple.localPort}` +
+            `&localrtpport=${localRtpPort}&localrtcpport=${localRtcpPort}&pkt_size=1200`,
+    };
+}
+
+function buildRtmpFfmpegArgs(inputUrl, video, audio, videoSsrc, audioSsrc) {
+    return [
+        '-hide_banner',
+        '-loglevel',
+        'warning',
+        '-nostdin',
+        '-i',
+        inputUrl,
+        '-map',
+        '0:v:0',
+        '-an',
+        '-vf',
+        `scale=${RTMP_VIDEO_WIDTH}:${RTMP_VIDEO_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2,fps=${RTMP_VIDEO_FPS}`,
+        '-c:v',
+        'libvpx',
+        '-deadline',
+        'realtime',
+        '-cpu-used',
+        '8',
+        '-threads',
+        String(RTMP_VIDEO_THREADS),
+        '-b:v',
+        RTMP_VIDEO_BITRATE,
+        '-maxrate',
+        RTMP_VIDEO_BITRATE,
+        '-bufsize',
+        RTMP_VIDEO_BITRATE,
+        '-g',
+        '60',
+        '-payload_type',
+        String(RTMP_VIDEO_PAYLOAD_TYPE),
+        '-ssrc',
+        String(videoSsrc),
+        '-f',
+        'rtp',
+        video.url,
+        '-map',
+        '0:a:0',
+        '-vn',
+        '-c:a',
+        'libopus',
+        '-b:a',
+        '64k',
+        '-ar',
+        '48000',
+        '-ac',
+        '2',
+        '-payload_type',
+        String(RTMP_AUDIO_PAYLOAD_TYPE),
+        '-ssrc',
+        String(audioSsrc),
+        '-f',
+        'rtp',
+        audio.url,
+    ];
+}
+
+function runRtmpBridge(broadcastID, ingest, args, onExit) {
+    if (ingest.stopping) return;
+
+    ingest.attempts++;
+    const startedAt = Date.now();
+    const isStartingUp = () => Date.now() - startedAt < RTMP_BRIDGE_STARTUP_MS;
+    const ffmpegProcess = spawn(FFMPEG_PATH, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    ingest.process = ffmpegProcess;
+
+    ffmpegProcess.stderr.on('data', (data) => {
+        const message = data
+            .toString()
+            .trim()
+            .replace(/([?&]token=)[^&\s]+/g, '$1[REDACTED]');
+        ingest.lastError = message;
+        log[isStartingUp() ? 'debug' : 'warn']('RTMP FFmpeg', { broadcastID, message });
+    });
+    ffmpegProcess.on('error', (error) => {
+        ingest.lastError = error.message;
+        // A missing binary never fixes itself, so skip the retry loop.
+        if (error.code === 'ENOENT') ingest.unrecoverable = true;
+        log.error('RTMP FFmpeg failed to spawn', { broadcastID, ffmpegPath: FFMPEG_PATH, error: error.message });
+    });
+    ffmpegProcess.on('close', (code, signal) => {
+        if (ingest.stopping || ingest.process !== ffmpegProcess) return;
+
+        // MediaMTX only authenticates the publisher once, so a bridge that dies mid-stream
+        // must respawn itself; the publisher is usually still connected.
+        if (!isStartingUp()) {
+            log.warn('RTMP FFmpeg bridge died mid-stream, restarting', {
+                broadcastID,
+                code,
+                signal,
+                lastError: ingest.lastError,
+            });
+            ingest.attempts = 0;
+        }
+
+        const maxAttempts = ingest.everRan ? RTMP_BRIDGE_MAX_RESTARTS : RTMP_BRIDGE_MAX_ATTEMPTS;
+        if (!ingest.unrecoverable && ingest.attempts < maxAttempts) {
+            log.debug('Retrying RTMP FFmpeg bridge', { broadcastID, attempt: ingest.attempts + 1 });
+            ingest.retryTimer = setTimeout(
+                () => runRtmpBridge(broadcastID, ingest, args, onExit),
+                RTMP_BRIDGE_RETRY_DELAY_MS
+            );
+            return;
+        }
+
+        onExit(code, signal);
+    });
+
+    // Surviving the startup window means MediaMTX is really feeding us media.
+    ingest.runningTimer = setTimeout(() => {
+        if (ingest.process === ffmpegProcess) ingest.everRan = true;
+    }, RTMP_BRIDGE_STARTUP_MS);
+
+    log.debug('RTMP FFmpeg bridge started', { broadcastID, attempt: ingest.attempts, pid: ffmpegProcess.pid });
+}
+
+async function startRtmpIngest(pathName, token, io, broadcasters, viewers) {
+    const broadcastID = getRtmpBroadcastID(pathName);
+
+    const room = await getOrCreateRoom(broadcastID);
+    if (room.rtmpIngest) return;
+
+    const videoSsrc = Math.floor(Math.random() * 0x3fffffff) + 1;
+    const audioSsrc = Math.floor(Math.random() * 0x3fffffff) + 0x40000000;
+    let video;
+    let audio;
+
+    try {
+        video = await createRtmpPlainProducer(room, 'video', videoSsrc);
+        audio = await createRtmpPlainProducer(room, 'audio', audioSsrc);
+
+        const separator = RTMP_SOURCE_URL.includes('?') ? '&' : '?';
+        const inputUrl = `${RTMP_SOURCE_URL}/${pathName}${separator}token=${encodeURIComponent(token)}`;
+        const args = buildRtmpFfmpegArgs(inputUrl, video, audio, videoSsrc, audioSsrc);
+        const ingest = {
+            process: null,
+            retryTimer: null,
+            runningTimer: null,
+            attempts: 0,
+            lastError: null,
+            unrecoverable: false,
+            everRan: false,
+            video,
+            audio,
+            stopping: false,
+        };
+        room.rtmpIngest = ingest;
+        rtmpReservations.delete(broadcastID);
+        broadcasters[broadcastID] = `rtmp:${broadcastID}`;
+
+        runRtmpBridge(broadcastID, ingest, args, (code, signal) => {
+            log.info('RTMP ingest stopped', { broadcastID, code, signal, lastError: ingest.lastError });
+            stopRtmpIngest(broadcastID);
+            delete broadcasters[broadcastID];
+            for (const [viewerSocketId] of room.viewers) {
+                io.to(viewerSocketId).emit('broadcasterDisconnect');
+                delete viewers[viewerSocketId];
+            }
+            deleteRoom(broadcastID);
+        });
+
+        for (const { producer } of [video, audio]) {
+            for (const [viewerSocketId] of room.viewers) {
+                io.to(viewerSocketId).emit('sfu-newProducer', {
+                    producerId: producer.id,
+                    kind: producer.kind,
+                    source: 'rtmp',
+                });
+            }
+        }
+
+        log.info('RTMP ingest started', { broadcastID, pathName });
+    } catch (error) {
+        if (video) video.transport.close();
+        if (audio) audio.transport.close();
+        room.rtmpIngest = null;
+        rtmpReservations.delete(broadcastID);
+        throw error;
+    }
+}
+
+function stopRtmpIngest(broadcastID) {
+    const room = getRoom(broadcastID);
+    const ingest = room?.rtmpIngest;
+    if (!ingest) return;
+
+    ingest.stopping = true;
+    room.rtmpIngest = null;
+    if (ingest.retryTimer) clearTimeout(ingest.retryTimer);
+    if (ingest.runningTimer) clearTimeout(ingest.runningTimer);
+    if (ingest.process && ingest.process.exitCode === null) ingest.process.kill('SIGTERM');
+    ingest.video.transport.close();
+    ingest.audio.transport.close();
+    log.debug('RTMP ingest resources closed', { broadcastID });
 }
 
 // =====================================================
@@ -343,6 +668,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
     socket.on('sfu-createBroadcasterTransport', async (broadcastID, callback) => {
         try {
             const room = await getOrCreateRoom(broadcastID);
+            if (isRtmpSourceActive(broadcastID)) throw new Error('This broadcast is using an RTMP source');
 
             // Cancel any pending broadcaster disconnect timer (browser refresh)
             if (broadcasterDisconnectTimers[broadcastID]) {
@@ -437,6 +763,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
                 io.to(viewerSocketId).emit('sfu-newProducer', {
                     producerId: producer.id,
                     kind: producer.kind,
+                    source: producer.appData.source || 'browser',
                 });
             }
 
@@ -510,6 +837,15 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             log.error('sfu-createViewerSendTransport error', error.message);
             callback({ error: error.message });
         }
+    });
+
+    socket.on('sfu-closeViewerSendTransport', ({ broadcastID }) => {
+        const viewer = getRoom(broadcastID)?.viewers.get(socket.id);
+        if (!viewer?.sendTransport) return;
+        viewer.sendTransport.close();
+        viewer.sendTransport = null;
+        viewer.producers.clear();
+        log.debug('sfu-closeViewerSendTransport', { broadcastID, socketId: socket.id });
     });
 
     // Connect viewer receive transport
@@ -739,20 +1075,25 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         }
     });
 
+    // Let a viewer know the source type before it asks for camera/mic permission
+    socket.on('sfu-getSourceType', (broadcastID, callback) => {
+        callback({ sourceType: getRoomSourceType(broadcastID) });
+    });
+
     // Get current producers (for viewer joining an existing broadcast)
     socket.on('sfu-getProducers', (broadcastID, callback) => {
         try {
             const room = getRoom(broadcastID);
             if (!room) {
-                callback({ producers: [] });
+                callback({ producers: [], sourceType: 'none' });
                 return;
             }
             const producers = [];
             for (const [producerId, producer] of room.producers) {
-                producers.push({ producerId, kind: producer.kind });
+                producers.push({ producerId, kind: producer.kind, source: producer.appData.source || 'browser' });
             }
             log.debug('sfu-getProducers', { broadcastID, count: producers.length });
-            callback({ producers });
+            callback({ producers, sourceType: getRoomSourceType(broadcastID) });
         } catch (error) {
             log.error('sfu-getProducers error', error.message);
             callback({ error: error.message });
@@ -1029,6 +1370,10 @@ module.exports = {
     getOrCreateRoom,
     getRoom,
     deleteRoom,
+    getRoomSourceType,
+    reserveRtmpIngest,
+    isRtmpSourceActive,
+    startRtmpIngest,
     handleSfuConnection,
     handleSfuDisconnect,
     sfuRooms,

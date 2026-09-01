@@ -16,6 +16,7 @@ const viewerFormHeader = document.getElementById('viewerFormHeader');
 const viewerButtons = document.getElementById('viewerButtons');
 const myName = document.getElementById('myName');
 const sessionTime = document.getElementById('sessionTime');
+const rtmpBadge = document.getElementById('rtmpBadge');
 const video = document.getElementById('mainVideo');
 const videoOff = document.getElementById('videoOff');
 
@@ -134,6 +135,7 @@ let sfuProducing = false; // guard to prevent concurrent viewer produce
 let sfuJoined = false; // guard to prevent double SFU join
 let isFirstConnect = true; // track first vs reconnect
 let isBroadcasterConnected = false; // track if broadcaster is present
+let isExternalSource = false;
 
 const socket = io.connect(window.location.origin);
 
@@ -149,6 +151,15 @@ socket.on('broadcastingMode', async (mode) => {
     if (reconnectingOverlay) reconnectingOverlay.classList.remove('active');
     broadcastingMode = mode;
     console.log('Broadcasting mode:', broadcastingMode);
+
+    if (isFirstConnect) {
+        isFirstConnect = false;
+        if (broadcastingMode === 'sfu') {
+            const { sourceType } = await sfuSocketRequest('sfu-getSourceType', broadcastID);
+            setExternalSourceMode(sourceType === 'rtmp');
+        }
+        if (!isExternalSource) await checkViewerAudioVideo();
+    }
 
     // SFU reconnect: if we already joined once, server restarted and all
     // mediasoup state is gone. Reset and re-join.
@@ -187,6 +198,8 @@ socket.on('broadcastingMode', async (mode) => {
     // Trigger SFU join here because 'connect' fires before this event arrives
     if (broadcastingMode === 'sfu' && !sfuJoined) {
         await sfuJoinBroadcast();
+    } else if (broadcastingMode === 'p2p') {
+        socket.emit('viewer', broadcastID, username);
     }
 });
 
@@ -243,16 +256,6 @@ socket.on('candidate', (id, candidate) => {
 socket.on('connect', async () => {
     const reconnectingOverlay = document.getElementById('reconnectingOverlay');
     if (reconnectingOverlay) reconnectingOverlay.classList.remove('active');
-    if (isFirstConnect) {
-        isFirstConnect = false;
-        await checkViewerAudioVideo();
-    }
-    // Note: broadcastingMode event arrives AFTER connect, so in SFU mode
-    // the join is initiated from the broadcastingMode handler instead.
-    // On reconnect, broadcastingMode handler handles SFU reset + rejoin.
-    if (broadcastingMode !== 'sfu') {
-        socket.emit('viewer', broadcastID, username);
-    }
 });
 
 socket.on('broadcaster', () => {
@@ -324,7 +327,8 @@ async function sfuJoinBroadcast() {
         socket.emit('viewer', broadcastID, username);
 
         // Get existing producers and consume them
-        const { producers } = await sfuSocketRequest('sfu-getProducers', broadcastID);
+        const { producers, sourceType } = await sfuSocketRequest('sfu-getProducers', broadcastID);
+        setExternalSourceMode(sourceType === 'rtmp');
         if (producers.length > 0) isBroadcasterConnected = true;
         for (const { producerId, kind } of producers) {
             await sfuConsumeProducer(producerId, kind);
@@ -400,8 +404,9 @@ async function sfuConsumeProducer(producerId, kind) {
 }
 
 // Handle new producer from broadcaster (when broadcast starts or track changes)
-socket.on('sfu-newProducer', async ({ producerId, kind }) => {
+socket.on('sfu-newProducer', async ({ producerId, kind, source }) => {
     if (broadcastingMode !== 'sfu') return;
+    if (source === 'rtmp') setExternalSourceMode(true);
     await sfuConsumeProducer(producerId, kind);
 });
 
@@ -703,6 +708,31 @@ messageDisplay(viewerSettings.buttons.message);
 
 function messageDisplay(display) {
     elementDisplay(messagesBtn, display);
+}
+
+function setExternalSourceMode(enabled) {
+    if (!enabled || isExternalSource) return;
+    isExternalSource = true;
+
+    if (sfuSendTransport) {
+        socket.emit('sfu-closeViewerSendTransport', { broadcastID });
+        sfuSendTransport.close();
+        sfuSendTransport = null;
+        sfuProducers.clear();
+    }
+    if (viewerStream) {
+        viewerStream.getTracks().forEach((track) => track.stop());
+        viewerStream = null;
+    }
+
+    elementDisplay(disableAudio, false);
+    elementDisplay(enableAudio, false);
+    elementDisplay(videoBtn, false);
+    messageDisplay(false);
+    messagesForm.classList.remove('panel-open');
+    messagesFormOpen = false;
+    viewerVideoContainer.style.display = 'none';
+    rtmpBadge.classList.add('active');
 }
 
 if (viewerSettings.options.start_full_screen) {

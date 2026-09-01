@@ -1,0 +1,21 @@
+logLevel: info
+
+rtsp: false
+rtmp: true
+rtmpAddress: :1936
+hls: false
+webrtc: false
+srt: false
+moq: false
+playback: false
+api: false
+metrics: false
+pprof: false
+
+authMethod: http
+authHTTPAddress: http://127.0.0.1:3016/api/v1/rtmp/auth
+
+paths:
+    all_others:
+        source: publisher
+        overridePublisher: false
