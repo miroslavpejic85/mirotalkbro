@@ -709,6 +709,38 @@ startServer().catch((err) => {
     process.exit(1);
 });
 
+// Graceful shutdown: mediasoup registers its own SIGINT/SIGTERM listeners,
+// which override the Node default of exiting on those signals.
+let shuttingDown = false;
+
+async function shutdown(signal) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+
+    log.info('Shutting down...', { signal });
+
+    const forceExit = setTimeout(() => {
+        log.warn('Forcing shutdown after timeout');
+        process.exit(1);
+    }, 5000);
+    forceExit.unref();
+
+    try {
+        io.close();
+        server.closeAllConnections?.();
+        await new Promise((resolve) => server.close(resolve));
+        if (isSFU) sfuHandler.closeWorkers();
+        if (ngrokEnabled && ngrokAuthToken) await ngrok.kill();
+    } catch (err) {
+        log.warn('[Error] shutdown', err);
+    }
+
+    clearTimeout(forceExit);
+    process.exit(0);
+}
+
+['SIGINT', 'SIGTERM'].forEach((signal) => process.on(signal, () => shutdown(signal)));
+
 // Handle client errors (malformed/incomplete HTTP requests) gracefully
 server.on('clientError', (err, socket) => {
     err.code === 'HPE_HEADER_OVERFLOW' || err.message === 'Parse Error'

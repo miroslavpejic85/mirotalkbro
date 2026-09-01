@@ -252,6 +252,16 @@ async function createWorkers() {
     }
 }
 
+function closeWorkers() {
+    for (const broadcastID of Object.keys(sfuRooms)) {
+        stopRtmpIngest(broadcastID);
+    }
+    for (const worker of workers) {
+        if (!worker.closed) worker.close();
+    }
+    workers.length = 0;
+}
+
 function getNextWorker() {
     const worker = workers[nextWorkerIdx];
     nextWorkerIdx = (nextWorkerIdx + 1) % workers.length;
@@ -1367,6 +1377,7 @@ function handleSfuDisconnect(socket, broadcasters, viewers, io) {
 
 module.exports = {
     createWorkers,
+    closeWorkers,
     getOrCreateRoom,
     getRoom,
     deleteRoom,
