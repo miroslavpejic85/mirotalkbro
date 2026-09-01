@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.4.10
+ * @version 1.4.20
  */
 
 require('dotenv').config();
@@ -476,19 +476,41 @@ io.sockets.on('connection', (socket) => {
         sfuHandler.handleSfuConnection(socket, io, broadcasters, viewers);
 
         // SFU still needs broadcaster/viewer registration for room management
-        socket.on('broadcaster', (broadcastID, token) => {
+        socket.on('broadcaster', (broadcastID, token, callback) => {
+            const respond = typeof callback === 'function' ? callback : () => {};
+            if (!sfuHandler.isValidBroadcastID(broadcastID)) {
+                respond({ error: 'Invalid broadcast ID' });
+                return;
+            }
             if (adminOnlyBroadcast && !isValidAdminToken(token)) {
                 socket.emit('broadcasterRejected', 'Unauthorized: invalid admin token');
+                respond({ error: 'Unauthorized: invalid admin token' });
                 return;
             }
             if (sfuHandler.isRtmpSourceActive(broadcastID)) {
                 socket.emit('broadcasterRejected', 'This broadcast is using an RTMP source');
+                respond({ error: 'This broadcast is using an RTMP source' });
                 return;
             }
+            if (!socket.data.sfuBroadcasterIds) socket.data.sfuBroadcasterIds = new Set();
+            if (socket.data.sfuBroadcasterIds.has(broadcastID) && broadcasters[broadcastID] === socket.id) {
+                respond({ registered: true });
+                return;
+            }
+            socket.data.sfuBroadcasterIds.add(broadcastID);
             handleBroadcaster(socket, broadcastID);
+            respond({ registered: true });
         });
-        socket.on('viewer', (broadcastID, username) => {
+        socket.on('viewer', (broadcastID, username, callback) => {
+            const respond = typeof callback === 'function' ? callback : () => {};
+            if (!sfuHandler.isValidBroadcastID(broadcastID)) {
+                respond({ error: 'Invalid broadcast ID' });
+                return;
+            }
+            if (!socket.data.sfuViewerIds) socket.data.sfuViewerIds = new Set();
+            socket.data.sfuViewerIds.add(broadcastID);
             handleViewerSfu(socket, broadcastID, username);
+            respond({ registered: true });
         });
     } else {
         // P2P mode: original mesh signaling

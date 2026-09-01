@@ -23,6 +23,32 @@ let nextWorkerIdx = 0;
 // Room state: broadcastID -> { router, broadcasterSocketId, broadcasterTransport, producers, viewers }
 const sfuRooms = {};
 const rtmpReservations = new Set();
+const roomCreationPromises = new Map();
+const BROADCAST_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
+function isValidBroadcastID(broadcastID) {
+    return typeof broadcastID === 'string' && BROADCAST_ID_PATTERN.test(broadcastID);
+}
+
+function requireRegisteredBroadcaster(socket, broadcastID) {
+    if (!socket.data.sfuBroadcasterIds?.has(broadcastID)) {
+        throw new Error('Broadcaster is not authorized for this room');
+    }
+}
+
+function requireActiveBroadcaster(socket, room, broadcastID) {
+    requireRegisteredBroadcaster(socket, broadcastID);
+    if (room.broadcasterSocketId !== socket.id) {
+        throw new Error('Socket does not own the broadcaster transport');
+    }
+}
+
+function requireRoomMember(socket, room, broadcastID) {
+    const isBroadcaster = socket.data.sfuBroadcasterIds?.has(broadcastID) && room.broadcasterSocketId === socket.id;
+    if (!isBroadcaster && !socket.data.sfuViewerIds?.has(broadcastID)) {
+        throw new Error('Socket is not registered in this room');
+    }
+}
 
 // =====================================================
 // Network helpers
@@ -215,7 +241,6 @@ const config = {
             },
         ],
         initialAvailableOutgoingBitrate: 1000000,
-        minimumAvailableOutgoingBitrate: 600000,
         maxIncomingBitrate: 1500000,
     },
 };
@@ -263,6 +288,7 @@ function closeWorkers() {
 }
 
 function getNextWorker() {
+    if (workers.length === 0) throw new Error('No mediasoup workers are available');
     const worker = workers[nextWorkerIdx];
     nextWorkerIdx = (nextWorkerIdx + 1) % workers.length;
     return worker;
@@ -273,24 +299,35 @@ function getNextWorker() {
 // =====================================================
 
 async function getOrCreateRoom(broadcastID) {
+    if (!isValidBroadcastID(broadcastID)) throw new Error('Invalid broadcast ID');
     if (sfuRooms[broadcastID]) {
         return sfuRooms[broadcastID];
     }
+    if (roomCreationPromises.has(broadcastID)) return roomCreationPromises.get(broadcastID);
 
-    const worker = getNextWorker();
-    const router = await worker.createRouter({ mediaCodecs: config.router.mediaCodecs });
+    const creationPromise = (async () => {
+        const worker = getNextWorker();
+        const router = await worker.createRouter({ mediaCodecs: config.router.mediaCodecs });
 
-    sfuRooms[broadcastID] = {
-        router,
-        broadcasterSocketId: null,
-        broadcasterTransport: null,
-        rtmpIngest: null,
-        producers: new Map(), // producerId -> producer
-        viewers: new Map(), // socketId -> { transport, consumers: Map<producerId, consumer>, username }
-    };
+        const room = {
+            router,
+            broadcasterSocketId: null,
+            broadcasterTransport: null,
+            rtmpIngest: null,
+            producers: new Map(), // producerId -> producer
+            viewers: new Map(), // socketId -> { transports, consumers, producers, username }
+        };
+        sfuRooms[broadcastID] = room;
+        log.debug('Room created', { broadcastID, routerId: router.id });
+        return room;
+    })();
 
-    log.debug('Room created', { broadcastID, routerId: router.id });
-    return sfuRooms[broadcastID];
+    roomCreationPromises.set(broadcastID, creationPromise);
+    try {
+        return await creationPromise;
+    } finally {
+        roomCreationPromises.delete(broadcastID);
+    }
 }
 
 function getRoom(broadcastID) {
@@ -665,7 +702,14 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
     // Get RTP capabilities for the room
     socket.on('sfu-getRtpCapabilities', async (broadcastID, callback) => {
         try {
-            const room = await getOrCreateRoom(broadcastID);
+            if (!isValidBroadcastID(broadcastID)) throw new Error('Invalid broadcast ID');
+            let room = getRoom(broadcastID);
+            if (!room) {
+                requireRegisteredBroadcaster(socket, broadcastID);
+                room = await getOrCreateRoom(broadcastID);
+            } else {
+                requireRoomMember(socket, room, broadcastID);
+            }
             callback({ rtpCapabilities: room.router.rtpCapabilities });
             log.debug('sfu-getRtpCapabilities', { broadcastID });
         } catch (error) {
@@ -677,6 +721,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
     // Broadcaster creates a send transport
     socket.on('sfu-createBroadcasterTransport', async (broadcastID, callback) => {
         try {
+            requireRegisteredBroadcaster(socket, broadcastID);
             const room = await getOrCreateRoom(broadcastID);
             if (isRtmpSourceActive(broadcastID)) throw new Error('This broadcast is using an RTMP source');
 
@@ -738,6 +783,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room || !room.broadcasterTransport) throw new Error('No broadcaster transport');
+            requireActiveBroadcaster(socket, room, broadcastID);
             await room.broadcasterTransport.connect({ dtlsParameters });
             log.debug('sfu-connectBroadcasterTransport', { broadcastID });
             callback({ connected: true });
@@ -752,6 +798,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room || !room.broadcasterTransport) throw new Error('No broadcaster transport');
+            requireActiveBroadcaster(socket, room, broadcastID);
 
             const producer = await room.broadcasterTransport.produce({
                 kind,
@@ -789,6 +836,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room) throw new Error(`Room ${broadcastID} does not exist`);
+            requireRoomMember(socket, room, broadcastID);
 
             const { transport, params } = await createWebRtcTransport(broadcastID);
 
@@ -803,6 +851,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
                 });
             }
             const viewer = room.viewers.get(socket.id);
+            if (viewer.recvTransport && !viewer.recvTransport.closed) viewer.recvTransport.close();
             viewer.recvTransport = transport;
 
             // Track viewer in global viewers map (skip broadcaster — it's tracked in broadcasters)
@@ -825,6 +874,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room) throw new Error(`Room ${broadcastID} does not exist`);
+            requireRoomMember(socket, room, broadcastID);
 
             const { transport, params } = await createWebRtcTransport(broadcastID);
 
@@ -839,6 +889,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
                 });
             }
             const viewer = room.viewers.get(socket.id);
+            if (viewer.sendTransport && !viewer.sendTransport.closed) viewer.sendTransport.close();
             viewer.sendTransport = transport;
 
             log.debug('sfu-createViewerSendTransport', { broadcastID, socketId: socket.id, transportId: transport.id });
@@ -850,7 +901,14 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
     });
 
     socket.on('sfu-closeViewerSendTransport', ({ broadcastID }) => {
-        const viewer = getRoom(broadcastID)?.viewers.get(socket.id);
+        const room = getRoom(broadcastID);
+        if (!room) return;
+        try {
+            requireRoomMember(socket, room, broadcastID);
+        } catch (error) {
+            return;
+        }
+        const viewer = room.viewers.get(socket.id);
         if (!viewer?.sendTransport) return;
         viewer.sendTransport.close();
         viewer.sendTransport = null;
@@ -863,6 +921,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room) throw new Error('Room not found');
+            requireRoomMember(socket, room, broadcastID);
             const viewer = room.viewers.get(socket.id);
             if (!viewer || !viewer.recvTransport) throw new Error('No viewer transport');
             await viewer.recvTransport.connect({ dtlsParameters });
@@ -885,6 +944,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room) throw new Error('Room not found');
+            requireRoomMember(socket, room, broadcastID);
             const viewer = room.viewers.get(socket.id);
             if (!viewer || !viewer.sendTransport) throw new Error('No viewer send transport');
             await viewer.sendTransport.connect({ dtlsParameters });
@@ -907,6 +967,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room) throw new Error('Room not found');
+            requireRoomMember(socket, room, broadcastID);
             const viewer = room.viewers.get(socket.id);
             if (!viewer || !viewer.sendTransport) throw new Error('No viewer send transport');
 
@@ -940,6 +1001,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room) throw new Error('Room not found');
+            requireRoomMember(socket, room, broadcastID);
 
             if (!room.router.canConsume({ producerId, rtpCapabilities })) {
                 throw new Error('Cannot consume this producer');
@@ -951,9 +1013,11 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             const consumer = await viewer.recvTransport.consume({
                 producerId,
                 rtpCapabilities,
-                paused: false, // Start unpaused so media flows immediately
+                paused: true,
             });
 
+            const previousConsumer = viewer.consumers.get(producerId);
+            if (previousConsumer && !previousConsumer.closed) previousConsumer.close();
             viewer.consumers.set(producerId, consumer);
 
             consumer.on('transportclose', () => {
@@ -973,6 +1037,8 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
                 kind: consumer.kind,
                 rtpParameters: consumer.rtpParameters,
                 producerPaused: consumer.producerPaused,
+                consumerType: consumer.type,
+                spatialLayers: getProducerSpatialLayers(findProducer(room, producerId)),
             });
         } catch (error) {
             log.error('sfu-consume error', error.message);
@@ -985,6 +1051,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room) throw new Error('Room not found');
+            requireActiveBroadcaster(socket, room, broadcastID);
 
             // Use the broadcaster's recv transport (created via sfu-createViewerTransport)
             const broadcasterViewer = room.viewers.get(socket.id);
@@ -998,10 +1065,12 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             const consumer = await recvTransport.consume({
                 producerId,
                 rtpCapabilities,
-                paused: false,
+                paused: true,
             });
 
             if (!room.broadcasterConsumers) room.broadcasterConsumers = new Map();
+            const previousConsumer = room.broadcasterConsumers.get(producerId);
+            if (previousConsumer && !previousConsumer.closed) previousConsumer.close();
             room.broadcasterConsumers.set(producerId, consumer);
 
             consumer.on('transportclose', () => {
@@ -1019,22 +1088,11 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
                 kind: consumer.kind,
                 rtpParameters: consumer.rtpParameters,
                 producerPaused: consumer.producerPaused,
+                consumerType: consumer.type,
+                spatialLayers: getProducerSpatialLayers(findProducer(room, producerId)),
             });
         } catch (error) {
             log.error('sfu-broadcasterConsume error', error.message);
-            callback({ error: error.message });
-        }
-    });
-
-    // Connect broadcaster recv transport
-    socket.on('sfu-connectBroadcasterRecvTransport', async ({ broadcastID, dtlsParameters }, callback) => {
-        try {
-            const room = getRoom(broadcastID);
-            if (!room || !room.broadcasterRecvTransport) throw new Error('No broadcaster recv transport');
-            await room.broadcasterRecvTransport.connect({ dtlsParameters });
-            callback({ connected: true });
-        } catch (error) {
-            log.error('sfu-connectBroadcasterRecvTransport error', error.message);
             callback({ error: error.message });
         }
     });
@@ -1059,7 +1117,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             }
 
             // Check if it's a broadcaster consumer
-            if (!consumer && room.broadcasterConsumers) {
+            if (!consumer && room.broadcasterSocketId === socket.id && room.broadcasterConsumers) {
                 for (const [, c] of room.broadcasterConsumers) {
                     if (c.id === consumerId) {
                         consumer = c;
@@ -1098,6 +1156,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
                 callback({ producers: [], sourceType: 'none' });
                 return;
             }
+            requireRoomMember(socket, room, broadcastID);
             const producers = [];
             for (const [producerId, producer] of room.producers) {
                 producers.push({ producerId, kind: producer.kind, source: producer.appData.source || 'browser' });
@@ -1118,6 +1177,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
                 callback({ viewerProducers: [] });
                 return;
             }
+            requireActiveBroadcaster(socket, room, broadcastID);
             const viewerProducers = [];
             for (const [viewerSocketId, viewerData] of room.viewers) {
                 if (viewerSocketId === socket.id) continue; // skip broadcaster's own viewer entry
@@ -1143,10 +1203,16 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
     socket.on('sfu-dataMessage', ({ broadcastID, method, action, targetId }) => {
         const room = getRoom(broadcastID);
         if (!room) return;
+        try {
+            requireRoomMember(socket, room, broadcastID);
+        } catch (error) {
+            return;
+        }
 
         const message = { method, action };
 
         if (targetId && targetId !== '*') {
+            if (targetId !== room.broadcasterSocketId && !room.viewers.has(targetId)) return;
             // Send to specific peer
             io.to(targetId).emit('sfu-dataMessage', message);
         } else if (socket.id === room.broadcasterSocketId) {
@@ -1181,7 +1247,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room) throw new Error('Room not found');
-            const producer = findProducer(room, producerId);
+            const producer = findOwnedProducer(room, socket, producerId);
             if (producer) {
                 await producer.pause();
                 callback({ paused: true });
@@ -1197,7 +1263,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room) throw new Error('Room not found');
-            const producer = findProducer(room, producerId);
+            const producer = findOwnedProducer(room, socket, producerId);
             if (producer) {
                 await producer.resume();
                 callback({ resumed: true });
@@ -1228,6 +1294,16 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
 
             if (!consumer) throw new Error('Consumer not found');
 
+            const producer = findProducer(room, consumer.producerId);
+            const spatialLayerCount = getProducerSpatialLayers(producer);
+            if (spatialLayerCount <= 1) throw new Error('Consumer does not support spatial layers');
+            if (!Number.isInteger(spatialLayer) || spatialLayer < 0 || spatialLayer >= spatialLayerCount) {
+                throw new Error('Invalid spatial layer');
+            }
+            if (temporalLayer !== undefined && (!Number.isInteger(temporalLayer) || temporalLayer < 0)) {
+                throw new Error('Invalid temporal layer');
+            }
+
             const layers = { spatialLayer };
             if (typeof temporalLayer === 'number') layers.temporalLayer = temporalLayer;
             await consumer.setPreferredLayers(layers);
@@ -1235,43 +1311,6 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             callback({ ok: true });
         } catch (error) {
             log.error('sfu-setPreferredLayers error', error.message);
-            callback({ error: error.message });
-        }
-    });
-
-    // Replace track / update producer
-    socket.on('sfu-replaceProducer', async ({ broadcastID, producerId, kind, rtpParameters, appData }, callback) => {
-        try {
-            const room = getRoom(broadcastID);
-            if (!room || !room.broadcasterTransport) throw new Error('Room/transport not found');
-
-            // Close old producer
-            const oldProducer = room.producers.get(producerId);
-            if (oldProducer) {
-                oldProducer.close();
-                room.producers.delete(producerId);
-            }
-
-            // Create new producer
-            const newProducer = await room.broadcasterTransport.produce({ kind, rtpParameters, appData });
-            room.producers.set(newProducer.id, newProducer);
-
-            newProducer.on('transportclose', () => {
-                room.producers.delete(newProducer.id);
-            });
-
-            // Notify viewers
-            for (const [viewerSocketId] of room.viewers) {
-                io.to(viewerSocketId).emit('sfu-producerReplaced', {
-                    oldProducerId: producerId,
-                    newProducerId: newProducer.id,
-                    kind: newProducer.kind,
-                });
-            }
-
-            callback({ producerId: newProducer.id });
-        } catch (error) {
-            log.error('sfu-replaceProducer error', error.message);
             callback({ error: error.message });
         }
     });
@@ -1291,6 +1330,20 @@ function findProducer(room, producerId) {
         if (vp) return vp;
     }
     return null;
+}
+
+function findOwnedProducer(room, socket, producerId) {
+    if (room.broadcasterSocketId === socket.id) return room.producers.get(producerId) || null;
+    return room.viewers.get(socket.id)?.producers.get(producerId) || null;
+}
+
+function getProducerSpatialLayers(producer) {
+    if (!producer || producer.kind !== 'video') return 1;
+    if (producer.type === 'simulcast') return producer.rtpParameters.encodings.length;
+    if (producer.type === 'svc') {
+        return mediasoup.parseScalabilityMode(producer.rtpParameters.encodings[0]?.scalabilityMode).spatialLayers;
+    }
+    return 1;
 }
 
 // =====================================================
@@ -1389,4 +1442,5 @@ module.exports = {
     handleSfuDisconnect,
     sfuRooms,
     config,
+    isValidBroadcastID,
 };

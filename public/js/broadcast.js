@@ -468,17 +468,21 @@ socket.on('sfu-viewerProducer', async ({ viewerSocketId, producerId, kind, usern
         // Need a recv transport for broadcaster (serialized)
         await ensureSfuRecvTransport();
 
-        const { consumerId, rtpParameters, producerPaused } = await socketRequest('sfu-broadcasterConsume', {
-            broadcastID,
-            producerId,
-            rtpCapabilities: sfuDevice.rtpCapabilities,
-        });
+        const { consumerId, rtpParameters, producerPaused, consumerType, spatialLayers } = await socketRequest(
+            'sfu-broadcasterConsume',
+            {
+                broadcastID,
+                producerId,
+                rtpCapabilities: sfuDevice.rtpCapabilities,
+            }
+        );
 
         const consumer = await sfuRecvTransport.consume({
             id: consumerId,
             producerId,
             kind,
             rtpParameters,
+            appData: { consumerType, spatialLayers },
         });
 
         sfuConsumers.set(producerId, consumer);
@@ -550,9 +554,13 @@ async function ensureSfuRecvTransport() {
         await sfuRecvTransportPromise;
         return;
     }
-    sfuRecvTransportPromise = sfuCreateRecvTransport(broadcastID);
-    await sfuRecvTransportPromise;
-    sfuRecvTransportPromise = null;
+    const creationPromise = sfuCreateRecvTransport(broadcastID);
+    sfuRecvTransportPromise = creationPromise;
+    try {
+        await creationPromise;
+    } finally {
+        if (sfuRecvTransportPromise === creationPromise) sfuRecvTransportPromise = null;
+    }
 }
 
 async function sfuCreateRecvTransport(broadcastID) {
@@ -593,17 +601,21 @@ async function sfuConsumeExistingViewerProducers() {
             // Skip if already consumed (e.g. from sfu-viewerProducer event)
             if (sfuConsumers.has(producerId)) continue;
             try {
-                const { consumerId, rtpParameters, producerPaused } = await socketRequest('sfu-broadcasterConsume', {
-                    broadcastID,
-                    producerId,
-                    rtpCapabilities: sfuDevice.rtpCapabilities,
-                });
+                const { consumerId, rtpParameters, producerPaused, consumerType, spatialLayers } = await socketRequest(
+                    'sfu-broadcasterConsume',
+                    {
+                        broadcastID,
+                        producerId,
+                        rtpCapabilities: sfuDevice.rtpCapabilities,
+                    }
+                );
 
                 const consumer = await sfuRecvTransport.consume({
                     id: consumerId,
                     producerId,
                     kind,
                     rtpParameters,
+                    appData: { consumerType, spatialLayers },
                 });
 
                 sfuConsumers.set(producerId, consumer);
@@ -685,7 +697,9 @@ socket.on('sfu-dataMessage', (data) => {
 // Helper: promisify socket.emit with callback
 function socketRequest(event, data) {
     return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error(`${event} request timed out`)), 10000);
         socket.emit(event, data, (response) => {
+            clearTimeout(timeout);
             if (response && response.error) {
                 reject(new Error(response.error));
             } else {
@@ -1656,6 +1670,12 @@ function gotScreenStream(stream) {
 
 async function sfuStartBroadcast(stream) {
     try {
+        await new Promise((resolve, reject) => {
+            socket.emit('broadcaster', broadcastID, adminToken, (response) => {
+                if (response?.error) reject(new Error(response.error));
+                else resolve(response);
+            });
+        });
         if (!sfuDevice) {
             await sfuInitDevice(broadcastID);
         }
@@ -1663,7 +1683,6 @@ async function sfuStartBroadcast(stream) {
             await sfuCreateSendTransport(broadcastID);
         }
         await sfuProduceStream(stream);
-        socket.emit('broadcaster', broadcastID, adminToken);
     } catch (error) {
         console.error('SFU broadcast error', error);
         popupMessage('warning', 'SFU Error', 'Failed to start SFU broadcast: ' + error.message);

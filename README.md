@@ -119,6 +119,10 @@ FFMPEG_PATH=ffmpeg
 MEDIASOUP_ANNOUNCED_IP=127.0.0.1
 ```
 
+`127.0.0.1` is only valid when viewers run on the same host. For remote access or Docker behind NAT, set
+`MEDIASOUP_ANNOUNCED_IP` to the public IP address or hostname that viewers can reach and expose the configured
+mediasoup UDP/TCP port range.
+
 With Docker, add the optional MediaMTX overlay (P2P deployments can skip it):
 
 ```bash

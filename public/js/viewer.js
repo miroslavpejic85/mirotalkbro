@@ -130,6 +130,7 @@ let sfuDevice = null;
 let sfuRecvTransport = null;
 let sfuSendTransport = null;
 let sfuConsumers = new Map(); // producerId -> consumer
+let sfuConsumerPromises = new Map(); // producerId -> in-flight consume promise
 let sfuProducers = new Map(); // kind -> producer
 let sfuProducing = false; // guard to prevent concurrent viewer produce
 let sfuJoined = false; // guard to prevent double SFU join
@@ -285,6 +286,8 @@ async function sfuJoinBroadcast() {
     sfuJoined = true;
 
     try {
+        await sfuSocketRequest('viewer', broadcastID, username);
+
         // Initialize device
         if (!sfuDevice) {
             if (typeof mediasoupClient === 'undefined') {
@@ -323,9 +326,6 @@ async function sfuJoinBroadcast() {
             });
         }
 
-        // Register as viewer
-        socket.emit('viewer', broadcastID, username);
-
         // Get existing producers and consume them
         const { producers, sourceType } = await sfuSocketRequest('sfu-getProducers', broadcastID);
         setExternalSourceMode(sourceType === 'rtmp');
@@ -347,14 +347,17 @@ async function sfuJoinBroadcast() {
 }
 
 async function sfuConsumeProducer(producerId, kind) {
-    try {
+    if (sfuConsumers.has(producerId)) return;
+    if (sfuConsumerPromises.has(producerId)) return sfuConsumerPromises.get(producerId);
+
+    const consumePromise = (async () => {
         const response = await sfuSocketRequest('sfu-consume', {
             broadcastID,
             producerId,
             rtpCapabilities: sfuDevice.rtpCapabilities,
         });
 
-        const { consumerId, rtpParameters, producerPaused } = response;
+        const { consumerId, rtpParameters, producerPaused, consumerType, spatialLayers } = response;
 
         const consumer = await sfuRecvTransport.consume({
             id: consumerId,
@@ -367,6 +370,7 @@ async function sfuConsumeProducer(producerId, kind) {
              * jitter buffer).
              */
             streamId: `broadcaster-${broadcastID}`,
+            appData: { consumerType, spatialLayers },
         });
 
         // Enlarge the receiver playout buffer for smoother playback under loss.
@@ -398,8 +402,15 @@ async function sfuConsumeProducer(producerId, kind) {
         consumer.on('transportclose', () => {
             sfuConsumers.delete(producerId);
         });
+    })();
+
+    sfuConsumerPromises.set(producerId, consumePromise);
+    try {
+        await consumePromise;
     } catch (error) {
         console.error('SFU consume error', error);
+    } finally {
+        sfuConsumerPromises.delete(producerId);
     }
 }
 
@@ -512,7 +523,10 @@ socket.on('sfu-dataMessage', (data) => {
 // Helper: promisify socket.emit with callback
 function sfuSocketRequest(event, data) {
     return new Promise((resolve, reject) => {
-        socket.emit(event, data, (response) => {
+        const args = Array.prototype.slice.call(arguments, 1);
+        const timeout = setTimeout(() => reject(new Error(`${event} request timed out`)), 10000);
+        socket.emit(event, ...args, (response) => {
+            clearTimeout(timeout);
             if (response && response.error) {
                 reject(new Error(response.error));
             } else {
@@ -535,7 +549,9 @@ function sfuResetState() {
     sfuRecvTransport = null;
     sfuSendTransport = null;
     sfuConsumers = new Map();
+    sfuConsumerPromises = new Map();
     sfuProducers = new Map();
+    sfuProducing = false;
     sfuJoined = false;
 }
 
@@ -1170,12 +1186,20 @@ function handleQualitySelect() {
         return;
     }
 
-    const layers = [
-        { label: 'Auto', spatial: -1 },
-        { label: 'Low (1/4)', spatial: 0 },
-        { label: 'Medium (1/2)', spatial: 1 },
-        { label: 'High (Full)', spatial: 2 },
-    ];
+    const spatialLayerCount = Number(videoConsumer.appData?.spatialLayers) || 1;
+    if (spatialLayerCount <= 1) {
+        popupMessage('toast', 'Quality', 'Quality selection is unavailable for this stream', 'top');
+        return;
+    }
+
+    const threeLayerLabels = ['Low (1/4)', 'Medium (1/2)', 'High (Full)'];
+    const layers = [{ label: 'Auto', spatial: -1 }];
+    for (let spatial = 0; spatial < spatialLayerCount; spatial++) {
+        layers.push({
+            label: spatialLayerCount === 3 ? threeLayerLabels[spatial] : `Layer ${spatial + 1}`,
+            spatial,
+        });
+    }
 
     const inputOptions = {};
     layers.forEach((l) => {
@@ -1202,7 +1226,7 @@ function handleQualitySelect() {
                     await sfuSocketRequest('sfu-setPreferredLayers', {
                         broadcastID,
                         consumerId: videoConsumer.id,
-                        spatialLayer: 2,
+                        spatialLayer: spatialLayerCount - 1,
                     });
                 } else {
                     await sfuSocketRequest('sfu-setPreferredLayers', {
