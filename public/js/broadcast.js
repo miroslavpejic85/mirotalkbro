@@ -187,6 +187,7 @@ let sfuRecvTransportPromise = null; // serializes recv transport creation
 let sfuProducers = new Map(); // kind -> producer
 let sfuConsumers = new Map(); // producerId -> consumer
 let sfuViewerCount = 0;
+let isRtmpControlOnly = false;
 
 const socket = io.connect(window.location.origin);
 const reconnectingOverlay = document.getElementById('reconnectingOverlay');
@@ -194,6 +195,7 @@ const reconnectingOverlay = document.getElementById('reconnectingOverlay');
 socket.on('disconnect', () => {
     console.log('Socket disconnected, waiting for reconnect...');
     if (reconnectingOverlay) reconnectingOverlay.classList.add('active');
+    if (isRtmpControlOnly) sfuResetState();
 });
 
 socket.on('broadcasterRejected', (reason) => {
@@ -204,7 +206,7 @@ socket.on('broadcasterRejected', (reason) => {
 });
 
 // Server tells us which mode to use
-socket.on('broadcastingMode', (mode) => {
+socket.on('broadcastingMode', async (mode) => {
     if (reconnectingOverlay) reconnectingOverlay.classList.remove('active');
     broadcastingMode = mode;
     console.log('Broadcasting mode:', broadcastingMode);
@@ -222,6 +224,8 @@ socket.on('broadcastingMode', (mode) => {
         sfuResetState();
         // Re-acquire stream since old tracks may have ended
         getStream();
+    } else if (!broadcastStream) {
+        await startBroadcasterSession();
     }
 });
 
@@ -242,7 +246,9 @@ socket.on('viewer', (id, iceServers, username) => {
         addViewer(id, username);
         connectedPeers.innerText = sfuViewerCount;
         // Send current broadcaster video status to the new viewer
-        sendToViewersDataChannel('video', { visibility: videoOff.style.visibility }, id);
+        if (broadcastStream) {
+            sendToViewersDataChannel('video', { visibility: videoOff.style.visibility }, id);
+        }
         playSound('viewer');
         return;
     }
@@ -323,8 +329,10 @@ socket.on('sfuExistingViewers', async (existingViewers) => {
     }
 
     // Send current broadcaster video status to all existing viewers
-    for (const { id } of existingViewers) {
-        sendToViewersDataChannel('video', { visibility: videoOff.style.visibility }, id);
+    if (broadcastStream) {
+        for (const { id } of existingViewers) {
+            sendToViewersDataChannel('video', { visibility: videoOff.style.visibility }, id);
+        }
     }
 });
 
@@ -761,6 +769,10 @@ function handleDataChannelMessage(data) {
             const viewerAudioStatus = document.getElementById(
                 `${data.action.id}___${data.action.username}___viewerAudioStatus`
             );
+            const viewerAudioElement = document.getElementById(
+                `${data.action.id}___${data.action.username}___viewerAudio`
+            );
+            if (viewerAudioElement) viewerAudioElement.muted = !data.action.enabled;
             if (viewerAudioStatus) {
                 data.action.enabled
                     ? viewerAudioStatus.classList.remove('color-red')
@@ -1289,7 +1301,6 @@ function addViewer(id, username, stream = null) {
     if (sfuMode && !stream) {
         videoElement.classList.add('hidden');
         videoElementOff.classList.remove('hidden');
-        cardBody.classList.add('video-loading');
     } else {
         videoElementOff.classList.add('hidden');
     }
@@ -1580,9 +1591,72 @@ audioOutputTestBtn.onclick = () => {
     playSound('speaker');
 };
 
-getStream().then(getDevices).then(gotDevices);
+async function startBroadcasterSession() {
+    if (broadcastingMode !== 'sfu') {
+        await getStream();
+        await getDevices().then(gotDevices);
+        return;
+    }
+
+    try {
+        const registration = await registerSfuBroadcaster();
+        if (registration.mediaAllowed === false && registration.sourceType === 'rtmp') {
+            isRtmpControlOnly = true;
+            configureRtmpModeratorUi();
+            if (!sfuDevice) await sfuInitDevice(broadcastID);
+            await sfuConsumeExistingViewerProducers();
+            return;
+        }
+
+        await getStream();
+        await getDevices().then(gotDevices);
+    } catch (error) {
+        console.error('Unable to start broadcaster session', error);
+        popupMessage('warning', 'SFU Error', 'Failed to start broadcaster session: ' + error.message);
+    }
+}
+
+function registerSfuBroadcaster() {
+    return new Promise((resolve, reject) => {
+        socket.emit('broadcaster', broadcastID, adminToken, (response) => {
+            if (response?.error) reject(new Error(response.error));
+            else resolve(response);
+        });
+    });
+}
+
+function configureRtmpModeratorUi() {
+    stopTracks(broadcastStream);
+    broadcastStream = null;
+    video.srcObject = null;
+    video.closest('.container')?.classList.remove('video-loading');
+    videoOff.style.visibility = 'hidden';
+    const rtmpSourceStatus = document.getElementById('rtmpSourceStatus');
+    if (rtmpSourceStatus) rtmpSourceStatus.hidden = false;
+
+    for (const element of [
+        disableAudio,
+        enableAudio,
+        videoBtn,
+        screenShareStart,
+        screenShareStop,
+        recordingStart,
+        recordingStop,
+        togglePIP,
+        settingsBtn,
+    ]) {
+        elementDisplay(element, false);
+    }
+
+    settingsForm.classList.remove('panel-open');
+    settingsFormOpen = false;
+    const modeText = document.querySelector('#broadcastingModeLabel .mode-text');
+    if (modeText) modeText.textContent = 'SFU / RTMP';
+}
 
 function getStream() {
+    if (isRtmpControlOnly) return Promise.resolve();
+
     try {
         videoOff.style.visibility = 'hidden';
         video.closest('.container')?.classList.add('video-loading');
@@ -1670,12 +1744,7 @@ function gotScreenStream(stream) {
 
 async function sfuStartBroadcast(stream) {
     try {
-        await new Promise((resolve, reject) => {
-            socket.emit('broadcaster', broadcastID, adminToken, (response) => {
-                if (response?.error) reject(new Error(response.error));
-                else resolve(response);
-            });
-        });
+        await registerSfuBroadcaster();
         if (!sfuDevice) {
             await sfuInitDevice(broadcastID);
         }

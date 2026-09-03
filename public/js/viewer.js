@@ -159,7 +159,7 @@ socket.on('broadcastingMode', async (mode) => {
             const { sourceType } = await sfuSocketRequest('sfu-getSourceType', broadcastID);
             setExternalSourceMode(sourceType === 'rtmp');
         }
-        if (!isExternalSource) await checkViewerAudioVideo();
+        await checkViewerAudioVideo();
     }
 
     // SFU reconnect: if we already joined once, server restarted and all
@@ -729,25 +729,6 @@ function messageDisplay(display) {
 function setExternalSourceMode(enabled) {
     if (!enabled || isExternalSource) return;
     isExternalSource = true;
-
-    if (sfuSendTransport) {
-        socket.emit('sfu-closeViewerSendTransport', { broadcastID });
-        sfuSendTransport.close();
-        sfuSendTransport = null;
-        sfuProducers.clear();
-    }
-    if (viewerStream) {
-        viewerStream.getTracks().forEach((track) => track.stop());
-        viewerStream = null;
-    }
-
-    elementDisplay(disableAudio, false);
-    elementDisplay(enableAudio, false);
-    elementDisplay(videoBtn, false);
-    messageDisplay(false);
-    messagesForm.classList.remove('panel-open');
-    messagesFormOpen = false;
-    viewerVideoContainer.style.display = 'none';
     rtmpBadge.classList.add('active');
 }
 

@@ -125,6 +125,37 @@
     font-size: var(--font-base);
 }
 
+.rtmp-source-status {
+    position: absolute;
+    z-index: 4;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    color: var(--text-color);
+    pointer-events: none;
+}
+
+.rtmp-source-status[hidden] {
+    display: none;
+}
+
+.rtmp-source-status i {
+    font-size: 48px;
+    color: var(--accent-color);
+}
+
+.rtmp-source-status strong {
+    font-size: var(--font-lg);
+}
+
+.rtmp-source-status span {
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
 /* Recording Label */
 #recordingLabel {
     display: flex;

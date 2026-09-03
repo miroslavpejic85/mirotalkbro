@@ -374,6 +374,20 @@ function isRtmpSourceActive(broadcastID) {
     return rtmpReservations.has(broadcastID) || Boolean(getRoom(broadcastID)?.rtmpIngest);
 }
 
+async function attachRtmpModerator(broadcastID, socket) {
+    if (!isRtmpSourceActive(broadcastID)) throw new Error('This broadcast is not using an RTMP source');
+
+    const room = await getOrCreateRoom(broadcastID);
+    if (room.broadcasterTransport) throw new Error(`Broadcast ${broadcastID} already has a browser source`);
+
+    if (broadcasterDisconnectTimers[broadcastID]) {
+        clearTimeout(broadcasterDisconnectTimers[broadcastID]);
+        delete broadcasterDisconnectTimers[broadcastID];
+    }
+
+    room.broadcasterSocketId = socket.id;
+}
+
 // Tells viewers whether the room is fed by an RTMP publisher, a browser broadcaster, or nothing yet.
 function getRoomSourceType(broadcastID) {
     const room = getRoom(broadcastID);
@@ -605,7 +619,11 @@ async function startRtmpIngest(pathName, token, io, broadcasters, viewers) {
             log.info('RTMP ingest stopped', { broadcastID, code, signal, lastError: ingest.lastError });
             stopRtmpIngest(broadcastID);
             delete broadcasters[broadcastID];
+            if (room.broadcasterSocketId) {
+                io.to(room.broadcasterSocketId).emit('broadcasterDisconnect');
+            }
             for (const [viewerSocketId] of room.viewers) {
+                if (viewerSocketId === room.broadcasterSocketId) continue;
                 io.to(viewerSocketId).emit('broadcasterDisconnect');
                 delete viewers[viewerSocketId];
             }
@@ -798,6 +816,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
         try {
             const room = getRoom(broadcastID);
             if (!room || !room.broadcasterTransport) throw new Error('No broadcaster transport');
+            if (isRtmpSourceActive(broadcastID)) throw new Error('This broadcast is using an RTMP source');
             requireActiveBroadcaster(socket, room, broadcastID);
 
             const producer = await room.broadcasterTransport.produce({
@@ -972,6 +991,11 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             if (!viewer || !viewer.sendTransport) throw new Error('No viewer send transport');
 
             const producer = await viewer.sendTransport.produce({ kind, rtpParameters, appData });
+            for (const [existingProducerId, existingProducer] of viewer.producers) {
+                if (existingProducer.kind !== kind) continue;
+                existingProducer.close();
+                viewer.producers.delete(existingProducerId);
+            }
             viewer.producers.set(producer.id, producer);
 
             producer.on('transportclose', () => {
@@ -1249,7 +1273,11 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             if (!room) throw new Error('Room not found');
             const producer = findOwnedProducer(room, socket, producerId);
             if (producer) {
-                await producer.pause();
+                const viewer = room.viewers.get(socket.id);
+                const ownedProducers = viewer
+                    ? [...viewer.producers.values()].filter((ownedProducer) => ownedProducer.kind === producer.kind)
+                    : [producer];
+                await Promise.all(ownedProducers.map((ownedProducer) => ownedProducer.pause()));
                 callback({ paused: true });
             } else {
                 callback({ error: 'Producer not found' });
@@ -1362,6 +1390,21 @@ function handleSfuDisconnect(socket, broadcasters, viewers, io) {
     for (const [broadcastID, room] of Object.entries(sfuRooms)) {
         // If broadcaster disconnected
         if (room.broadcasterSocketId === socket.id) {
+            if (isRtmpSourceActive(broadcastID)) {
+                const moderatorViewer = room.viewers.get(socket.id);
+                if (moderatorViewer?.recvTransport) moderatorViewer.recvTransport.close();
+                if (moderatorViewer?.sendTransport) moderatorViewer.sendTransport.close();
+                room.viewers.delete(socket.id);
+                if (room.broadcasterConsumers) {
+                    for (const [, consumer] of room.broadcasterConsumers) consumer.close();
+                    room.broadcasterConsumers.clear();
+                }
+                room.broadcasterSocketId = null;
+                broadcasters[broadcastID] = `rtmp:${broadcastID}`;
+                log.debug('RTMP moderator disconnected', { broadcastID, socketId: socket.id });
+                return true;
+            }
+
             log.debug('SFU broadcaster disconnected (starting grace period)', { broadcastID, socketId: socket.id });
 
             // Clear any existing timer for this room
@@ -1437,6 +1480,7 @@ module.exports = {
     getRoomSourceType,
     reserveRtmpIngest,
     isRtmpSourceActive,
+    attachRtmpModerator,
     startRtmpIngest,
     handleSfuConnection,
     handleSfuDisconnect,

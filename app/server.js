@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.4.20
+ * @version 1.4.21
  */
 
 require('dotenv').config();
@@ -476,7 +476,7 @@ io.sockets.on('connection', (socket) => {
         sfuHandler.handleSfuConnection(socket, io, broadcasters, viewers);
 
         // SFU still needs broadcaster/viewer registration for room management
-        socket.on('broadcaster', (broadcastID, token, callback) => {
+        socket.on('broadcaster', async (broadcastID, token, callback) => {
             const respond = typeof callback === 'function' ? callback : () => {};
             if (!sfuHandler.isValidBroadcastID(broadcastID)) {
                 respond({ error: 'Invalid broadcast ID' });
@@ -488,18 +488,26 @@ io.sockets.on('connection', (socket) => {
                 return;
             }
             if (sfuHandler.isRtmpSourceActive(broadcastID)) {
-                socket.emit('broadcasterRejected', 'This broadcast is using an RTMP source');
-                respond({ error: 'This broadcast is using an RTMP source' });
+                try {
+                    if (!socket.data.sfuBroadcasterIds) socket.data.sfuBroadcasterIds = new Set();
+                    socket.data.sfuBroadcasterIds.add(broadcastID);
+                    await sfuHandler.attachRtmpModerator(broadcastID, socket);
+                    handleBroadcaster(socket, broadcastID);
+                    respond({ registered: true, sourceType: 'rtmp', mediaAllowed: false });
+                } catch (error) {
+                    socket.data.sfuBroadcasterIds?.delete(broadcastID);
+                    respond({ error: error.message });
+                }
                 return;
             }
             if (!socket.data.sfuBroadcasterIds) socket.data.sfuBroadcasterIds = new Set();
             if (socket.data.sfuBroadcasterIds.has(broadcastID) && broadcasters[broadcastID] === socket.id) {
-                respond({ registered: true });
+                respond({ registered: true, sourceType: 'browser', mediaAllowed: true });
                 return;
             }
             socket.data.sfuBroadcasterIds.add(broadcastID);
             handleBroadcaster(socket, broadcastID);
-            respond({ registered: true });
+            respond({ registered: true, sourceType: 'browser', mediaAllowed: true });
         });
         socket.on('viewer', (broadcastID, username, callback) => {
             const respond = typeof callback === 'function' ? callback : () => {};
