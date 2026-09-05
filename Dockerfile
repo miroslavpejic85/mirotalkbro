@@ -37,19 +37,18 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy node_modules with compiled mediasoup worker (production deps only)
-COPY --from=build /src/node_modules /src/node_modules
+COPY --chown=node:node --from=build /src/node_modules /src/node_modules
 
-# Copy application files
-COPY package*.json .
-COPY .env.template ./.env
-COPY app app
-COPY public public
+# Copy application files, already owned by the runtime user
+COPY --chown=node:node package*.json .
+COPY --chown=node:node .env.template ./.env
+COPY --chown=node:node app app
+COPY --chown=node:node public public
 
 # Copy freshly built mediasoup-client bundle (overwrite repo version)
-COPY --from=build /src/public/js/mediasoup-client.js /src/public/js/mediasoup-client.js
+COPY --chown=node:node --from=build /src/public/js/mediasoup-client.js /src/public/js/mediasoup-client.js
 
 # Run as the non-root "node" user (uid/gid 1000) shipped with the base image
-RUN chown -R node:node /src
 USER node
 
 # Set default command to start the application

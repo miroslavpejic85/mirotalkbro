@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.4.21",
+    "version": "1.4.22",
     "description": "P2P and SFU WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
