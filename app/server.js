@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.4.25
+ * @version 1.4.26
  */
 
 require('dotenv').config();
@@ -615,9 +615,7 @@ function handleDisconnect(socket, reason) {
     let isBroadcaster = false;
 
     // In SFU mode, let mediasoup handler clean up transports/consumers
-    if (isSFU) {
-        sfuHandler.handleSfuDisconnect(socket, broadcasters, viewers, io);
-    }
+    const deferredSfuBroadcasterId = isSFU ? sfuHandler.handleSfuDisconnect(socket, broadcasters, viewers, io) : null;
 
     // Check if socket disconnected is a viewer, if so, delete it from the viewers list and update the broadcaster
     if (socket.id in viewers) {
@@ -632,8 +630,10 @@ function handleDisconnect(socket, reason) {
     // Check if socket disconnected is broadcaster, if so, delete it from the broadcasters lists
     for (let broadcastID in broadcasters) {
         if (broadcasters[broadcastID] == socket.id) {
-            delete broadcasters[broadcastID];
             isBroadcaster = true;
+            if (broadcastID !== deferredSfuBroadcasterId) {
+                delete broadcasters[broadcastID];
+            }
             if (!isSFU) {
                 sendToBroadcasterViewers(socket, broadcastID, 'broadcasterDisconnect');
             }

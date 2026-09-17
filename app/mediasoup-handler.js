@@ -725,7 +725,7 @@ function handleSfuConnection(socket, io, broadcasters, viewers) {
             if (!room) {
                 requireRegisteredBroadcaster(socket, broadcastID);
                 room = await getOrCreateRoom(broadcastID);
-            } else {
+            } else if (!socket.data.sfuBroadcasterIds?.has(broadcastID)) {
                 requireRoomMember(socket, room, broadcastID);
             }
             callback({ rtpCapabilities: room.router.rtpCapabilities });
@@ -1402,7 +1402,7 @@ function handleSfuDisconnect(socket, broadcasters, viewers, io) {
                 room.broadcasterSocketId = null;
                 broadcasters[broadcastID] = `rtmp:${broadcastID}`;
                 log.debug('RTMP moderator disconnected', { broadcastID, socketId: socket.id });
-                return true;
+                return broadcastID;
             }
 
             log.debug('SFU broadcaster disconnected (starting grace period)', { broadcastID, socketId: socket.id });
@@ -1436,7 +1436,7 @@ function handleSfuDisconnect(socket, broadcasters, viewers, io) {
                 deleteRoom(broadcastID);
             }, BROADCASTER_GRACE_PERIOD_MS);
 
-            return true;
+            return broadcastID;
         }
 
         // If viewer disconnected
@@ -1461,10 +1461,10 @@ function handleSfuDisconnect(socket, broadcasters, viewers, io) {
                 username: viewer.username,
                 remainingViewers: room.viewers.size,
             });
-            return true;
+            return null;
         }
     }
-    return false;
+    return null;
 }
 
 // =====================================================
