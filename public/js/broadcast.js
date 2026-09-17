@@ -1363,7 +1363,7 @@ function addViewer(id, username, stream = null) {
 
     viewersTable.appendChild(card);
     handleAudioPeer(buttonAudio.id);
-    handleDisconnectPeer(buttonDisconnect.id);
+    handleDisconnectPeer(buttonDisconnect.id, id, username);
     handleVideoPeer(buttonVideo.id);
 }
 
@@ -1383,8 +1383,8 @@ function handleAudioPeer(id) {
     });
 }
 
-function handleDisconnectPeer(id) {
-    const buttonDisconnect = document.getElementById(id);
+function handleDisconnectPeer(buttonId, peerId, peerName) {
+    const buttonDisconnect = document.getElementById(buttonId);
     if (!buttonDisconnect) return;
     buttonDisconnect.addEventListener('click', () => {
         Swal.fire({
@@ -1393,14 +1393,14 @@ function handleDisconnectPeer(id) {
             showDenyButton: true,
             position: 'top',
             title: 'Disconnect',
-            text: `Do you want to disconnect ${getPeerName(id)} ?`,
+            text: `Do you want to disconnect ${peerName} ?`,
             confirmButtonText: `Yes`,
             denyButtonText: `No`,
             showClass: { popup: 'animate__animated animate__fadeInDown' },
             hideClass: { popup: 'animate__animated animate__fadeOutUp' },
         }).then((result) => {
             if (result.isConfirmed) {
-                sendToViewersDataChannel('disconnect', {}, getPeerId(id));
+                socket.emit('disconnectViewer', broadcastID, peerId);
             }
         });
     });

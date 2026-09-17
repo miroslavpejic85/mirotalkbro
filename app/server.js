@@ -8,7 +8,7 @@
  * @license For open source under AGPL-3.0
  * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.4.24
+ * @version 1.4.25
  */
 
 require('dotenv').config();
@@ -542,6 +542,17 @@ io.sockets.on('connection', (socket) => {
             socket.to(id).emit('candidate', socket.id, message);
         });
     }
+
+    socket.on('disconnectViewer', (broadcastID, viewerId) => {
+        if (broadcasters[broadcastID] !== socket.id) return;
+        if (viewers[viewerId]?.broadcastID !== broadcastID) return;
+
+        const viewerSocket = io.sockets.sockets.get(viewerId);
+        if (!viewerSocket) return;
+
+        viewerSocket.emit('viewerDisconnect');
+        viewerSocket.disconnect(true);
+    });
 
     socket.on('disconnect', (reason) => {
         handleDisconnect(socket, reason);

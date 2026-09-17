@@ -273,6 +273,10 @@ socket.on('broadcasterDisconnect', () => {
     location.reload();
 });
 
+socket.on('viewerDisconnect', () => {
+    openURL(viewerSettings.options.disconnect_url);
+});
+
 function handleError(error) {
     console.error('Error', error);
 }
