@@ -506,8 +506,14 @@ io.sockets.on('connection', (socket) => {
                 return;
             }
             socket.data.sfuBroadcasterIds.add(broadcastID);
-            handleBroadcaster(socket, broadcastID);
-            respond({ registered: true, sourceType: 'browser', mediaAllowed: true });
+            try {
+                await sfuHandler.getOrCreateRoom(broadcastID);
+                handleBroadcaster(socket, broadcastID);
+                respond({ registered: true, sourceType: 'browser', mediaAllowed: true });
+            } catch (error) {
+                socket.data.sfuBroadcasterIds.delete(broadcastID);
+                respond({ error: error.message });
+            }
         });
         socket.on('viewer', (broadcastID, username, callback) => {
             const respond = typeof callback === 'function' ? callback : () => {};

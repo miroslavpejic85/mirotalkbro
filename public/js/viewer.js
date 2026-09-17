@@ -134,6 +134,7 @@ let sfuConsumerPromises = new Map(); // producerId -> in-flight consume promise
 let sfuProducers = new Map(); // kind -> producer
 let sfuProducing = false; // guard to prevent concurrent viewer produce
 let sfuJoined = false; // guard to prevent double SFU join
+let sfuJoinPromise = null;
 let isFirstConnect = true; // track first vs reconnect
 let isBroadcasterConnected = false; // track if broadcaster is present
 let isExternalSource = false;
@@ -259,10 +260,11 @@ socket.on('connect', async () => {
     if (reconnectingOverlay) reconnectingOverlay.classList.remove('active');
 });
 
-socket.on('broadcaster', () => {
+socket.on('broadcaster', async () => {
     isBroadcasterConnected = true;
     if (broadcastingMode === 'sfu') {
-        if (!sfuJoined) sfuJoinBroadcast();
+        await sfuJoinBroadcast();
+        if (!sfuJoined) await sfuJoinBroadcast();
     } else {
         socket.emit('viewer', broadcastID, username);
     }
@@ -285,7 +287,19 @@ function handleError(error) {
 // SFU Mode: mediasoup client logic
 // =====================================================
 
-async function sfuJoinBroadcast() {
+function sfuJoinBroadcast() {
+    if (sfuJoinPromise) return sfuJoinPromise;
+    if (sfuJoined) return Promise.resolve();
+
+    const joinPromise = performSfuJoinBroadcast();
+    sfuJoinPromise = joinPromise;
+    joinPromise.finally(() => {
+        if (sfuJoinPromise === joinPromise) sfuJoinPromise = null;
+    });
+    return joinPromise;
+}
+
+async function performSfuJoinBroadcast() {
     if (sfuJoined) return;
     sfuJoined = true;
 
@@ -293,12 +307,12 @@ async function sfuJoinBroadcast() {
         await sfuSocketRequest('viewer', broadcastID, username);
 
         // Initialize device
-        if (!sfuDevice) {
+        if (!sfuDevice || !sfuDevice.loaded) {
             if (typeof mediasoupClient === 'undefined') {
                 console.error('mediasoup-client library not loaded');
                 return;
             }
-            sfuDevice = new mediasoupClient.Device();
+            if (!sfuDevice) sfuDevice = new mediasoupClient.Device();
             const { rtpCapabilities } = await sfuSocketRequest('sfu-getRtpCapabilities', broadcastID);
             await sfuDevice.load({ routerRtpCapabilities: rtpCapabilities });
             console.log('SFU Device loaded', { loaded: sfuDevice.loaded });
