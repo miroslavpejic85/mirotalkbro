@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.4.29",
+    "version": "1.4.30",
     "description": "P2P and SFU WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
@@ -26,7 +26,7 @@
     "license": "AGPLv3",
     "dependencies": {
         "@ngrok/ngrok": "1.7.0",
-        "@sentry/node": "^10.75.2",
+        "@sentry/node": "^11.0.0",
         "compression": "^1.8.2",
         "cors": "^2.8.6",
         "dotenv": "^18.0.3",
@@ -36,7 +36,7 @@
         "httpolyglot": "0.1.2",
         "js-yaml": "^5.4.2",
         "mediasoup": "^3.27.1",
-        "mediasoup-client": "^3.23.2",
+        "mediasoup-client": "^3.24.0",
         "socket.io": "^4.8.3",
         "swagger-ui-express": "5.0.1",
         "uuid": "~14.0.2"
@@ -45,6 +45,6 @@
         "esbuild": "^0.28.2",
         "node-fetch": "^3.3.2",
         "nodemon": "^3.1.14",
-        "prettier": "3.9.8"
+        "prettier": "3.9.9"
     }
 }
