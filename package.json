@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.4.33",
+    "version": "1.4.34",
     "description": "P2P and SFU WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
@@ -26,7 +26,7 @@
     "license": "AGPLv3",
     "dependencies": {
         "@ngrok/ngrok": "1.7.0",
-        "@sentry/node": "^11.0.0",
+        "@sentry/node": "^11.1.0",
         "compression": "^1.8.2",
         "cors": "^2.8.6",
         "dotenv": "^18.0.4",
