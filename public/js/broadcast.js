@@ -74,6 +74,16 @@ const audioSelect = document.getElementById('audioSelect');
 const audioOutputSelect = document.getElementById('audioOutputSelect');
 const audioOutputSection = document.getElementById('audioOutputSection');
 const audioOutputTestBtn = document.getElementById('audioOutputTestBtn');
+const backgroundEffectSelect = document.getElementById('backgroundEffectSelect');
+const backgroundImageInput = document.getElementById('backgroundImageInput');
+const backgroundEffectsSection = document.getElementById('backgroundEffectsSection');
+const backgroundEffectLoading = document.getElementById('backgroundEffectLoading');
+const backgroundEffectsSupported = BackgroundEffects.supported();
+let cameraEffects = null;
+let mediaRequestId = 0;
+let backgroundImage = null;
+let backgroundEffectsBusy = false;
+if (!backgroundEffectsSupported) backgroundEffectsSection.hidden = true;
 
 const userAgent = navigator.userAgent;
 const parser = new UAParser(userAgent);
@@ -1533,8 +1543,9 @@ videoFpsSelect.onchange = applyVideoConstraints;
 
 function applyVideoConstraints() {
     const videoConstraints = getVideoConstraints();
-    broadcastStream
-        .getVideoTracks()[0]
+    const track = cameraEffects?.cameraTrack || broadcastStream?.getVideoTracks()[0];
+    if (!track) return Promise.resolve();
+    return track
         .applyConstraints(videoConstraints)
         .then(() => {
             logStreamSettingsInfo(broadcastStream);
@@ -1581,6 +1592,72 @@ function getVideoConstraints() {
 
 audioSelect.onchange = getStream;
 videoSelect.onchange = getStream;
+
+function updateBackgroundControls() {
+    backgroundEffectSelect.disabled = backgroundEffectsBusy || screenShareEnabled || !cameraEffects;
+    backgroundImageInput.disabled = backgroundEffectSelect.disabled;
+    backgroundImageInput.hidden = backgroundEffectSelect.value !== 'image';
+    backgroundEffectLoading.hidden = !backgroundEffectsBusy;
+    backgroundEffectsSection.setAttribute('aria-busy', String(backgroundEffectsBusy));
+}
+
+function backgroundEffectsError(error) {
+    console.error('Background effects error', error);
+    cameraEffects?.setMode('off');
+    backgroundEffectSelect.value = 'off';
+    updateBackgroundControls();
+    popupMessage('warning', 'Background', 'Background effects unavailable. Continuing without effects.');
+}
+
+async function applyBackgroundEffect() {
+    const effects = cameraEffects;
+    if (!effects || screenShareEnabled) return;
+    const mode = backgroundEffectSelect.value;
+    updateBackgroundControls();
+    if (mode === 'image' && !backgroundImage) {
+        await effects.setMode('off');
+        return;
+    }
+    backgroundEffectsBusy = true;
+    updateBackgroundControls();
+    try {
+        await effects.setMode(mode, backgroundImage);
+    } catch (error) {
+        if (effects === cameraEffects) backgroundEffectsError(error);
+    } finally {
+        backgroundEffectsBusy = false;
+        updateBackgroundControls();
+    }
+}
+
+backgroundEffectSelect.onchange = applyBackgroundEffect;
+backgroundImageInput.onchange = async () => {
+    const file = backgroundImageInput.files[0];
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) {
+        backgroundImageInput.value = '';
+        return popupMessage('warning', 'Background', 'Choose a PNG, JPEG or WebP image smaller than 10 MB.');
+    }
+    backgroundEffectsBusy = true;
+    updateBackgroundControls();
+    const url = URL.createObjectURL(file);
+    try {
+        const image = new Image();
+        await new Promise((resolve, reject) => {
+            image.onload = resolve;
+            image.onerror = () => reject(new Error('Unable to load background image'));
+            image.src = url;
+        });
+        backgroundImage = image;
+        await applyBackgroundEffect();
+    } catch (error) {
+        backgroundEffectsError(error);
+    } finally {
+        URL.revokeObjectURL(url);
+        backgroundEffectsBusy = false;
+        updateBackgroundControls();
+    }
+};
 
 audioOutputSelect.onchange = () => {
     applyAudioOutput(audioOutputSelect.value);
@@ -1656,6 +1733,7 @@ function configureRtmpModeratorUi() {
 
 function getStream() {
     if (isRtmpControlOnly) return Promise.resolve();
+    const requestId = ++mediaRequestId;
 
     try {
         videoOff.style.visibility = 'hidden';
@@ -1677,6 +1755,10 @@ function getStream() {
         };
         const constraints = screenShareEnabled ? screenConstraints : cameraConstraints;
 
+        cameraEffects?.stop();
+        cameraEffects = null;
+        updateBackgroundControls();
+
         if (screenShareEnabled) {
             stopVideoTrack(broadcastStream);
 
@@ -1684,7 +1766,7 @@ function getStream() {
             isVideoMirrored = false;
             return navigator.mediaDevices
                 .getDisplayMedia(constraints)
-                .then(gotScreenStream)
+                .then((stream) => gotScreenStream(stream, requestId))
                 .then(applyVideoConstraints)
                 .catch(handleMediaDeviceError);
         }
@@ -1698,7 +1780,7 @@ function getStream() {
 
         return navigator.mediaDevices
             .getUserMedia(constraints)
-            .then(gotStream)
+            .then((stream) => gotStream(stream, requestId))
             .then(applyVideoConstraints)
             .catch(handleMediaDeviceError);
     } catch (error) {
@@ -1706,7 +1788,11 @@ function getStream() {
     }
 }
 
-function gotStream(stream) {
+async function gotStream(stream, requestId) {
+    if (requestId !== mediaRequestId) {
+        stopTracks(stream);
+        return;
+    }
     if (!screenShareEnabled) {
         audioSelect.selectedIndex = [...audioSelect.options].findIndex(
             (option) => option.text === stream.getAudioTracks()[0].label
@@ -1714,6 +1800,29 @@ function gotStream(stream) {
         videoSelect.selectedIndex = [...videoSelect.options].findIndex(
             (option) => option.text === stream.getVideoTracks()[0].label
         );
+    }
+    if (backgroundEffectsSupported && !screenShareEnabled) {
+        const effects = new BackgroundEffects(backgroundEffectsError);
+        cameraEffects = effects;
+        try {
+            stream = await effects.start(stream);
+        } catch (error) {
+            effects.stop(false);
+            if (effects !== cameraEffects) {
+                stopTracks(stream);
+                return;
+            }
+            cameraEffects = null;
+            backgroundEffectsError(error);
+        }
+        if (cameraEffects) {
+            if (effects !== cameraEffects) {
+                stopTracks(stream);
+                return;
+            }
+            updateBackgroundControls();
+            applyBackgroundEffect();
+        }
     }
     attachStream(stream);
 
@@ -1724,7 +1833,11 @@ function gotStream(stream) {
     }
 }
 
-function gotScreenStream(stream) {
+function gotScreenStream(stream, requestId) {
+    if (requestId !== mediaRequestId) {
+        stopTracks(stream);
+        return;
+    }
     const tracksToInclude = [];
     const videoTrack = hasVideoTrack(stream) ? stream.getVideoTracks()[0] : null;
     const audioTabTrack = hasAudioTrack(stream) ? stream.getAudioTracks()[0] : null;
@@ -1875,6 +1988,9 @@ function gotDevices(deviceInfos) {
 // =====================================================
 
 window.onbeforeunload = () => {
+    saveRecording();
+    cameraEffects?.stop();
+    stopTracks(broadcastStream);
     socket.close();
     if (broadcastingMode === 'sfu') {
         // Close SFU resources
@@ -1894,6 +2010,5 @@ window.onbeforeunload = () => {
         }
     }
     stopSessionTime();
-    saveRecording();
     return undefined;
 };

@@ -236,6 +236,53 @@
     border-bottom: none;
 }
 
+.settings-section[hidden] {
+    display: none;
+}
+
+#backgroundImageInput {
+    min-width: 0;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+}
+
+#backgroundImageInput::file-selector-button {
+    margin-right: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border: var(--border);
+    border-radius: var(--border-radius-sm);
+    background: var(--surface-color);
+    color: var(--text-color);
+    font: inherit;
+    cursor: pointer;
+}
+
+#backgroundImageInput::file-selector-button:hover {
+    background: var(--surface-hover);
+}
+
+.background-effect-control {
+    position: relative;
+    min-width: 0;
+}
+
+#backgroundEffectSelect {
+    width: 100%;
+    padding-right: 72px;
+}
+
+.background-effect-loading {
+    position: absolute;
+    top: 50%;
+    right: 44px;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    color: var(--accent-color);
+    pointer-events: none;
+}
+
 .settings-label {
     font-size: var(--font-sm);
     font-weight: 500;
@@ -412,12 +459,17 @@
     height: 100dvh;
     z-index: 900;
     transform: translateX(100%);
-    transition: transform var(--transition-slow);
+    visibility: hidden;
+    transition:
+        transform var(--transition-slow),
+        visibility 0s 300ms;
     pointer-events: none;
 }
 
 .panel-drawer.panel-open {
     transform: translateX(0);
+    visibility: visible;
+    transition-delay: 0s;
     pointer-events: auto;
 }
 

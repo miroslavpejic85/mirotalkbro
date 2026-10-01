@@ -102,6 +102,21 @@ Open [http://localhost:3016](http://localhost:3016) - done!
 </details>
 
 <details>
+<summary>Camera backgrounds</summary>
+
+<br/>
+
+In broadcaster **Settings > Background**, choose **Off**, **Blur**, or **Image**. Image backgrounds accept local PNG, JPEG, and WebP files up to 10 MB; images are not uploaded to the server.
+
+Effects are processed in the broadcaster's browser and appear in the preview, P2P/SFU broadcasts, and recordings. Screen sharing bypasses effects and restores the selected background when returning to the camera. RTMP sources do not support browser camera effects.
+
+Effects require WebGL2 and canvas stream capture. Blur also requires canvas filter support. The pinned MediaPipe runtime and WASM files (version 0.10.21) are lazy-loaded from jsDelivr, and the selfie model (version 1) is loaded from Google Storage on first use. Those hosts must be reachable and allowed by any custom CSP. Browsers can cache the assets normally. Initialization or processing failures show a warning and fall back to the camera without effects.
+
+While effects are active, output is capped at 1280 x 720 and 15 FPS to limit processing cost. Off retains camera resolution and up to 60 FPS. Performance varies by device; keep the broadcaster tab visible to avoid browser throttling of canvas rendering.
+
+</details>
+
+<details>
 <summary>📡 RTMP upstream source</summary>
 
 <br/>

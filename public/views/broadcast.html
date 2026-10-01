@@ -112,6 +112,34 @@
                     <label class="settings-label not-selectable"><i class="fas fa-microphone"></i> Audio source</label>
                     <select id="audioSelect"></select>
                 </div>
+                <div id="backgroundEffectsSection" class="settings-section">
+                    <label for="backgroundEffectSelect" class="settings-label not-selectable">
+                        <i class="fas fa-image"></i> Background
+                    </label>
+                    <div class="background-effect-control">
+                        <select id="backgroundEffectSelect" disabled>
+                            <option value="off">Off</option>
+                            <option value="blur">Blur</option>
+                            <option value="image">Image</option>
+                        </select>
+                        <span
+                            id="backgroundEffectLoading"
+                            class="background-effect-loading"
+                            role="status"
+                            aria-label="Loading background"
+                            hidden
+                        >
+                            <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <input
+                        id="backgroundImageInput"
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        aria-label="Background image"
+                        hidden
+                    />
+                </div>
                 <div id="audioOutputSection" class="settings-section">
                     <label class="settings-label not-selectable"><i class="fas fa-volume-high"></i> Audio output</label>
                     <div class="broadcast-audio-output">
@@ -182,6 +210,7 @@
         <script defer src="../js/swal.js"></script>
         <script defer src="../js/utils.js"></script>
         <script defer src="../js/config.js"></script>
+        <script defer src="../js/background-effects.js"></script>
         <script defer src="../js/broadcast.js"></script>
         <script defer src="../js/recording.js"></script>
         <script defer src="../js/ux.js"></script>
