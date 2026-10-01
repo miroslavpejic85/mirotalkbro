@@ -449,11 +449,7 @@ async function sfuProduceStream(stream) {
                 track: videoTrack,
             };
             if (simulcast.enabled && !isScreenShare) {
-                if (sfuDevice.handlerName === 'Safari12' && simulcast.encodings.length > 1) {
-                    console.warn('Safari legacy simulcast disabled: using browser-default single-stream encoding');
-                } else {
-                    produceOptions.encodings = simulcast.encodings;
-                }
+                produceOptions.encodings = simulcast.encodings;
                 produceOptions.codecOptions = simulcast.codecOptions;
             }
             const videoProducer = await sfuSendTransport.produce(produceOptions);
