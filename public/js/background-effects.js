@@ -132,9 +132,9 @@ class BackgroundEffects {
                 this.context.drawImage(this.video, 0, 0, width, height);
                 this.onError(error);
             }
-            this.outputTrack.requestFrame?.();
+            if (!this.stopped) this.outputTrack.requestFrame?.();
         }
-        this.frame = setTimeout(() => this.render(performance.now()), 1000 / 60);
+        if (!this.stopped) this.frame = setTimeout(() => this.render(performance.now()), 1000 / 60);
     }
 
     stop(stopCamera = true) {
