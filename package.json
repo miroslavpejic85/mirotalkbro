@@ -1,6 +1,6 @@
 {
     "name": "mirotalkbro",
-    "version": "1.4.52",
+    "version": "1.4.53",
     "description": "P2P and SFU WebRTC audio, video and screen live broadcast",
     "main": "app/server.js",
     "scripts": {
@@ -8,7 +8,7 @@
         "build:mediasoup-client": "npx esbuild node_modules/mediasoup-client/lib/index.js --bundle --minify --format=iife --global-name=mediasoupClient --outfile=public/js/mediasoup-client.js --platform=browser",
         "postinstall": "npm run build:mediasoup-client",
         "start": "node app/server.js",
-        "start-dev": "nodemon app/server.js",
+        "dev": "node --watch app/server.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
@@ -35,8 +35,8 @@
         "helmet": "^8.3.0",
         "httpolyglot": "0.1.2",
         "js-yaml": "^5.4.3",
-        "mediasoup": "^3.28.0",
-        "mediasoup-client": "^3.24.4",
+        "mediasoup": "^3.29.0",
+        "mediasoup-client": "^3.24.5",
         "socket.io": "^4.8.4",
         "swagger-ui-express": "5.0.1",
         "uuid": "~14.0.2"
@@ -44,7 +44,6 @@
     "devDependencies": {
         "esbuild": "^0.28.2",
         "node-fetch": "^3.3.2",
-        "nodemon": "^3.1.14",
         "prettier": "3.9.9"
     }
 }
