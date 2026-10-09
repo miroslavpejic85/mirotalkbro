@@ -1163,7 +1163,11 @@ function appendMessage(username, message, isSelf = false) {
     const timeNow = getTime();
     const messageDiv = document.createElement('div');
     const messageTitle = document.createElement('span');
-    messageTitle.innerHTML = `${timeNow} - ${isSelf ? `<span class="message-name-self">${username}</span>` : username}`;
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = username;
+    if (isSelf) nameSpan.className = 'message-name-self';
+    messageTitle.appendChild(document.createTextNode(`${timeNow} - `));
+    messageTitle.appendChild(nameSpan);
     const messageText = document.createElement('p');
     messageText.innerText = message;
     messageDiv.appendChild(messageTitle);
