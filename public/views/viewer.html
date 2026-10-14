@@ -24,93 +24,155 @@
         <link rel="stylesheet" href="../css/viewer.css" />
     </head>
     <body>
-        <div id="viewerVideoContainer">
+        <div id="viewerVideoContainer" aria-label="Your camera preview">
             <video id="viewerVideo" class="fadeIn" autoplay muted playsinline></video>
         </div>
-        <div id="viewerForm" class="viewer fadeIn">
-            <div id="viewerFormHeader" class="viewer-header not-selectable">
-                <div class="viewer-info">
+        <div id="viewerForm" class="viewer room fadeIn">
+            <header id="viewerFormHeader" class="viewer-header room-header not-selectable">
+                <div class="viewer-info room-meta">
                     <span class="live-badge">LIVE</span>
-                    <span id="rtmpBadge" class="source-badge"><i class="fas fa-satellite-dish"></i> RTMP</span>
-                    <i class="fas fa-user"></i> <span id="myName">Viewer</span> <i class="fas fa-clock"></i>
-                    <span id="sessionTime">0s</span>
+                    <span id="rtmpBadge" class="source-badge"
+                        ><i class="fas fa-satellite-dish" aria-hidden="true"></i> RTMP</span
+                    >
+                    <span class="meta-item meta-user" title="Your name">
+                        <i class="fas fa-user" aria-hidden="true"></i><span id="myName">Viewer</span>
+                    </span>
+                    <span class="meta-item" title="Time watching">
+                        <i class="fas fa-clock" aria-hidden="true"></i><span id="sessionTime">0s</span>
+                    </span>
                 </div>
                 <div class="viewer-header-buttons">
-                    <button id="leave"><i class="fas fa-times"></i></button>
+                    <button id="leave" class="room-leave" type="button" aria-label="Leave broadcast">
+                        <i class="fas fa-right-from-bracket" aria-hidden="true"></i><span>Leave</span>
+                    </button>
                 </div>
-            </div>
-            <div class="container">
+            </header>
+            <main class="container">
                 <video id="mainVideo" class="not-selectable"></video>
-                <img id="videoOff" class="video-off" src="../assets/images/videoOff.png" />
-                <div id="awaitingBroadcaster" class="awaiting-broadcaster center pulse">
-                    Awaiting the broadcaster...
+                <img id="videoOff" class="video-off" src="../assets/images/videoOff.png" alt="Broadcaster camera off" />
+                <div id="awaitingBroadcaster" class="awaiting-broadcaster center pulse" role="status">
+                    Waiting for the broadcaster to go live...
                 </div>
-                <div id="reconnectingOverlay" class="reconnecting-overlay">
+                <div id="reconnectingOverlay" class="reconnecting-overlay" role="status">
                     <div class="spinner"></div>
                     <span>Reconnecting...</span>
                 </div>
-            </div>
-            <label id="recordingLabel" class="pulse">🔴 REC: <span id="recordingTime">0S</span></label>
-            <div id="viewerButtons" class="viewer-buttons">
-                <button id="disableAudio"><i class="fas fa-microphone"></i></button>
-                <button id="enableAudio" class="color-red"><i class="fas fa-microphone"></i></button>
-                <button id="videoBtn"><i class="fas fa-video"></i></button>
-                <button id="recordingStart"><i class="fas fa-record-vinyl"></i></button>
-                <button id="recordingStop" class="color-red"><i class="fas fa-record-vinyl"></i></button>
-                <button id="snapshot"><i class="fas fa-camera-retro"></i></button>
-                <button id="togglePIP"><i class="fas fa-images"></i></button>
-                <button id="messagesBtn"><i class="fas fa-comment"></i></button>
-                <button id="fullScreenOn"><i class="fas fa-expand-alt"></i></button>
-                <button id="fullScreenOff"><i class="fas fa-compress-alt"></i></button>
-                <button id="qualitySelect"><i class="fas fa-sliders-h"></i></button>
-                <button id="settingsBtn"><i class="fa-solid fa-sliders"></i></button>
-            </div>
+            </main>
+            <label id="recordingLabel" class="rec-indicator pulse" role="status"
+                >REC <span id="recordingTime">0S</span></label
+            >
+            <nav id="viewerButtons" class="viewer-buttons control-dock" aria-label="Viewer controls">
+                <button id="disableAudio" type="button" aria-label="Disable your audio">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="enableAudio" class="color-red" type="button" aria-label="Enable your audio">
+                    <i class="fas fa-microphone-slash"></i>
+                </button>
+                <button id="videoBtn" type="button" aria-label="Toggle your video"><i class="fas fa-video"></i></button>
+                <button id="recordingStart" type="button" aria-label="Start recording">
+                    <i class="fas fa-record-vinyl"></i>
+                </button>
+                <button id="recordingStop" class="color-red" type="button" aria-label="Stop recording">
+                    <i class="fas fa-stop"></i>
+                </button>
+                <button id="snapshot" type="button" aria-label="Take a snapshot">
+                    <i class="fas fa-camera-retro"></i>
+                </button>
+                <button id="togglePIP" type="button" aria-label="Toggle picture in picture">
+                    <i class="fas fa-images"></i>
+                </button>
+                <button id="messagesBtn" type="button" aria-label="Toggle messages" aria-controls="messagesForm">
+                    <i class="fas fa-message"></i>
+                </button>
+                <button id="fullScreenOn" type="button" aria-label="Enable full screen">
+                    <i class="fas fa-expand-alt"></i>
+                </button>
+                <button id="fullScreenOff" type="button" aria-label="Disable full screen">
+                    <i class="fas fa-compress-alt"></i>
+                </button>
+                <button id="qualitySelect" type="button" aria-label="Video quality">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+                <button id="settingsBtn" type="button" aria-label="Toggle settings" aria-controls="settingsForm">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </nav>
         </div>
-        <div id="settingsForm" class="viewer-settings panel-drawer fadeIn">
-            <div class="viewer-settings-header">
-                <div class="viewer-settings-info">
-                    <label class="not-selectable"><i class="fa-solid fa-sliders"></i> Settings</label>
-                </div>
-                <div class="viewer-settings-buttons">
-                    <button id="settingsCloseBtn" class="panel-close-btn" title="Close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+        <aside
+            id="settingsForm"
+            class="viewer-settings panel-drawer fadeIn"
+            role="dialog"
+            aria-labelledby="settingsTitle"
+        >
+            <div class="viewer-settings-header panel-header">
+                <h2 id="settingsTitle" class="panel-title">
+                    <i class="fa-solid fa-gear" aria-hidden="true"></i><span>Settings</span>
+                </h2>
+                <button id="settingsCloseBtn" class="panel-close-btn" type="button" aria-label="Close settings">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="viewer-settings-body">
-                <div id="audioOutputSection" class="viewer-settings-section">
-                    <label class="viewer-settings-label not-selectable">
-                        <i class="fas fa-volume-high"></i> Audio output
+            <div class="viewer-settings-body panel-body">
+                <div id="audioOutputSection" class="form-section">
+                    <label for="audioOutputSelect" class="form-label not-selectable">
+                        <i class="fas fa-volume-high" aria-hidden="true"></i> Speaker
                     </label>
-                    <div class="viewer-audio-output">
+                    <div class="control-row">
                         <select id="audioOutputSelect"></select>
-                        <button id="audioOutputTestBtn" title="Test speaker"><i class="fas fa-play"></i></button>
+                        <button id="audioOutputTestBtn" class="square-btn" type="button" title="Test speaker">
+                            <i class="fas fa-play" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
-        <div id="messagesForm" class="viewer-messages panel-drawer">
-            <div class="viewer-messages-header">
-                <div class="viewer-messages-info">
-                    <label class="not-selectable"><i class="fas fa-message"></i> Messages</label>
-                </div>
-                <div class="viewer-messages-buttons">
-                    <button id="messagesClean" title="Clear all"><i class="fas fa-trash"></i></button>
-                    <button id="messagesSave" title="Save"><i class="fas fa-save"></i></button>
-                    <button id="messagesCloseBtn" class="panel-close-btn" title="Close">
-                        <i class="fas fa-times"></i>
+        </aside>
+        <aside id="messagesForm" class="viewer-messages panel-drawer" role="dialog" aria-labelledby="messagesTitle">
+            <div class="viewer-messages-header panel-header">
+                <h2 id="messagesTitle" class="panel-title">
+                    <i class="fas fa-message" aria-hidden="true"></i><span>Messages</span>
+                </h2>
+                <div class="panel-toolbar">
+                    <button id="messagesClean" class="icon-btn" type="button" title="Clear messages">
+                        <i class="fas fa-trash" aria-hidden="true"></i>
+                    </button>
+                    <button id="messagesSave" class="icon-btn" type="button" title="Save messages">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                    </button>
+                    <button id="messagesCloseBtn" class="panel-close-btn" type="button" title="Close messages">
+                        <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
-            <div id="viewerMessagesArea" class="viewer-messages-area"></div>
-            <div class="viewer-messages-compose">
-                <input id="messageInput" maxlength="1024" name="message" placeholder="Type message..." />
-                <button id="messageEmoji" class="emoji-picker-button" title="Emoji" aria-label="Choose an emoji">
+            <div
+                id="viewerMessagesArea"
+                class="viewer-messages-area chat-feed panel-body"
+                role="log"
+                aria-live="polite"
+            ></div>
+            <div class="viewer-messages-compose chat-compose">
+                <input
+                    id="messageInput"
+                    class="text-input"
+                    maxlength="1024"
+                    name="message"
+                    placeholder="Write a message..."
+                    aria-label="Message"
+                    autocomplete="off"
+                />
+                <button
+                    id="messageEmoji"
+                    class="emoji-picker-button"
+                    type="button"
+                    title="Emoji"
+                    aria-label="Choose an emoji"
+                >
                     <i class="fa-regular fa-face-smile"></i>
                 </button>
-                <button id="messageSend" title="Send"><i class="fas fa-paper-plane"></i></button>
+                <button id="messageSend" type="button" title="Send" aria-label="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
             </div>
-        </div>
+        </aside>
         <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.8"></script>
         <script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.8/umd/popper.min.js"></script>
         <script defer src="https://cdnjs.cloudflare.com/ajax/libs/tippy.js/6.3.7/tippy-bundle.umd.min.js"></script>

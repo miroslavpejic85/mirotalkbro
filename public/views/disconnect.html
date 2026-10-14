@@ -18,12 +18,15 @@
         <link rel="stylesheet" href="../css/common.css" />
         <link rel="stylesheet" href="../css/disconnect.css" />
     </head>
-    <body>
-        <div class="container">
-            <div class="icon"><i class="fas fa-video-slash"></i></div>
-            <h1>Session Ended</h1>
+    <body class="disconnect-page">
+        <main class="disconnect-card" aria-labelledby="disconnectTitle">
+            <div class="disconnect-icon" aria-hidden="true"><i class="fas fa-video-slash"></i></div>
+            <h1 id="disconnectTitle">Session ended</h1>
             <p id="disconnectText" class="disconnect-txt">Thank you for joining!</p>
-        </div>
+            <div class="disconnect-actions">
+                <a class="disconnect-btn" href="/"><i class="fas fa-house" aria-hidden="true"></i> Back to home</a>
+            </div>
+        </main>
         <script async src="../js/stats.js"></script>
         <script src="../js/config.js"></script>
         <script src="../js/disconnect.js"></script>

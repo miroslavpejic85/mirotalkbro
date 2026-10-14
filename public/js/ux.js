@@ -127,6 +127,29 @@
     });
 
     // =====================================================
+    // Panel toggles: reflect open state & close with Escape
+    // =====================================================
+
+    document.querySelectorAll('button[aria-controls]').forEach((button) => {
+        const panel = document.getElementById(button.getAttribute('aria-controls'));
+        if (!panel || !panel.classList.contains('panel-drawer')) return;
+        const sync = () => button.setAttribute('aria-expanded', String(panel.classList.contains('panel-open')));
+        sync();
+        new MutationObserver(sync).observe(panel, { attributes: true, attributeFilter: ['class'] });
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        // Let the emoji picker and dialogs handle their own Escape first
+        if (document.querySelector('.emoji-picker-popover:not([hidden])')) return;
+        if (window.Swal && Swal.isVisible()) return;
+        const openPanels = document.querySelectorAll('.panel-drawer.panel-open');
+        const panel = openPanels[openPanels.length - 1];
+        // Use the panel's own close button so page state stays in sync
+        panel?.querySelector('.panel-close-btn')?.click();
+    });
+
+    // =====================================================
     // Smooth scroll for messages area
     // =====================================================
 
