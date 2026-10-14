@@ -28,18 +28,18 @@
             <header id="broadcastFormHeader" class="broadcast-header room-header not-selectable">
                 <div class="broadcast-info room-meta">
                     <span class="live-badge">LIVE</span>
-                    <div id="broadcastingModeLabel" class="broadcasting-mode-badge" title="Broadcasting mode">
+                    <div id="broadcastingModeLabel" class="broadcasting-mode-badge">
                         <span class="mode-dot"></span>
                         <span class="mode-text">---</span>
                     </div>
-                    <span class="meta-item meta-user" title="Your name">
+                    <span class="meta-item meta-user">
                         <i class="fas fa-user" aria-hidden="true"></i><span id="myName">Broadcaster</span>
                     </span>
-                    <span class="meta-item" title="Connected viewers">
+                    <span class="meta-item">
                         <i class="fas fa-users" aria-hidden="true"></i><span id="connectedPeers">0</span>
                         <span class="visually-hidden">viewers</span>
                     </span>
-                    <span class="meta-item" title="Session duration">
+                    <span class="meta-item">
                         <i class="fas fa-clock" aria-hidden="true"></i><span id="sessionTime">0s</span>
                     </span>
                 </div>
@@ -202,7 +202,7 @@
                         </label>
                         <div class="control-row">
                             <select id="audioOutputSelect"></select>
-                            <button id="audioOutputTestBtn" class="square-btn" type="button" title="Test speaker">
+                            <button id="audioOutputTestBtn" class="square-btn" type="button" aria-label="Test speaker">
                                 <i class="fas fa-play" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -215,14 +215,14 @@
                         <i class="fas fa-message" aria-hidden="true"></i><span>Messages</span>
                     </h2>
                     <div class="panel-toolbar">
-                        <button id="messagesClean" class="icon-btn" type="button" aria-label="Clear messages">
-                            <i class="fas fa-trash"></i>
-                        </button>
                         <button id="messagesSave" class="icon-btn" type="button" aria-label="Save messages">
                             <i class="fas fa-download"></i>
                         </button>
                         <button id="messagesOpenViewersForm" class="icon-btn" type="button" aria-label="Show viewers">
                             <i class="fas fa-users"></i>
+                        </button>
+                        <button id="messagesClean" class="icon-btn" type="button" aria-label="Clear messages">
+                            <i class="fas fa-trash"></i>
                         </button>
                         <button
                             id="messagesCloseForm"
@@ -250,16 +250,10 @@
                         aria-label="Message"
                         autocomplete="off"
                     />
-                    <button
-                        id="messageEmoji"
-                        class="emoji-picker-button"
-                        type="button"
-                        title="Emoji"
-                        aria-label="Choose an emoji"
-                    >
+                    <button id="messageEmoji" class="emoji-picker-button" type="button" aria-label="Choose an emoji">
                         <i class="fa-regular fa-face-smile"></i>
                     </button>
-                    <button id="messageSend" type="button" title="Send" aria-label="Send message">
+                    <button id="messageSend" type="button" aria-label="Send message">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>

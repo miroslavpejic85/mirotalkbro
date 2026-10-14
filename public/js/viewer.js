@@ -97,7 +97,14 @@ function loadViewerToolTip() {
         { element: fullScreenOn, text: 'Enable full screen', position: 'top' },
         { element: fullScreenOff, text: 'Disable full screen', position: 'top' },
         { element: settingsBtn, text: 'Toggle settings', position: 'top' },
-        { element: leave, text: 'Disconnect', position: 'top' },
+        { element: messagesSave, text: 'Save messages', position: 'bottom' },
+        { element: messagesClean, text: 'Clear messages', position: 'bottom' },
+        { element: messagesCloseBtn, text: 'Close messages', position: 'bottom' },
+        { element: audioOutputTestBtn, text: 'Test speaker', position: 'top' },
+        { element: messageEmoji, text: 'Emoji', position: 'top' },
+        { element: messageSend, text: 'Send', position: 'top' },
+        { element: myName.closest('.meta-item'), text: 'Your name', position: 'bottom' },
+        { element: sessionTime.closest('.meta-item'), text: 'Time watching', position: 'bottom' },
     ];
 
     viewerTooltips.forEach(({ element, text, position }) => {

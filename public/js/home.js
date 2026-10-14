@@ -230,6 +230,10 @@ if (getMode === 'dark') body.classList.add('dark');
 updateThemeButton();
 mode.addEventListener('click', setTheme);
 
+setTippy(about, 'About MiroTalk', 'bottom');
+setTippy(userNameRandom, 'Generate a random name', 'top');
+setTippy(broadcasterIdRandom, 'Generate a new room ID', 'top');
+
 function setTheme() {
     body.classList.toggle('dark');
     window.localStorage.mode = body.classList.contains('dark') ? 'dark' : 'light';
@@ -241,7 +245,7 @@ function updateThemeButton() {
     const isDark = body.classList.contains('dark');
     const label = `Switch to ${isDark ? 'light' : 'dark'} appearance`;
     mode.setAttribute('aria-label', label);
-    mode.title = label;
+    setTippy(mode, label, 'bottom');
     mode.querySelector('i').className = `fas fa-${isDark ? 'sun' : 'moon'}`;
 }
 

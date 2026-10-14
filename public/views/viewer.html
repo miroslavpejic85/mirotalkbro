@@ -34,10 +34,10 @@
                     <span id="rtmpBadge" class="source-badge"
                         ><i class="fas fa-satellite-dish" aria-hidden="true"></i> RTMP</span
                     >
-                    <span class="meta-item meta-user" title="Your name">
+                    <span class="meta-item meta-user">
                         <i class="fas fa-user" aria-hidden="true"></i><span id="myName">Viewer</span>
                     </span>
-                    <span class="meta-item" title="Time watching">
+                    <span class="meta-item">
                         <i class="fas fa-clock" aria-hidden="true"></i><span id="sessionTime">0s</span>
                     </span>
                 </div>
@@ -119,7 +119,7 @@
                     </label>
                     <div class="control-row">
                         <select id="audioOutputSelect"></select>
-                        <button id="audioOutputTestBtn" class="square-btn" type="button" title="Test speaker">
+                        <button id="audioOutputTestBtn" class="square-btn" type="button" aria-label="Test speaker">
                             <i class="fas fa-play" aria-hidden="true"></i>
                         </button>
                     </div>
@@ -132,13 +132,13 @@
                     <i class="fas fa-message" aria-hidden="true"></i><span>Messages</span>
                 </h2>
                 <div class="panel-toolbar">
-                    <button id="messagesSave" class="icon-btn" type="button" title="Save messages">
+                    <button id="messagesSave" class="icon-btn" type="button" aria-label="Save messages">
                         <i class="fas fa-download" aria-hidden="true"></i>
                     </button>
-                    <button id="messagesClean" class="icon-btn" type="button" title="Clear messages">
+                    <button id="messagesClean" class="icon-btn" type="button" aria-label="Clear messages">
                         <i class="fas fa-trash" aria-hidden="true"></i>
                     </button>
-                    <button id="messagesCloseBtn" class="panel-close-btn" type="button" title="Close messages">
+                    <button id="messagesCloseBtn" class="panel-close-btn" type="button" aria-label="Close messages">
                         <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
@@ -159,16 +159,10 @@
                     aria-label="Message"
                     autocomplete="off"
                 />
-                <button
-                    id="messageEmoji"
-                    class="emoji-picker-button"
-                    type="button"
-                    title="Emoji"
-                    aria-label="Choose an emoji"
-                >
+                <button id="messageEmoji" class="emoji-picker-button" type="button" aria-label="Choose an emoji">
                     <i class="fa-regular fa-face-smile"></i>
                 </button>
-                <button id="messageSend" type="button" title="Send" aria-label="Send message">
+                <button id="messageSend" type="button" aria-label="Send message">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>

@@ -89,8 +89,12 @@ function isPIPSupported() {
 }
 
 function setTippy(elem, content, placement) {
-    if (isMobileDevice) return;
+    if (!elem || (typeof isMobileDevice !== 'undefined' && isMobileDevice)) return;
     try {
+        if (elem._tippy) {
+            elem._tippy.setContent(content);
+            return;
+        }
         tippy(elem, {
             content: content,
             placement: placement,
