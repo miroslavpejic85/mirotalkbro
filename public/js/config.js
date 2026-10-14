@@ -56,6 +56,7 @@ const viewerSettings = {
         redirect_url: '/disconnect', // URL to redirect viewers when they leave the room
         disconnect_url: '/disconnect', // URL to redirect viewers when the broadcaster ends the session or disconnects them
         disconnect_txt: 'Thank you for joining!', // Text to display on disconnect page
+        disconnect_home_btn: false, // Show the "Back to home" button on the disconnect page
     },
 };
 

@@ -58,6 +58,10 @@
     justify-content: center;
 }
 
+.disconnect-actions[hidden] {
+    display: none;
+}
+
 .disconnect-btn {
     min-height: 44px;
     display: inline-flex;
