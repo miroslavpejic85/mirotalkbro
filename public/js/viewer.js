@@ -129,6 +129,7 @@ myName.innerText = username;
 let peerConnection;
 let dataChannel;
 let viewerStream;
+let viewerMediaReady = Promise.resolve(); // settles once mic/camera acquisition is done (or failed)
 let videoSender = null; // P2P: RTCRtpSender for the viewer's video track
 let broadcastingMode = 'p2p'; // Will be set by server
 
@@ -167,7 +168,9 @@ socket.on('broadcastingMode', async (mode) => {
             const { sourceType } = await sfuSocketRequest('sfu-getSourceType', broadcastID);
             setExternalSourceMode(sourceType === 'rtmp');
         }
-        await checkViewerAudioVideo();
+        // P2P can't add tracks after the offer/answer, so it waits for the devices; SFU joins right away
+        viewerMediaReady = checkViewerAudioVideo().catch(handleError);
+        if (broadcastingMode === 'p2p') await viewerMediaReady;
     }
 
     // SFU reconnect: if we already joined once, server restarted and all
@@ -185,6 +188,7 @@ socket.on('broadcastingMode', async (mode) => {
             const allEnded = tracks.length === 0 || tracks.every((t) => t.readyState === 'ended');
             if (allEnded) {
                 viewerStream = await getStream();
+                if (!viewerStream) hideViewerMediaButtons();
             }
         }
 
@@ -273,6 +277,7 @@ socket.on('broadcaster', async () => {
         await sfuJoinBroadcast();
         if (!sfuJoined) await sfuJoinBroadcast();
     } else {
+        await viewerMediaReady;
         socket.emit('viewer', broadcastID, username);
     }
 });
@@ -621,12 +626,16 @@ function sfuResendMediaStatus() {
 async function checkViewerAudioVideo() {
     if (broadcastSettings.options.show_viewers && (viewerSettings.buttons.audio || viewerSettings.buttons.video)) {
         viewerStream = await getStream();
-        if (viewerSettings.buttons.audio) disableAudio.click();
-        if (viewerSettings.buttons.video) videoBtn.click();
-        // If SFU already joined but viewerStream wasn't ready, produce it now
-        if (broadcastingMode === 'sfu' && sfuJoined && viewerStream) {
-            await sfuProduceViewerStream();
-            sfuResendMediaStatus();
+        applyViewerMediaButtons();
+        if (viewerStream && viewerStream.getAudioTracks().length) disableAudio.click();
+        if (viewerStream && viewerStream.getVideoTracks().length) videoBtn.click();
+        // SFU join doesn't wait for the stream: produce it once the join is done
+        if (broadcastingMode === 'sfu' && viewerStream) {
+            if (sfuJoinPromise) await sfuJoinPromise.catch(() => {});
+            if (sfuJoined) {
+                await sfuProduceViewerStream();
+                sfuResendMediaStatus();
+            }
         }
     }
 }
@@ -674,7 +683,7 @@ function handleDataChannelMessage(data) {
             }
             break;
         case 'hide':
-            if (videoBtn.style.color !== 'red') {
+            if (viewerStream && viewerStream.getVideoTracks().length && videoBtn.style.color !== 'red') {
                 videoBtn.click();
                 popupMessage('toast', 'Broadcaster', 'Broadcaster hide your camera', 'top');
             }
@@ -732,9 +741,8 @@ function sendToBroadcasterDataChannel(method, action = {}) {
 // =====================================================
 
 elementDisplay(fullScreenOff, false);
-elementDisplay(disableAudio, broadcastSettings.options.show_viewers && viewerSettings.buttons.audio);
-elementDisplay(enableAudio, broadcastSettings.options.show_viewers && viewerSettings.buttons.audio && false);
-elementDisplay(videoBtn, broadcastSettings.options.show_viewers && viewerSettings.buttons.video);
+// Mic/camera buttons stay hidden until we know which devices the viewer actually has (see applyViewerMediaButtons)
+hideViewerMediaButtons();
 elementDisplay(recordingLabel, false);
 elementDisplay(recordingStop, false);
 elementDisplay(snapshot, viewerSettings.buttons.snapshot);
@@ -931,9 +939,10 @@ enableAudio.addEventListener('click', () => toggleAudio(true));
 disableAudio.addEventListener('click', () => toggleAudio(false));
 
 function toggleAudio(enabled) {
-    if (!viewerStream) return;
+    const audioTrack = viewerStream && viewerStream.getAudioTracks()[0];
+    if (!audioTrack) return;
 
-    viewerStream.getAudioTracks()[0].enabled = !viewerStream.getAudioTracks()[0].enabled;
+    audioTrack.enabled = !audioTrack.enabled;
 
     elementDisplay(enableAudio, !enabled);
     elementDisplay(disableAudio, enabled && viewerSettings.buttons.audio);
@@ -971,16 +980,17 @@ function toggleAudio(enabled) {
 videoBtn.addEventListener('click', toggleVideo);
 
 function toggleVideo() {
-    if (!viewerStream) return;
+    const videoTrack = viewerStream && viewerStream.getVideoTracks()[0];
+    if (!videoTrack) return;
 
-    viewerStream.getVideoTracks()[0].enabled = !viewerStream.getVideoTracks()[0].enabled;
+    videoTrack.enabled = !videoTrack.enabled;
 
     const color = getMode === 'dark' ? 'white' : 'black';
     const enabled = videoBtn.style.color !== 'red';
     videoBtn.style.color = enabled ? 'red' : color;
 
     // Show/hide viewer video
-    if (viewerStream.getVideoTracks()[0].enabled) {
+    if (videoTrack.enabled) {
         viewerVideo.srcObject = viewerStream;
         viewerVideoContainer.style.display = 'block';
     } else {
@@ -1004,7 +1014,6 @@ function toggleVideo() {
 
     // In P2P mode, replace the outgoing video track with null when the camera is off
     if (broadcastingMode === 'p2p' && videoSender) {
-        const videoTrack = viewerStream.getVideoTracks()[0];
         !enabled
             ? videoSender.replaceTrack(videoTrack).catch(handleError)
             : videoSender.replaceTrack(null).catch(handleError);
@@ -1057,25 +1066,62 @@ function attachStream(stream) {
     }
 }
 
-async function getStream() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: viewerSettings.buttons.video,
-            audio: viewerSettings.buttons.audio,
-        });
-        return stream;
-    } catch (error) {
-        console.error('Failed to access media devices:', error.message);
-        handleMediaStreamError(error);
-        hideVideoAudioButtons();
-        return null;
-    }
+function isPermissionError(error) {
+    return ['NotAllowedError', 'PermissionDeniedError', 'SecurityError'].includes(error && error.name);
 }
 
-function hideVideoAudioButtons() {
+// Returns a stream with whatever mic/camera is available, or null (viewer can still watch without sending media)
+async function getStream() {
+    const audio = !!viewerSettings.buttons.audio;
+    const video = !!viewerSettings.buttons.video;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('Media devices not available, joining as watch-only viewer');
+        return null;
+    }
+
+    try {
+        return await navigator.mediaDevices.getUserMedia({ audio, video });
+    } catch (error) {
+        console.warn('Failed to access media devices:', error.name, error.message);
+        // Not requesting both kinds, nothing else to try
+        if (!(audio && video)) {
+            if (isPermissionError(error)) handleMediaStreamError(error);
+            return null;
+        }
+    }
+
+    // One of the devices is missing, busy or blocked: collect whichever kind is still available
+    const stream = new MediaStream();
+    let permissionError = null;
+    for (const kind of ['audio', 'video']) {
+        try {
+            const kindStream = await navigator.mediaDevices.getUserMedia({ [kind]: true });
+            kindStream.getTracks().forEach((track) => stream.addTrack(track));
+        } catch (error) {
+            console.warn(`No ${kind} available:`, error.name, error.message);
+            if (isPermissionError(error)) permissionError = error;
+        }
+    }
+    // Only warn when nothing could be used at all
+    if (!stream.getTracks().length && permissionError) handleMediaStreamError(permissionError);
+    return stream.getTracks().length > 0 ? stream : null;
+}
+
+function hideViewerMediaButtons() {
     elementDisplay(disableAudio, false);
     elementDisplay(enableAudio, false);
     elementDisplay(videoBtn, false);
+}
+
+// Show only the controls for the tracks the viewer is actually sending
+function applyViewerMediaButtons() {
+    const canShow = broadcastSettings.options.show_viewers;
+    const hasAudio = !!(viewerStream && viewerStream.getAudioTracks().length);
+    const hasVideo = !!(viewerStream && viewerStream.getVideoTracks().length);
+    elementDisplay(disableAudio, canShow && hasAudio && viewerSettings.buttons.audio);
+    elementDisplay(enableAudio, false);
+    elementDisplay(videoBtn, canShow && hasVideo && viewerSettings.buttons.video);
 }
 
 video.addEventListener('loadeddata', () => {
