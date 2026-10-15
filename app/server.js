@@ -5,10 +5,9 @@
  *
  * @link    GitHub: https://github.com/miroslavpejic85/mirotalkbro
  * @link    Live demo: https://bro.mirotalk.com
- * @license For open source under AGPL-3.0
- * @license For private project or commercial purposes contact us at: license.mirotalk@gmail.com
+ * @license Open source: AGPLv3 | Commercial/closed source (official channel): https://docs.mirotalk.com/sites/bro/
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.4.62
+ * @version 1.4.63
  */
 
 require('dotenv').config();
