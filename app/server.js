@@ -7,7 +7,7 @@
  * @link    Live demo: https://bro.mirotalk.com
  * @license Open source: AGPLv3 | Commercial/closed source (official channel): https://docs.mirotalk.com/sites/bro/
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.4.68
+ * @version 1.4.69
  */
 
 require('dotenv').config();
@@ -232,6 +232,16 @@ const html = {
     broadcast: path.join(__dirname, '../', 'public/views/broadcast.html'),
     viewer: path.join(__dirname, '../', 'public/views/viewer.html'),
     disconnect: path.join(__dirname, '../', 'public/views/disconnect.html'),
+    config: path.join(__dirname, '../', 'public/js/config.js'),
+    configTemplate: path.join(__dirname, '../', 'public/js/config.template.js'),
+};
+
+const isFile = (filePath) => {
+    try {
+        return fs.statSync(filePath).isFile();
+    } catch {
+        return false;
+    }
 };
 
 app.set('trust proxy', trustProxy); // Enables trust for proxy headers (e.g., X-Forwarded-For) based on the trustProxy setting
@@ -240,6 +250,10 @@ app.use(applyEmbedHeaders); // Apply iframe embedding restrictions (CSP frame-an
 app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json()); // Api parse body data as json
+// Serve the user-customized public/js/config.js, falling back to config.template.js when it is missing
+app.get('/js/config.js', (req, res) => {
+    res.sendFile(isFile(html.config) ? html.config : html.configTemplate);
+});
 app.use(express.static(html.public));
 app.use(apiBasePath + '/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument)); // api docs
 

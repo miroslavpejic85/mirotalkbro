@@ -17,6 +17,7 @@ services:
             # - '${MEDIASOUP_RTC_MIN_PORT}-${MEDIASOUP_RTC_MAX_PORT}:${MEDIASOUP_RTC_MIN_PORT}-${MEDIASOUP_RTC_MAX_PORT}/tcp'
         volumes:
             - .env:/src/.env:ro
+            - ./public/js/config.js:/src/public/js/config.js:ro
             # Optional volumes for real-time updates:
             # - ./app/:/src/app/:ro
             # - ./public/:/src/public/:ro

@@ -44,6 +44,7 @@ COPY --chown=node:node package*.json .
 COPY --chown=node:node .env.template ./.env
 COPY --chown=node:node app app
 COPY --chown=node:node public public
+COPY --chown=node:node public/js/config.template.js ./public/js/config.js
 
 # Copy freshly built mediasoup-client bundle (overwrite repo version)
 COPY --chown=node:node --from=build /src/public/js/mediasoup-client.js /src/public/js/mediasoup-client.js

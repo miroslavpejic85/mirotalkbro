@@ -14,5 +14,6 @@ npm-debug.log
 # personal
 .env
 docker-compose.yml
+public/js/config.js
 docker-push.sh
 turnserver.conf

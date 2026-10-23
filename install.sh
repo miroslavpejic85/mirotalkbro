@@ -11,6 +11,8 @@ readonly ENV_FILE='.env'
 readonly ENV_TEMPLATE='.env.template'
 readonly COMPOSE_FILE='docker-compose.yml'
 readonly COMPOSE_TEMPLATE='docker-compose.template.yml'
+readonly CONFIG_FILE='public/js/config.js'
+readonly CONFIG_TEMPLATE='public/js/config.template.js'
 
 if [[ -t 1 ]] && command -v tput >/dev/null 2>&1 && [[ -n "${TERM:-}" ]]; then
     readonly RED="$(tput setaf 1)"
@@ -152,7 +154,7 @@ install_docker() {
     log warning "Ubuntu ${VERSION_ID:-unknown} has not been tested; continuing anyway."
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-[[ -f package.json && -f package-lock.json && -f "$ENV_TEMPLATE" && -f "$COMPOSE_TEMPLATE" ]] || \
+[[ -f package.json && -f package-lock.json && -f "$ENV_TEMPLATE" && -f "$COMPOSE_TEMPLATE" && -f "$CONFIG_TEMPLATE" ]] || \
     die 'Run this script from a complete MiroTalk BRO checkout.'
 
 log info "MiroTalk BRO installer on Ubuntu ${VERSION_ID:-unknown}"
@@ -168,6 +170,7 @@ if confirm 'Use Docker?' y; then
 
     copy_if_missing "$ENV_TEMPLATE" "$ENV_FILE"
     copy_if_missing "$COMPOSE_TEMPLATE" "$COMPOSE_FILE"
+    copy_if_missing "$CONFIG_TEMPLATE" "$CONFIG_FILE"
 
     if confirm 'Use the official Docker image?' y; then
         log info 'Pulling the latest official image'
@@ -192,6 +195,7 @@ else
         die "Node.js ${NODE_MAJOR} or newer is required; found $(node --version)."
 
     copy_if_missing "$ENV_TEMPLATE" "$ENV_FILE"
+    copy_if_missing "$CONFIG_TEMPLATE" "$CONFIG_FILE"
 
     log info 'Installing npm dependencies from the lockfile'
     run_as_project_user npm ci

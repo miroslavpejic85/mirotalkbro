@@ -68,11 +68,15 @@ apt-get install -y python3 python3-pip
 git clone https://github.com/miroslavpejic85/mirotalkbro.git
 cd mirotalkbro
 cp .env.template .env
+cp public/js/config.template.js public/js/config.js
 npm install
 npm start
 ```
 
 Open [http://localhost:3016](http://localhost:3016) - done!
+
+> **Note:**
+> Edit `.env` for server settings and `public/js/config.js` to customize the UI (buttons, options, simulcast, SFU tuning). If `public/js/config.js` is missing, `public/js/config.template.js` is served instead.
 
 </details>
 
@@ -90,6 +94,7 @@ git clone https://github.com/miroslavpejic85/mirotalkbro.git
 cd mirotalkbro
 cp .env.template .env
 cp docker-compose.template.yml docker-compose.yml
+cp public/js/config.template.js public/js/config.js
 docker-compose pull    # optional: pull official image
 docker-compose up      # add -d to run in background
 ```
@@ -97,7 +102,7 @@ docker-compose up      # add -d to run in background
 Open [http://localhost:3016](http://localhost:3016) - done!
 
 > **Note:**
-> Edit `.env` and `docker-compose.yml` to customize your setup.
+> Edit `.env`, `docker-compose.yml` and `public/js/config.js` to customize your setup.
 
 </details>
 
