@@ -20,6 +20,8 @@ const body = document.querySelector('body');
 
 const appName = document.getElementById('appName');
 const copyright = document.getElementById('copyright');
+const copyrightText = document.getElementById('copyrightText');
+const appVersion = document.getElementById('appVersion');
 const aboutDiv = document.getElementById('aboutDiv');
 const about = document.getElementById('about');
 
@@ -36,7 +38,12 @@ const viewer = document.getElementById('viewer');
 const mode = document.getElementById('mode');
 
 appName.textContent = homePage.appName;
-copyright.textContent = `© ${new Date().getFullYear()} ${homePage.appName}`;
+copyrightText.textContent = `© ${new Date().getFullYear()} ${homePage.appName}`;
+
+// Never leak the raw {{APP_VERSION}} placeholder (e.g. if served without server-side injection)
+if (homePage.showVersion === false || appVersion.textContent.includes('{{')) {
+    appVersion.textContent = '';
+}
 
 // =====================================================
 // handle element display

@@ -202,6 +202,15 @@
     font-size: 0.75rem;
 }
 
+.app-version {
+    margin-left: 4px;
+    opacity: 0.8;
+}
+
+.app-version:empty {
+    display: none;
+}
+
 .field-group {
     display: grid;
     gap: 8px;

@@ -7,7 +7,7 @@
  * @link    Live demo: https://bro.mirotalk.com
  * @license Open source: AGPLv3 | Commercial/closed source (official channel): https://docs.mirotalk.com/sites/bro/
  * @author  Miroslav Pejic - miroslav.pejic.85@gmail.com
- * @version 1.4.69
+ * @version 1.4.70
  */
 
 require('dotenv').config();
@@ -244,6 +244,16 @@ const isFile = (filePath) => {
     }
 };
 
+// Serve home.html with the {{APP_VERSION}} placeholder replaced (cached after first read)
+const appVersion = `v${packageJson.version}`;
+let homeHtmlCache = null;
+const sendHome = (res) => {
+    if (!homeHtmlCache) {
+        homeHtmlCache = fs.readFileSync(html.home, 'utf8').replace(/{{APP_VERSION}}/g, appVersion);
+    }
+    return res.type('html').send(homeHtmlCache);
+};
+
 app.set('trust proxy', trustProxy); // Enables trust for proxy headers (e.g., X-Forwarded-For) based on the trustProxy setting
 app.use(helmet.noSniff()); // Enable content type sniffing prevention
 app.use(applyEmbedHeaders); // Apply iframe embedding restrictions (CSP frame-ancestors / X-Frame-Options)
@@ -376,13 +386,13 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/', OIDCAuth, (req, res) => {
-    return res.sendFile(html.home);
+    return sendHome(res);
 });
 
 app.get('/home', (req, res) => {
     //http://localhost:3016/home?id=123
     const { id } = req.query;
-    return Object.keys(req.query).length > 0 && id ? res.sendFile(html.home) : notFound(res);
+    return Object.keys(req.query).length > 0 && id ? sendHome(res) : notFound(res);
 });
 
 app.get('/broadcast', OIDCAuth, (req, res) => {

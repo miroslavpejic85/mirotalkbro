@@ -3,6 +3,7 @@
 const homePage = {
     appName: 'MiroTalk BRO',
     showCopyright: true,
+    showVersion: true, // show app version next to the copyright
     about: {
         show: true,
         url: 'https://docs.mirotalk.com/sites/bro',
