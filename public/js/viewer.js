@@ -419,6 +419,8 @@ async function sfuConsumeProducer(producerId, kind) {
             }
         }
         const stream = new MediaStream(tracks);
+        // Recording is bound to the previous stream: save it before swapping (same as P2P ontrack)
+        saveRecording();
         attachStream(stream);
         video.play().catch(() => {});
 
