@@ -85,6 +85,9 @@ let mediaRequestId = 0;
 let backgroundImage = null;
 let backgroundEffectsBusy = false;
 if (!backgroundEffectsSupported) backgroundEffectsSection.hidden = true;
+if (['off', 'blur', 'image'].includes(localStorage.backgroundEffect)) {
+    backgroundEffectSelect.value = localStorage.backgroundEffect;
+}
 
 const userAgent = navigator.userAgent;
 const parser = new UAParser(userAgent);
@@ -1708,6 +1711,32 @@ function loadBackgroundImage(src) {
     });
 }
 
+function saveBackgroundImage(src, presetSrc, image) {
+    try {
+        if (presetSrc) {
+            localStorage.backgroundImage = presetSrc;
+        } else if (!src.startsWith('data:')) {
+            // Custom upload: store a downscaled copy so it survives the next session
+            const scale = Math.min(1, 1920 / Math.max(image.naturalWidth, image.naturalHeight));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(image.naturalWidth * scale);
+            canvas.height = Math.round(image.naturalHeight * scale);
+            canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+            localStorage.backgroundImage = canvas.toDataURL('image/jpeg', 0.85);
+        }
+    } catch (error) {
+        console.warn('Unable to save background image', error);
+        localStorage.removeItem('backgroundImage');
+    }
+}
+
+function restoreBackgroundImage() {
+    const saved = localStorage.backgroundImage;
+    const preset = BACKGROUND_PRESETS.find(({ src }) => src === saved);
+    if (!preset && saved?.startsWith('data:image/')) return setBackgroundImage(saved);
+    return selectBackgroundPreset((preset || BACKGROUND_PRESETS[0]).src);
+}
+
 async function setBackgroundImage(src, presetSrc = null) {
     backgroundEffectsBusy = true;
     updateBackgroundControls();
@@ -1715,8 +1744,10 @@ async function setBackgroundImage(src, presetSrc = null) {
         backgroundImage = await loadBackgroundImage(src);
         markBackgroundPreset(presetSrc);
         if (presetSrc) backgroundImageInput.value = '';
+        saveBackgroundImage(src, presetSrc, backgroundImage);
         await applyBackgroundEffect();
     } catch (error) {
+        if (src === localStorage.backgroundImage) localStorage.removeItem('backgroundImage');
         backgroundEffectsError(error);
     } finally {
         backgroundEffectsBusy = false;
@@ -1761,12 +1792,13 @@ async function applyBackgroundEffect() {
     if (!effects || screenShareEnabled) return;
     const mode = backgroundEffectSelect.value;
     updateBackgroundControls();
-    // No image chosen yet: start with the first default background
-    if (mode === 'image' && !backgroundImage) return selectBackgroundPreset(BACKGROUND_PRESETS[0].src);
+    // No image loaded yet: restore the saved one or start with the first default background
+    if (mode === 'image' && !backgroundImage) return restoreBackgroundImage();
     backgroundEffectsBusy = true;
     updateBackgroundControls();
     try {
         await effects.setMode(mode, backgroundImage);
+        if (effects === cameraEffects) localStorage.backgroundEffect = mode;
     } catch (error) {
         if (effects === cameraEffects) backgroundEffectsError(error);
     } finally {
