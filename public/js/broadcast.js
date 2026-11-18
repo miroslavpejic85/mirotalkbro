@@ -1598,8 +1598,49 @@ function getVideoConstraints() {
 // Handle camera, microphone, screen
 // =====================================================
 
-audioSelect.onchange = getStream;
-videoSelect.onchange = getStream;
+audioSelect.onchange = () => {
+    localStorage.audioInputDeviceId = audioSelect.value;
+    getStream();
+};
+videoSelect.onchange = () => {
+    localStorage.videoInputDeviceId = videoSelect.value;
+    getStream();
+};
+
+// The select is empty on first load (devices are enumerated after getUserMedia),
+// so fall back to the saved device. Chrome ignores `ideal` deviceId on the first
+// request, so `exact` is required; getUserMediaWithFallback handles a missing device.
+function getDeviceConstraint(select, savedDeviceId) {
+    const deviceId = select.value || savedDeviceId;
+    return deviceId ? { exact: deviceId } : undefined;
+}
+
+function isUsingSavedDevice() {
+    return (
+        (!audioSelect.value && !!localStorage.audioInputDeviceId) ||
+        (!videoSelect.value && !!localStorage.videoInputDeviceId)
+    );
+}
+
+function getUserMediaWithFallback(constraints) {
+    const usingSavedDevice = isUsingSavedDevice();
+    return navigator.mediaDevices.getUserMedia(constraints).catch((error) => {
+        if (!usingSavedDevice || !['OverconstrainedError', 'NotFoundError'].includes(error.name)) throw error;
+        console.warn('Saved media device unavailable, using default devices', error);
+        return navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    });
+}
+
+let activeInputTracks = {};
+
+function selectStreamDevice(select, track) {
+    if (!track) return;
+    const options = [...select.options];
+    const { deviceId } = track.getSettings ? track.getSettings() : {};
+    let index = deviceId ? options.findIndex((option) => option.value === deviceId) : -1;
+    if (index === -1) index = options.findIndex((option) => option.text === track.label);
+    if (index !== -1) select.selectedIndex = index;
+}
 
 const BACKGROUND_PRESETS = ['forest', 'beach', 'mountains', 'lake', 'aurora', 'abstract'].map((name) => ({
     name: name.charAt(0).toUpperCase() + name.slice(1),
@@ -1814,13 +1855,10 @@ function getStream() {
         videoFpsSelect.selectedIndex = localStorage.videoFpsSelectedIndex ? localStorage.videoFpsSelectedIndex : 0;
         videoBtn.style.color = dark ? 'white' : 'black';
 
-        const audioSource = audioSelect.value;
-        const videoSource = videoSelect.value;
-
         const screenConstraints = { audio: true, video: true };
         const cameraConstraints = {
-            audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
-            video: { deviceId: videoSource ? { exact: videoSource } : undefined },
+            audio: { deviceId: getDeviceConstraint(audioSelect, localStorage.audioInputDeviceId) },
+            video: { deviceId: getDeviceConstraint(videoSelect, localStorage.videoInputDeviceId) },
         };
         const constraints = screenShareEnabled ? screenConstraints : cameraConstraints;
 
@@ -1847,8 +1885,7 @@ function getStream() {
 
         stopTracks(broadcastStream);
 
-        return navigator.mediaDevices
-            .getUserMedia(constraints)
+        return getUserMediaWithFallback(constraints)
             .then((stream) => gotStream(stream, requestId))
             .then(applyVideoConstraints)
             .catch(handleMediaDeviceError);
@@ -1863,12 +1900,9 @@ async function gotStream(stream, requestId) {
         return;
     }
     if (!screenShareEnabled) {
-        audioSelect.selectedIndex = [...audioSelect.options].findIndex(
-            (option) => option.text === stream.getAudioTracks()[0].label
-        );
-        videoSelect.selectedIndex = [...videoSelect.options].findIndex(
-            (option) => option.text === stream.getVideoTracks()[0].label
-        );
+        activeInputTracks = { audio: stream.getAudioTracks()[0], video: stream.getVideoTracks()[0] };
+        selectStreamDevice(audioSelect, activeInputTracks.audio);
+        selectStreamDevice(videoSelect, activeInputTracks.video);
     }
     if (backgroundEffectsSupported && !screenShareEnabled) {
         const effects = new BackgroundEffects(backgroundEffectsError);
@@ -2041,6 +2075,9 @@ function gotDevices(deviceInfos) {
             }
         }
     }
+
+    selectStreamDevice(audioSelect, activeInputTracks.audio);
+    selectStreamDevice(videoSelect, activeInputTracks.video);
 
     if (supportsAudioOutputSelection() && localStorage.audioOutputDeviceId) {
         const savedId = localStorage.audioOutputDeviceId;
