@@ -76,6 +76,7 @@ const audioOutputSection = document.getElementById('audioOutputSection');
 const audioOutputTestBtn = document.getElementById('audioOutputTestBtn');
 const backgroundEffectSelect = document.getElementById('backgroundEffectSelect');
 const backgroundImageInput = document.getElementById('backgroundImageInput');
+const backgroundPresets = document.getElementById('backgroundPresets');
 const backgroundEffectsSection = document.getElementById('backgroundEffectsSection');
 const backgroundEffectLoading = document.getElementById('backgroundEffectLoading');
 const backgroundEffectsSupported = BackgroundEffects.supported();
@@ -1600,18 +1601,94 @@ function getVideoConstraints() {
 audioSelect.onchange = getStream;
 videoSelect.onchange = getStream;
 
+const BACKGROUND_PRESETS = ['forest', 'beach', 'mountains', 'lake', 'aurora', 'abstract'].map((name) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    src: `../assets/images/backgrounds/${name}.webp`,
+}));
+
+function renderBackgroundPresets() {
+    backgroundPresets.replaceChildren(
+        ...BACKGROUND_PRESETS.map(({ name, src }) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'background-preset';
+            button.dataset.src = src;
+            button.title = name;
+            button.setAttribute('aria-label', `${name} background`);
+            button.setAttribute('aria-pressed', 'false');
+            const thumbnail = document.createElement('img');
+            thumbnail.src = src;
+            thumbnail.alt = '';
+            thumbnail.loading = 'lazy';
+            thumbnail.decoding = 'async';
+            button.appendChild(thumbnail);
+            button.onclick = () => selectBackgroundPreset(src);
+            return button;
+        })
+    );
+}
+
+renderBackgroundPresets();
+
+function markBackgroundPreset(src) {
+    backgroundPresets.querySelectorAll('.background-preset').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.src === src));
+    });
+}
+
+function loadBackgroundImage(src) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Unable to load background image'));
+        image.src = src;
+    });
+}
+
+async function setBackgroundImage(src, presetSrc = null) {
+    backgroundEffectsBusy = true;
+    updateBackgroundControls();
+    try {
+        backgroundImage = await loadBackgroundImage(src);
+        markBackgroundPreset(presetSrc);
+        if (presetSrc) backgroundImageInput.value = '';
+        await applyBackgroundEffect();
+    } catch (error) {
+        backgroundEffectsError(error);
+    } finally {
+        backgroundEffectsBusy = false;
+        updateBackgroundControls();
+    }
+}
+
+function selectBackgroundPreset(src) {
+    if (backgroundEffectsBusy) return;
+    backgroundEffectSelect.value = 'image';
+    return setBackgroundImage(src, src);
+}
+
 function updateBackgroundControls() {
     backgroundEffectSelect.disabled = backgroundEffectsBusy || screenShareEnabled || !cameraEffects;
     backgroundImageInput.disabled = backgroundEffectSelect.disabled;
     backgroundImageInput.hidden = backgroundEffectSelect.value !== 'image';
+    backgroundPresets.hidden = backgroundImageInput.hidden;
+    backgroundPresets.querySelectorAll('.background-preset').forEach((button) => {
+        button.disabled = backgroundEffectSelect.disabled;
+    });
     backgroundEffectLoading.hidden = !backgroundEffectsBusy;
     backgroundEffectsSection.setAttribute('aria-busy', String(backgroundEffectsBusy));
 }
 
 function backgroundEffectsError(error) {
     console.error('Background effects error', error);
-    cameraEffects?.setMode('off');
     backgroundEffectSelect.value = 'off';
+    if (cameraEffects?.session?.ended) {
+        // The worker pipeline that fed the broadcast is gone: restart the camera on the main-thread engine
+        BackgroundEffectsWorker.disable();
+        getStream();
+    } else {
+        cameraEffects?.setMode('off').catch(() => {});
+    }
     updateBackgroundControls();
     popupMessage('warning', 'Background', 'Background effects unavailable. Continuing without effects.');
 }
@@ -1621,10 +1698,8 @@ async function applyBackgroundEffect() {
     if (!effects || screenShareEnabled) return;
     const mode = backgroundEffectSelect.value;
     updateBackgroundControls();
-    if (mode === 'image' && !backgroundImage) {
-        await effects.setMode('off');
-        return;
-    }
+    // No image chosen yet: start with the first default background
+    if (mode === 'image' && !backgroundImage) return selectBackgroundPreset(BACKGROUND_PRESETS[0].src);
     backgroundEffectsBusy = true;
     updateBackgroundControls();
     try {
@@ -1645,24 +1720,11 @@ backgroundImageInput.onchange = async () => {
         backgroundImageInput.value = '';
         return popupMessage('warning', 'Background', 'Choose a PNG, JPEG or WebP image smaller than 10 MB.');
     }
-    backgroundEffectsBusy = true;
-    updateBackgroundControls();
     const url = URL.createObjectURL(file);
     try {
-        const image = new Image();
-        await new Promise((resolve, reject) => {
-            image.onload = resolve;
-            image.onerror = () => reject(new Error('Unable to load background image'));
-            image.src = url;
-        });
-        backgroundImage = image;
-        await applyBackgroundEffect();
-    } catch (error) {
-        backgroundEffectsError(error);
+        await setBackgroundImage(url);
     } finally {
         URL.revokeObjectURL(url);
-        backgroundEffectsBusy = false;
-        updateBackgroundControls();
     }
 };
 

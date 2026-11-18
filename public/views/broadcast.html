@@ -134,6 +134,41 @@
                         </label>
                         <select id="videoSelect"></select>
                     </div>
+                    <div id="backgroundEffectsSection" class="form-section">
+                        <label for="backgroundEffectSelect" class="form-label not-selectable">
+                            <i class="fas fa-image" aria-hidden="true"></i> Background
+                        </label>
+                        <div class="background-effect-control">
+                            <select id="backgroundEffectSelect" disabled>
+                                <option value="off">Off</option>
+                                <option value="blur">Blur</option>
+                                <option value="image">Image</option>
+                            </select>
+                            <span
+                                id="backgroundEffectLoading"
+                                class="background-effect-loading"
+                                role="status"
+                                aria-label="Loading background"
+                                hidden
+                            >
+                                <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+                            </span>
+                        </div>
+                        <div
+                            id="backgroundPresets"
+                            class="background-presets"
+                            role="group"
+                            aria-label="Default backgrounds"
+                            hidden
+                        ></div>
+                        <input
+                            id="backgroundImageInput"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            aria-label="Background image"
+                            hidden
+                        />
+                    </div>
                     <div class="form-section">
                         <label for="videoQualitySelect" class="form-label not-selectable">
                             <i class="fas fa-photo-film" aria-hidden="true"></i> Quality &amp; frame rate
@@ -167,34 +202,6 @@
                             <i class="fas fa-microphone" aria-hidden="true"></i> Microphone
                         </label>
                         <select id="audioSelect"></select>
-                    </div>
-                    <div id="backgroundEffectsSection" class="form-section">
-                        <label for="backgroundEffectSelect" class="form-label not-selectable">
-                            <i class="fas fa-image" aria-hidden="true"></i> Background
-                        </label>
-                        <div class="background-effect-control">
-                            <select id="backgroundEffectSelect" disabled>
-                                <option value="off">Off</option>
-                                <option value="blur">Blur</option>
-                                <option value="image">Image</option>
-                            </select>
-                            <span
-                                id="backgroundEffectLoading"
-                                class="background-effect-loading"
-                                role="status"
-                                aria-label="Loading background"
-                                hidden
-                            >
-                                <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
-                            </span>
-                        </div>
-                        <input
-                            id="backgroundImageInput"
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            aria-label="Background image"
-                            hidden
-                        />
                     </div>
                     <div id="audioOutputSection" class="form-section">
                         <label for="audioOutputSelect" class="form-label not-selectable">
@@ -322,6 +329,7 @@
         <script defer src="../js/swal.js"></script>
         <script defer src="../js/utils.js"></script>
         <script defer src="../js/config.js"></script>
+        <script defer src="../js/background-effects-compositor.js"></script>
         <script defer src="../js/background-effects.js"></script>
         <script defer src="../js/broadcast.js"></script>
         <script defer src="../js/recording.js"></script>
