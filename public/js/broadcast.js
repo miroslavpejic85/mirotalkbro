@@ -1642,8 +1642,30 @@ function selectStreamDevice(select, track) {
     if (index !== -1) select.selectedIndex = index;
 }
 
-const BACKGROUND_PRESETS = ['forest', 'beach', 'mountains', 'lake', 'aurora', 'abstract'].map((name) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
+const BACKGROUND_PRESETS = [
+    'forest',
+    'beach',
+    'mountains',
+    'lake',
+    'aurora',
+    'abstract',
+    'white-room',
+    'living-room',
+    'bookshelf',
+    'lounge',
+    'loft',
+    'space-office',
+    'savanna',
+    'autumn',
+    'cabin',
+    'pier',
+    'gradient',
+    'mirotalk',
+].map((name) => ({
+    name: name
+        .split('-')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' '),
     src: `../assets/images/backgrounds/${name}.webp`,
 }));
 
