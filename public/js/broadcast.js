@@ -25,6 +25,9 @@ const videoOff = document.getElementById('videoOff');
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsForm = document.getElementById('broadcasterSettingsForm');
 const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+const settingsVideoPreview = document.getElementById('settingsVideoPreview');
+const settingsVideoPreviewVideo = document.getElementById('settingsVideoPreviewVideo');
+const settingsFullScreenQuery = window.matchMedia('(max-width: 768px)');
 
 const copyRoom = document.getElementById('copyRoom');
 const shareRoom = document.getElementById('shareRoom');
@@ -939,10 +942,35 @@ if (!isMobileDevice) {
 
 settingsBtn.addEventListener('click', toggleSettings);
 toggleSettingsBtn.addEventListener('click', toggleSettings);
+settingsFullScreenQuery.addEventListener('change', syncSettingsVideoPreview);
+// Assigning srcObject (camera change, screen share) fires loadstart/emptied; mirroring toggles the class
+video.addEventListener('loadstart', syncSettingsVideoPreview);
+video.addEventListener('emptied', syncSettingsVideoPreview);
+new MutationObserver(syncSettingsVideoPreview).observe(video, { attributes: true, attributeFilter: ['class'] });
 
 function toggleSettings() {
     settingsFormOpen = !settingsFormOpen;
     settingsForm.classList.toggle('panel-open', settingsFormOpen);
+    syncSettingsVideoPreview();
+}
+
+// Mirror the broadcast video (with background effects) above the camera select when settings covers the screen
+function syncSettingsVideoPreview() {
+    const stream = video.srcObject;
+    const videoTrack = stream?.getVideoTracks?.()[0];
+    const show = !!videoTrack && settingsFullScreenQuery.matches && settingsFormOpen;
+    settingsVideoPreview.hidden = !show;
+    if (!show) {
+        if (settingsVideoPreviewVideo.srcObject) settingsVideoPreviewVideo.srcObject = null;
+        return;
+    }
+    if (settingsVideoPreviewVideo.srcObject !== stream) {
+        settingsVideoPreviewVideo.srcObject = stream;
+        settingsVideoPreviewVideo.play().catch(() => {});
+    }
+    settingsVideoPreviewVideo.classList.toggle('mirror', video.classList.contains('mirror'));
+    settingsVideoPreviewVideo.style.objectFit = screenShareEnabled ? 'contain' : 'cover';
+    settingsVideoPreview.classList.toggle('is-off', !videoTrack.enabled);
 }
 
 // =====================================================
@@ -1016,6 +1044,7 @@ function toggleVideo() {
     broadcastStream.getVideoTracks()[0].enabled = !broadcastStream.getVideoTracks()[0].enabled;
     sendToViewersDataChannel('video', { visibility: videoOff.style.visibility });
     checkTrackAndPopup(broadcastStream, 'video');
+    syncSettingsVideoPreview();
 }
 
 // =====================================================
@@ -1891,6 +1920,7 @@ function configureRtmpModeratorUi() {
 
     settingsForm.classList.remove('panel-open');
     settingsFormOpen = false;
+    syncSettingsVideoPreview();
     const modeText = document.querySelector('#broadcastingModeLabel .mode-text');
     if (modeText) modeText.textContent = 'SFU / RTMP';
 }

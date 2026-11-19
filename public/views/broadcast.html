@@ -129,6 +129,17 @@
                 </div>
                 <div class="panel-body">
                     <div class="form-section">
+                        <div id="settingsVideoPreview" class="settings-video-preview" hidden>
+                            <video
+                                id="settingsVideoPreviewVideo"
+                                autoplay
+                                muted
+                                playsinline
+                                disablepictureinpicture
+                                aria-label="Camera preview"
+                            ></video>
+                            <i class="fas fa-video-slash settings-video-preview-off" aria-hidden="true"></i>
+                        </div>
                         <label for="videoSelect" class="form-label not-selectable">
                             <i class="fas fa-video" aria-hidden="true"></i> Camera
                         </label>

@@ -1155,6 +1155,42 @@ td button:hover {
     display: none;
 }
 
+/* Live camera preview (full-screen settings only) */
+.settings-video-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 40vh;
+    border: var(--border);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background: #000;
+}
+
+.settings-video-preview[hidden] {
+    display: none;
+}
+
+.settings-video-preview video {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.settings-video-preview-off {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-items: center;
+    font-size: 1.6rem;
+    color: var(--text-secondary);
+    background: #000;
+}
+
+.settings-video-preview.is-off .settings-video-preview-off {
+    display: grid;
+}
+
 .form-label {
     display: flex;
     align-items: center;
